@@ -100,10 +100,10 @@ nav.scrolled { justify-content: center; }
     margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.1); 
 }
 
-/* --- WRITING BOX SIZE --- */
+/* --- WRITING BOX SIZE UPDATE --- */
 .writing-zone textarea {
     width: 100%; 
-    height: 500px; /* Doubled Height */
+    height: 600px; /* Increased to 600px */
     background: transparent; border: none;
     color: var(--text-main); font-family: var(--font-body);
     font-size: 1.2rem; resize: vertical; outline: none; margin-bottom: 5px;
@@ -149,12 +149,16 @@ input, textarea { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid va
 .video-wrapper { position: relative; width: 100%; padding-bottom: 56.25%; height: 0; border-radius: 10px; overflow: hidden; }
 .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
 
+/* Google Translate Hide Bar */
+.goog-te-banner-frame.skiptranslate { display: none !important; }
+.goog-te-gadget-simple { background-color: rgba(255,255,255,0.1) !important; border: 1px solid var(--accent) !important; padding: 5px !important; border-radius: 20px !important; }
+.goog-te-gadget-simple span { color: var(--accent) !important; }
+.goog-te-gadget-icon { display: none !important; }
+
 /* === MOBILE STYLES === */
 @media (max-width: 600px) {
-    /* 1. Reset Nav to Standard Flex but Column */
     nav { 
-        flex-direction: column; 
-        justify-content: center; 
+        display: block; 
         text-align: center;
         padding: 15px 10px;
     }
@@ -174,10 +178,10 @@ input, textarea { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid va
         width: 100%;
     }
     
-    /* Force the nav group to be a ROW (Prompt next to Button) */
+    /* Force the nav group to be a ROW */
     .nav-group { 
         flex-direction: row; 
-        width: auto; /* Let it fit content */
+        width: auto; 
         gap: 10px; 
         justify-content: center;
         align-items: center;
@@ -195,7 +199,7 @@ input, textarea { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid va
         padding: 6px 12px;
     }
 
-    /* 4. SCROLL BEHAVIOR: HIDE CONTROLS */
+    /* 4. SCROLL BEHAVIOR */
     nav.scrolled .user-controls,
     nav.scrolled .save-prompt {
         display: none !important;
