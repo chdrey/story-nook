@@ -164,10 +164,18 @@ input, textarea { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid va
     .action-bar { flex-direction: column; align-items: stretch; gap: 10px; }
     #guestPenName { width: 100%; max-width: 100%; margin: 0 0 10px 0; }
     .btn-primary, .btn-secondary { width: 100%; margin-bottom: 5px; }
+    .hero h2 {
+        font-size: 1rem;      /* Smaller size */
+        white-space: nowrap;  /* Forces one line */
+        width: 100%;          /* Spans full width */
+        display: block;
+        margin-bottom: 10px;
+    }
     .welcome-content h1 { font-size: 1.8rem; }
     .modal-content.book-style { width: 95%; padding: 20px; }
     .modal-body-text { font-size: 1.1rem; }
     .logo { width: 100%; margin-bottom: 10px; }
+    
     /* Hide the "Want to save..." text on very small screens to save space */
     .save-prompt { display: none; } 
 }
