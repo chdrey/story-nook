@@ -3,6 +3,24 @@ const SUPABASE_URL = 'https://lypndarukqjtkyhxygwe.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5cG5kYXJ1a3FqdGt5aHh5Z3dlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3Nzc2NzAsImV4cCI6MjA3OTM1MzY3MH0.NE5Q1BFVsBDyKSUxHO--aR-jbSHSLW8klha7C7_VbUA';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// --- 1. PRIORITY: WELCOME SCREEN LOGIC (Moved to top) ---
+// We put this first so the site is always accessible even if other code fails.
+const enterBtn = document.getElementById('enterBtn');
+if (enterBtn) {
+    enterBtn.addEventListener('click', () => {
+        const overlay = document.getElementById('welcomeOverlay');
+        const ytPlayer = document.getElementById('youtubePlayer');
+        const bgVideo = document.getElementById('bgVideo');
+
+        if (overlay) overlay.classList.add('hidden');
+        if (ytPlayer) ytPlayer.src = "https://www.youtube.com/embed/hVFaaUEIpzE?start=103&autoplay=1";
+        if (bgVideo) {
+            bgVideo.muted = false;
+            bgVideo.play().catch(e => console.log("Autoplay blocked:", e));
+        }
+    });
+}
+
 // --- DOM Elements ---
 const loggedOutNav = document.getElementById('loggedOutNav');
 const loggedInNav = document.getElementById('loggedInNav');
@@ -10,23 +28,20 @@ const guestPenNameInput = document.getElementById('guestPenName');
 const commentGuestName = document.getElementById('commentGuestName');
 const authModal = document.getElementById('authModal');
 const mainNav = document.getElementById('mainNav');
-
-// New Info Elements
 const infoBtn = document.getElementById('infoBtn');
 const aboutModal = document.getElementById('aboutModal');
 
-// Upload & Profile Elements
-const changeAvatarBtn = document.getElementById('changeAvatarBtn');
-const avatarUploadInput = document.createElement('input'); 
-avatarUploadInput.type = 'file';
-avatarUploadInput.accept = 'image/*';
-
-// Settings Elements
+// Settings Elements (Wrapped in try/catch later to prevent crashes)
 const updateUsernameInput = document.getElementById('updateUsernameInput');
 const saveUsernameBtn = document.getElementById('saveUsernameBtn');
 const newPasswordInput = document.getElementById('newPasswordInput');
 const changePasswordBtn = document.getElementById('changePasswordBtn');
 const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+const changeAvatarBtn = document.getElementById('changeAvatarBtn');
+
+const avatarUploadInput = document.createElement('input'); 
+avatarUploadInput.type = 'file';
+avatarUploadInput.accept = 'image/*';
 
 let currentUser = null;
 let currentProfile = null;
@@ -59,21 +74,26 @@ window.addEventListener('scroll', () => {
     if (window.scrollY > 50) mainNav.classList.add('scrolled');
     else mainNav.classList.remove('scrolled');
 });
-document.querySelector('.logo').addEventListener('click', () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-});
+if(document.querySelector('.logo')) {
+    document.querySelector('.logo').addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+}
 
 // --- MODALS ---
-infoBtn.addEventListener('click', () => aboutModal.classList.remove('hidden'));
+if(infoBtn) infoBtn.addEventListener('click', () => aboutModal.classList.remove('hidden'));
 
 function closeAllModals() { document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden')); }
 window.onclick = (e) => { if (e.target.classList.contains('modal')) closeAllModals(); };
 
 // --- AUTHENTICATION ---
 let isSignUp = false;
-document.getElementById('navLoginBtn').addEventListener('click', () => authModal.classList.remove('hidden'));
+if(document.getElementById('navLoginBtn')) {
+    document.getElementById('navLoginBtn').addEventListener('click', () => authModal.classList.remove('hidden'));
+}
 
-document.querySelector('.auth-link').addEventListener('click', () => {
+// Fixed the arguments.callee issue for modern strict compliance
+function toggleAuthMode() {
     isSignUp = !isSignUp;
     document.getElementById('authTitle').innerText = isSignUp ? "Sign Up" : "Log In";
     document.getElementById('authActionBtn').innerText = isSignUp ? "Sign Up & Log In" : "Log In"; 
@@ -81,8 +101,14 @@ document.querySelector('.auth-link').addEventListener('click', () => {
     document.getElementById('switchAuthMode').innerHTML = isSignUp ? 
         "Already have an account? <span class='auth-link'>Log In</span>" : 
         "Don't have an account? <span class='auth-link'>Sign Up</span>";
-    document.querySelector('.auth-link').addEventListener('click', arguments.callee);
-});
+    
+    // Re-attach event listener to the new span
+    document.querySelector('.auth-link').addEventListener('click', toggleAuthMode);
+}
+// Attach initial listener
+if(document.querySelector('.auth-link')) {
+    document.querySelector('.auth-link').addEventListener('click', toggleAuthMode);
+}
 
 document.getElementById('authActionBtn').addEventListener('click', async () => {
     const email = document.getElementById('emailInput').value;
@@ -112,7 +138,9 @@ document.getElementById('authActionBtn').addEventListener('click', async () => {
     }
 });
 
-document.getElementById('logoutBtn').addEventListener('click', async () => { await supabase.auth.signOut(); });
+if(document.getElementById('logoutBtn')) {
+    document.getElementById('logoutBtn').addEventListener('click', async () => { await supabase.auth.signOut(); });
+}
 
 async function fetchUserProfile() {
     if(!currentUser) return;
@@ -151,7 +179,6 @@ async function fetchStories() {
     stories.forEach(story => {
         const card = document.createElement('div');
         card.className = 'story-card';
-        // Only click to read if not clicking a button
         card.onclick = (e) => {
             if(!e.target.closest('button') && !e.target.closest('.menu-container')) openReadModal(story);
         };
@@ -169,7 +196,6 @@ async function fetchStories() {
             username = story.guest_name + " (Guest)";
         }
 
-        // Check if user has voted
         const userIdKey = currentUser ? currentUser.id : 'guest';
         const hasVoted = JSON.parse(localStorage.getItem(`voted_stories_${userIdKey}`))?.includes(story.id);
 
@@ -193,9 +219,7 @@ async function fetchStories() {
                 </div>
                 ${menuHtml}
             </div>
-            
             <div class="story-text" id="story-text-${story.id}">${escapeHtml(story.content)}</div>
-            
             <div class="story-meta">
                 <button id="btn-${story.id}" class="vote-btn ${hasVoted ? 'voted' : ''}" onclick="toggleVote(event, ${story.id}, ${story.votes})">
                     ${hasVoted ? '❤️' : '🤍'} <span>${story.votes}</span>
@@ -209,6 +233,7 @@ async function fetchStories() {
 
 function renderLeaderboard(stories) {
     const container = document.getElementById('topStories');
+    if(!container) return;
     container.innerHTML = '';
     stories.forEach(story => {
         if (story.votes > 0) {
@@ -223,40 +248,36 @@ function renderLeaderboard(stories) {
 }
 
 // --- ACTIONS & VOTING ---
-document.getElementById('publishBtn').addEventListener('click', async () => {
-    const text = document.getElementById('mainStoryInput').value;
-    const guestName = document.getElementById('guestPenName').value;
-    if (!text) return alert("Write something first!");
-    const payload = { content: text, votes: 0 };
-    if (currentUser) { payload.user_id = currentUser.id; } 
-    else {
-        if (!guestName) return alert("Please enter a Pen Name to post as a Guest!");
-        payload.guest_name = guestName;
-    }
-    const { error } = await supabase.from('stories').insert([payload]);
-    if (error) alert(error.message); else {
-        document.getElementById('mainStoryInput').value = '';
-        document.getElementById('guestPenName').value = '';
-        fetchStories();
-    }
-});
+if(document.getElementById('publishBtn')) {
+    document.getElementById('publishBtn').addEventListener('click', async () => {
+        const text = document.getElementById('mainStoryInput').value;
+        const guestName = document.getElementById('guestPenName').value;
+        if (!text) return alert("Write something first!");
+        const payload = { content: text, votes: 0 };
+        if (currentUser) { payload.user_id = currentUser.id; } 
+        else {
+            if (!guestName) return alert("Please enter a Pen Name to post as a Guest!");
+            payload.guest_name = guestName;
+        }
+        const { error } = await supabase.from('stories').insert([payload]);
+        if (error) alert(error.message); else {
+            document.getElementById('mainStoryInput').value = '';
+            document.getElementById('guestPenName').value = '';
+            fetchStories();
+        }
+    });
+}
 
 async function toggleVote(event, id, currentVotes) {
     event.stopPropagation();
-    
-    // Use User ID or 'guest' to key the local storage
     const userIdKey = currentUser ? currentUser.id : 'guest';
     const storageKey = `voted_stories_${userIdKey}`;
     
     let votedStories = JSON.parse(localStorage.getItem(storageKey)) || [];
     const hasVoted = votedStories.includes(id);
 
-    if (hasVoted) { 
-        alert("You have already voted for this story.");
-        return; 
-    }
+    if (hasVoted) { return alert("You have already voted for this story."); }
 
-    // Optimistic Update
     const newVotes = currentVotes + 1; 
     votedStories.push(id); 
     localStorage.setItem(storageKey, JSON.stringify(votedStories));
@@ -265,28 +286,19 @@ async function toggleVote(event, id, currentVotes) {
     if(btnElement) {
         btnElement.innerHTML = `❤️ <span>${newVotes}</span>`;
         btnElement.classList.add('voted');
-        btnElement.onclick = null; // Disable click visually
+        btnElement.onclick = null;
     }
-
     const { error } = await supabase.from('stories').update({ votes: newVotes }).eq('id', id);
-    if (error) {
-        console.error("Vote failed", error);
-        // Revert if error
-        votedStories = votedStories.filter(sid => sid !== id);
-        localStorage.setItem(storageKey, JSON.stringify(votedStories));
-        fetchStories();
-    }
+    if (error) fetchStories();
 }
 
 // --- EDIT & DELETE (3 DOTS) ---
 window.toggleMenu = function(btn) {
-    // Close others
     document.querySelectorAll('.menu-dropdown').forEach(d => {
         if(d !== btn.nextElementSibling) d.classList.remove('show');
     });
     btn.nextElementSibling.classList.toggle('show');
 }
-// Close menus when clicking elsewhere
 window.addEventListener('click', (e) => {
     if(!e.target.matches('.menu-trigger')) {
         document.querySelectorAll('.menu-dropdown').forEach(d => d.classList.remove('show'));
@@ -297,7 +309,6 @@ window.deleteStory = async function(id) {
     if(confirm("Are you sure you want to delete this story?")) {
         await supabase.from('stories').delete().eq('id', id);
         fetchStories();
-        // If profile modal is open, refresh that too
         if(!document.getElementById('profileModal').classList.contains('hidden')) {
             document.getElementById('navProfileBtn').click();
         }
@@ -305,7 +316,6 @@ window.deleteStory = async function(id) {
 };
 
 window.editStoryInit = function(id) {
-    // Replace text with textarea
     const textDiv = document.getElementById(`story-text-${id}`);
     const currentText = textDiv.innerText;
     textDiv.innerHTML = `
@@ -346,8 +356,6 @@ async function fetchComments(storyId) {
         const div = document.createElement('div');
         div.className = 'comment-item';
         let cUser = c.profiles ? c.profiles.username : (c.guest_name ? c.guest_name + " (Guest)" : 'Guest');
-        
-        // 3-dots for comments
         let menuHtml = '';
         if(currentUser && c.user_id === currentUser.id) {
             menuHtml = `
@@ -358,14 +366,7 @@ async function fetchComments(storyId) {
                 </div>
             </div>`;
         }
-
-        div.innerHTML = `
-            <div style="flex-grow:1;">
-                <span class="comment-author">@${cUser}</span>
-                <div>${escapeHtml(c.content)}</div>
-            </div>
-            ${menuHtml}
-        `;
+        div.innerHTML = `<div style="flex-grow:1;"><span class="comment-author">@${cUser}</span><div>${escapeHtml(c.content)}</div></div>${menuHtml}`;
         list.appendChild(div);
     });
 }
@@ -392,68 +393,91 @@ document.getElementById('postCommentBtn').addEventListener('click', async () => 
     fetchComments(activeStoryId);
 });
 
-// --- PROFILE & SETTINGS ---
-document.getElementById('navProfileBtn').addEventListener('click', async () => {
-    document.getElementById('profileNameDisplay').innerText = currentProfile.username;
-    document.getElementById('profileAvatar').src = currentProfile.avatar_url || 'https://i.imgur.com/6UD0njE.png';
-    document.getElementById('profileModal').classList.remove('hidden');
-    
-    // Load My Stories for management
-    const { data: myStories } = await supabase.from('stories').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
-    const list = document.getElementById('myStoriesList');
-    list.innerHTML = '';
-    myStories.forEach(story => {
-        const div = document.createElement('div');
-        div.className = 'my-story-item';
-        div.innerHTML = `<div><p>${story.content.substring(0, 30)}...</p><small>❤️ ${story.votes}</small></div><button class="btn-delete" onclick="deleteStory(${story.id})">Delete</button>`;
-        list.appendChild(div);
+// --- PROFILE & SETTINGS (Robust Checks) ---
+if(document.getElementById('navProfileBtn')) {
+    document.getElementById('navProfileBtn').addEventListener('click', async () => {
+        document.getElementById('profileNameDisplay').innerText = currentProfile.username;
+        document.getElementById('profileAvatar').src = currentProfile.avatar_url || 'https://i.imgur.com/6UD0njE.png';
+        document.getElementById('profileModal').classList.remove('hidden');
+        
+        const { data: myStories } = await supabase.from('stories').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+        const list = document.getElementById('myStoriesList');
+        list.innerHTML = '';
+        myStories.forEach(story => {
+            const div = document.createElement('div');
+            div.className = 'my-story-item';
+            div.innerHTML = `<div><p>${story.content.substring(0, 30)}...</p><small>❤️ ${story.votes}</small></div><button class="btn-delete" onclick="deleteStory(${story.id})">Delete</button>`;
+            list.appendChild(div);
+        });
     });
-});
+}
 
-changeAvatarBtn.addEventListener('click', () => avatarUploadInput.click());
-avatarUploadInput.addEventListener('change', async (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${currentUser.id}-${Math.random()}.${fileExt}`;
-    const { error: uploadError } = await supabase.storage.from('avatars').upload(fileName, file);
-    if (uploadError) return alert(uploadError.message);
-    const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(fileName);
-    await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', currentUser.id);
-    currentProfile.avatar_url = publicUrl;
-    document.getElementById('profileAvatar').src = publicUrl;
-    updateUI();
-});
-
-// Update Username
-saveUsernameBtn.addEventListener('click', async () => {
-    const newName = updateUsernameInput.value;
-    if(!newName) return;
-    const { error } = await supabase.from('profiles').update({ username: newName }).eq('id', currentUser.id);
-    if(error) alert("Error updating name");
-    else {
-        alert("Username updated!");
-        currentProfile.username = newName;
+if(changeAvatarBtn) {
+    changeAvatarBtn.addEventListener('click', () => avatarUploadInput.click());
+    avatarUploadInput.addEventListener('change', async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${currentUser.id}-${Math.random()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage.from('avatars').upload(fileName, file);
+        if (uploadError) return alert(uploadError.message);
+        const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(fileName);
+        await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', currentUser.id);
+        currentProfile.avatar_url = publicUrl;
+        document.getElementById('profileAvatar').src = publicUrl;
         updateUI();
-        document.getElementById('profileNameDisplay').innerText = newName;
-        updateUsernameInput.value = '';
-    }
+    });
+}
+
+// SAFEGUARDS for settings buttons
+if(saveUsernameBtn) {
+    saveUsernameBtn.addEventListener('click', async () => {
+        const newName = updateUsernameInput.value;
+        if(!newName) return;
+        const { error } = await supabase.from('profiles').update({ username: newName }).eq('id', currentUser.id);
+        if(error) alert("Error updating name");
+        else {
+            alert("Username updated!");
+            currentProfile.username = newName;
+            updateUI();
+            document.getElementById('profileNameDisplay').innerText = newName;
+            updateUsernameInput.value = '';
+        }
+    });
+}
+
+if(changePasswordBtn) {
+    changePasswordBtn.addEventListener('click', async () => {
+        const newPass = newPasswordInput.value;
+        if(!newPass) return alert("Enter a new password");
+        const { error } = await supabase.auth.updateUser({ password: newPass });
+        if(error) alert(error.message);
+        else {
+            alert("Password changed successfully!");
+            newPasswordInput.value = '';
+        }
+    });
+}
+
+if(deleteAccountBtn) {
+    deleteAccountBtn.addEventListener('click', async () => {
+        if(confirm("⚠️ ARE YOU SURE? This will delete your profile data. You cannot undo this.")) {
+            await supabase.from('profiles').delete().eq('id', currentUser.id);
+            await supabase.auth.signOut();
+            closeAllModals();
+            alert("Account deleted.");
+            location.reload();
+        }
+    });
+}
+
+function escapeHtml(text) { if (!text) return ""; return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
+
+document.getElementById('mainStoryInput').addEventListener('input', (e) => {
+    const currentLength = e.target.value.length;
+    document.getElementById('charCount').innerText = currentLength;
+    if (currentLength >= 1900) document.getElementById('charCount').style.color = "#e76f51"; 
+    else document.getElementById('charCount').style.color = "#ccd5ae"; 
 });
 
-// Change Password
-changePasswordBtn.addEventListener('click', async () => {
-    const newPass = newPasswordInput.value;
-    if(!newPass) return alert("Enter a new password");
-    // Supabase allows updating password without old password if session is active
-    const { error } = await supabase.auth.updateUser({ password: newPass });
-    if(error) alert(error.message);
-    else {
-        alert("Password changed successfully!");
-        newPasswordInput.value = '';
-    }
-});
-
-// Delete Account
-deleteAccountBtn.addEventListener('click', async () => {
-    if(confirm("⚠️ ARE YOU SURE? This will delete your profile data. You cannot undo this.")) {
-        // 1. Delete Profile (Cascades stories/comments if set up in
+init();
