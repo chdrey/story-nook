@@ -27,7 +27,8 @@ body {
 }
 
 nav {
-    display: flex; justify-content: space-between; padding: 20px 40px;
+    display: flex; justify-content: space-between; align-items: center; /* Ensures vertical centering */
+    padding: 20px 40px;
     background: var(--glass); position: sticky; top: 0; z-index: 100;
     border-bottom: 1px solid rgba(255,255,255,0.1);
 }
@@ -40,25 +41,40 @@ main { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
     background: var(--accent); color: #2c1e16; border: none;
     padding: 10px 25px; border-radius: 20px; cursor: pointer;
     font-weight: bold; transition: transform 0.2s;
-    white-space: nowrap; /* Keeps text on one line */
+    white-space: nowrap; 
 }
 .btn-primary:hover { transform: scale(1.05); }
 
 .btn-secondary {
     background: transparent; border: 1px solid var(--accent);
     color: var(--accent); padding: 8px 16px; border-radius: 20px; cursor: pointer;
+    white-space: nowrap; /* FIX 3: Forces "Log In" to stay on one line */
 }
 
 .hero {
     text-align: center; margin-bottom: 30px; background: var(--glass);
     padding: 30px; border-radius: 15px;
 }
+
+/* FIX 1: Responsive Video Wrapper */
 .video-wrapper {
-    margin: 20px 0; border-radius: 10px; overflow: hidden;
+    margin: 20px 0; 
+    border-radius: 10px; 
+    overflow: hidden;
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%; /* This creates a 16:9 Aspect Ratio */
+    height: 0;
+}
+.video-wrapper iframe {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
 }
 
-/* WRITING ZONE (Updated) */
+/* WRITING ZONE */
 .writing-zone {
     background: rgba(255, 255, 255, 0.08);
     padding: 25px;
@@ -68,35 +84,25 @@ main { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
 }
 .writing-zone textarea {
     width: 100%; height: 150px;
-    background: transparent;
-    border: none;
-    color: var(--text-main);
-    font-family: var(--font-body);
-    font-size: 1.2rem;
-    resize: vertical;
-    outline: none;
-    margin-bottom: 15px;
+    background: transparent; border: none;
+    color: var(--text-main); font-family: var(--font-body);
+    font-size: 1.2rem; resize: vertical; outline: none; margin-bottom: 15px;
 }
 .writing-zone textarea::placeholder { color: rgba(250, 237, 205, 0.5); }
 
-/* Action Bar: Holds Pen Name + Button */
+/* Action Bar */
 .action-bar {
     display: flex;
-    justify-content: flex-end; /* Pushes button to right */
+    justify-content: flex-end; 
     gap: 15px;
     align-items: center;
     border-top: 1px solid rgba(255,255,255,0.1);
     padding-top: 15px;
 }
 
-/* Pen Name Input */
 #guestPenName {
-    background: rgba(0,0,0,0.2);
-    border: 1px solid var(--text-muted);
-    color: white;
-    padding: 10px;
-    border-radius: 5px;
-    width: 200px;
+    background: rgba(0,0,0,0.2); border: 1px solid var(--text-muted);
+    color: white; padding: 10px; border-radius: 5px; width: 200px;
 }
 
 /* Stories Feed */
@@ -108,5 +114,33 @@ main { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
 .story-meta { display: flex; justify-content: space-between; color: var(--text-muted); }
 .vote-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem; }
 .vote-btn.voted { color: var(--accent); }
-
 .hidden { display: none; }
+
+/* FIXES FOR MOBILE PHONES */
+@media (max-width: 600px) {
+    /* 1. Stack the Action Bar (Input on top of Button) */
+    .action-bar {
+        flex-direction: column;
+        align-items: stretch; /* Makes them full width */
+    }
+    #guestPenName {
+        width: 100%; /* FIX 2: Full width so it doesn't trail off */
+        margin-bottom: 10px;
+    }
+    .btn-primary {
+        width: 100%;
+    }
+    
+    /* 2. Shrink Nav Padding */
+    nav {
+        padding: 15px;
+    }
+    .logo {
+        font-size: 1.2rem;
+    }
+    
+    /* 3. Adjust Padding for main content */
+    main {
+        padding: 20px 10px;
+    }
+}
