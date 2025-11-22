@@ -4,8 +4,8 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // --- DOM Elements ---
-const navLoginBtn = document.getElementById('navLoginBtn');
-const userNavProfile = document.getElementById('userNavProfile');
+const loggedOutNav = document.getElementById('loggedOutNav');
+const loggedInNav = document.getElementById('loggedInNav');
 const guestPenNameInput = document.getElementById('guestPenName');
 const commentGuestName = document.getElementById('commentGuestName');
 const authModal = document.getElementById('authModal');
@@ -43,12 +43,17 @@ document.getElementById('navLoginBtn').addEventListener('click', () => {
     authModal.classList.remove('hidden');
 });
 
-document.getElementById('switchAuthMode').addEventListener('click', () => {
+document.querySelector('.auth-link').addEventListener('click', () => {
     isSignUp = !isSignUp;
     document.getElementById('authTitle').innerText = isSignUp ? "Sign Up" : "Log In";
-    document.getElementById('authActionBtn').innerText = isSignUp ? "Sign Up & Log In" : "Log In"; // Updated Text
+    document.getElementById('authActionBtn').innerText = isSignUp ? "Sign Up & Log In" : "Log In"; 
     document.getElementById('usernameInput').classList.toggle('hidden', !isSignUp);
-    document.getElementById('switchAuthMode').innerHTML = isSignUp ? "Already have an account? <span>Log In</span>" : "Don't have an account? <span>Sign Up</span>";
+    document.getElementById('switchAuthMode').innerHTML = isSignUp ? 
+        "Already have an account? <span class='auth-link'>Log In</span>" : 
+        "Don't have an account? <span class='auth-link'>Sign Up</span>";
+    
+    // Re-attach listener because innerHTML replaced the element
+    document.querySelector('.auth-link').addEventListener('click', arguments.callee);
 });
 
 document.getElementById('authActionBtn').addEventListener('click', async () => {
@@ -65,17 +70,12 @@ document.getElementById('authActionBtn').addEventListener('click', async () => {
         if (isSignUp) {
             if(!username) return errorMsg.innerText = "Pen name required.";
             
-            // Sign Up
-            const { data, error } = await supabase.auth.signUp({
+            const { error } = await supabase.auth.signUp({
                 email, password,
                 options: { data: { username: username } }
             });
             if (error) throw error;
-
-            // AUTO-LOGIN logic is handled by Supabase automatically if "Confirm Email" is off.
-            // The onAuthStateChange listener will catch it and update the UI.
             alert("Welcome, " + username + "!");
-            
         } else {
             const { error } = await supabase.auth.signInWithPassword({ email, password });
             if (error) throw error;
@@ -97,21 +97,20 @@ async function fetchUserProfile() {
 }
 
 function updateUI() {
-    // This function controls showing/hiding elements based on login status
     if (currentUser && currentProfile) {
         // LOGGED IN VIEW
-        navLoginBtn.parentElement.classList.add('hidden'); // Hide login button + tooltip
-        userNavProfile.classList.remove('hidden');
+        loggedOutNav.classList.add('hidden');
+        loggedInNav.classList.remove('hidden');
         
         guestPenNameInput.classList.add('hidden'); // Hide guest input
-        commentGuestName.style.display = 'none';   // Hide comment guest input
+        commentGuestName.style.display = 'none';
 
         document.getElementById('navUsername').innerText = currentProfile.username;
         document.getElementById('navAvatar').src = currentProfile.avatar_url || 'https://i.imgur.com/6UD0njE.png';
     } else {
         // GUEST VIEW
-        navLoginBtn.parentElement.classList.remove('hidden');
-        userNavProfile.classList.add('hidden');
+        loggedOutNav.classList.remove('hidden');
+        loggedInNav.classList.add('hidden');
         
         guestPenNameInput.classList.remove('hidden'); // Show guest input
         commentGuestName.style.display = 'block';     // Show comment guest input
@@ -123,7 +122,6 @@ async function fetchStories() {
     const feed = document.getElementById('storyFeed');
     feed.innerHTML = '<p style="text-align:center;">Loading...</p>';
 
-    // Note: We now select user_id AND guest_name
     const { data: stories, error } = await supabase
         .from('stories')
         .select(`*, profiles (username, avatar_url), comments (count)`)
@@ -142,9 +140,9 @@ async function fetchStories() {
 
         const commentCount = story.comments ? story.comments[0].count : 0;
         
-        // HYBRID DISPLAY LOGIC: Check if Profile exists, otherwise use Guest Name
-        let avatar = 'https://i.imgur.com/6UD0njE.png'; // Default
-        let username = 'Anonymous';
+        // HYBRID DISPLAY LOGIC: Check if Profile exists, otherwise use Guest Name OR 'Guest'
+        let avatar = 'https://i.imgur.com/6UD0njE.png'; 
+        let username = 'Guest';
 
         if (story.profiles) {
             avatar = story.profiles.avatar_url;
@@ -173,7 +171,7 @@ function renderLeaderboard(stories) {
     container.innerHTML = '';
     stories.forEach(story => {
         if (story.votes > 0) {
-            let username = story.profiles ? story.profiles.username : (story.guest_name || 'Anonymous');
+            let username = story.profiles ? story.profiles.username : (story.guest_name || 'Guest');
             
             const div = document.createElement('div');
             div.className = 'story-card'; 
@@ -197,7 +195,6 @@ document.getElementById('publishBtn').addEventListener('click', async () => {
         votes: 0
     };
 
-    // Logic: Are you logged in?
     if (currentUser) {
         payload.user_id = currentUser.id;
     } else {
@@ -217,7 +214,7 @@ document.getElementById('publishBtn').addEventListener('click', async () => {
     }
 });
 
-// --- VOTING (Restored LocalStorage Check) ---
+// --- VOTING ---
 async function toggleVote(event, id, currentVotes) {
     event.stopPropagation();
 
@@ -243,17 +240,17 @@ async function toggleVote(event, id, currentVotes) {
     }
 
     const { error } = await supabase.from('stories').update({ votes: newVotes }).eq('id', id);
-    if (error) fetchStories(); // Revert if error
+    if (error) fetchStories(); 
 }
 
-// --- READ MODAL & COMMENTS (Hybrid) ---
+// --- READ MODAL & COMMENTS ---
 let activeStoryId = null;
 
 async function openReadModal(story) {
     activeStoryId = story.id;
     const modal = document.getElementById('readModal');
     
-    let username = story.profiles ? story.profiles.username : (story.guest_name || 'Anonymous');
+    let username = story.profiles ? story.profiles.username : (story.guest_name || 'Guest');
     
     document.getElementById('readModalAuthor').innerText = "By @" + username;
     document.getElementById('readModalText').innerText = story.content;
@@ -277,8 +274,7 @@ async function fetchComments(storyId) {
         const div = document.createElement('div');
         div.className = 'comment-item';
         
-        // Hybrid Comment Name Logic
-        let cUser = c.profiles ? c.profiles.username : (c.guest_name ? c.guest_name + " (Guest)" : 'Anonymous');
+        let cUser = c.profiles ? c.profiles.username : (c.guest_name ? c.guest_name + " (Guest)" : 'Guest');
         
         div.innerHTML = `<div class="comment-author">@${cUser}</div><div>${escapeHtml(c.content)}</div>`;
         list.appendChild(div);
@@ -309,7 +305,7 @@ document.getElementById('postCommentBtn').addEventListener('click', async () => 
     fetchComments(activeStoryId);
 });
 
-// --- PROFILE & UTILS (Same as before) ---
+// --- PROFILE & UTILS ---
 document.getElementById('navProfileBtn').addEventListener('click', async () => {
     document.getElementById('profileName').innerText = currentProfile.username;
     document.getElementById('profileAvatar').src = currentProfile.avatar_url || 'https://i.imgur.com/6UD0njE.png';
@@ -350,6 +346,17 @@ document.getElementById('enterBtn').addEventListener('click', () => {
     document.getElementById('youtubePlayer').src = "https://www.youtube.com/embed/hVFaaUEIpzE?start=103&autoplay=1";
     document.getElementById('bgVideo').muted = false;
     document.getElementById('bgVideo').play();
+});
+
+// Updated for 2000 character limit
+document.getElementById('mainStoryInput').addEventListener('input', (e) => {
+    const currentLength = e.target.value.length;
+    document.getElementById('charCount').innerText = currentLength;
+    if (currentLength >= 1900) {
+        document.getElementById('charCount').style.color = "#e76f51"; 
+    } else {
+        document.getElementById('charCount').style.color = "#ccd5ae"; 
+    }
 });
 
 init();
