@@ -48,7 +48,6 @@ nav.scrolled {
     background: rgba(20, 15, 10, 0.98); 
     padding: 10px 20px;
 }
-/* Hide controls on scroll */
 nav.scrolled .user-controls,
 nav.scrolled .save-prompt {
     opacity: 0; pointer-events: none; display: none;
@@ -75,6 +74,17 @@ nav.scrolled { justify-content: center; }
 .switch-text { margin-top: 15px; font-size: 0.9rem; color: #ccc; }
 .auth-link { color: var(--accent); font-weight: bold; text-decoration: underline; cursor: pointer; font-size: 1rem; }
 
+/* === SETTINGS SECTION === */
+.settings-section {
+    background: rgba(0,0,0,0.03);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 1px solid #d4a37355;
+}
+.settings-grid { display: flex; gap: 10px; align-items: center; }
+.error-text { color: #e76f51; font-size: 0.9rem; margin-top: 10px; }
+
 /* === GENERAL UI === */
 #welcomeOverlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -97,24 +107,14 @@ nav.scrolled { justify-content: center; }
 .hero { text-align: center; margin-bottom: 30px; background: var(--glass); padding: 30px; border-radius: 15px; }
 
 .hero-header-row {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 20px;
-    width: 100%;
+    display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 20px; width: 100%;
 }
-
-.hero h2 {
-    font-size: 1.5rem; margin: 0; /* Reset margin so flex controls gap */
-}
-
+.hero h2 { font-size: 1.5rem; margin: 0; }
 .info-icon {
     background: none; border: 1px solid var(--text-muted); 
     color: var(--text-muted); border-radius: 50%; width: 24px; height: 24px;
     display: flex; justify-content: center; align-items: center;
-    cursor: pointer; font-size: 0.9rem; transition: all 0.2s;
-    flex-shrink: 0; /* Prevents icon from being squished */
+    cursor: pointer; font-size: 0.9rem; transition: all 0.2s; flex-shrink: 0;
 }
 .info-icon:hover { color: var(--accent); border-color: var(--accent); transform: scale(1.1); }
 
@@ -122,11 +122,13 @@ nav.scrolled { justify-content: center; }
 .writing-zone, .story-card { 
     background: var(--glass); padding: 25px; border-radius: 10px; 
     margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.1); 
+    position: relative;
 }
 
+/* --- UPDATED: 400px Text Box --- */
 .writing-zone textarea {
     width: 100%; 
-    height: 400px; 
+    height: 400px; /* UPDATED SIZE */
     background: transparent; border: none;
     color: var(--text-main); font-family: var(--font-body);
     font-size: 1.2rem; resize: vertical; outline: none; margin-bottom: 5px;
@@ -145,7 +147,8 @@ input, textarea { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid va
 .btn-primary:hover { transform: scale(1.05); }
 .btn-primary.large { font-size: 1.2rem; padding: 15px 40px; }
 .btn-secondary { background: transparent; border: 1px solid var(--accent); color: var(--accent); padding: 8px 16px; border-radius: 20px; cursor: pointer; white-space: nowrap; }
-.btn-delete { background: #e76f51; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; }
+.btn-delete { background: #e76f51; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-size: 0.9rem; font-weight: bold; }
+.btn-delete:hover { background: #c54b30; }
 
 /* Story Cards */
 .story-card { border-left: 4px solid var(--accent); cursor: pointer; transition: background 0.2s; }
@@ -153,12 +156,30 @@ input, textarea { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid va
 .story-text { font-family: var(--font-body); font-size: 1.2rem; margin-bottom: 15px; white-space: pre-wrap; max-height: 150px; overflow: hidden; text-overflow: ellipsis; position: relative; }
 .story-text::after { content: ""; position: absolute; bottom: 0; left: 0; width: 100%; height: 40px; background: linear-gradient(to bottom, transparent, rgba(20, 15, 10, 0.9)); }
 .story-meta { display: flex; justify-content: space-between; color: var(--text-muted); align-items: center; }
-.vote-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem; z-index: 10; padding: 5px 10px; border-radius: 20px; }
-.vote-btn.voted { color: #e76f51; }
+.vote-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem; z-index: 10; padding: 5px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 5px; }
+.vote-btn.voted { color: #e76f51; font-weight: bold; }
+
+/* === DROP DOWN MENU (3 DOTS) === */
+.menu-container { position: relative; }
+.menu-trigger { background: transparent; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; padding: 0 10px; }
+.menu-dropdown {
+    display: none; position: absolute; right: 0; top: 100%; 
+    background: #3d2b20; border: 1px solid var(--accent); 
+    border-radius: 5px; z-index: 200; min-width: 100px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+}
+.menu-dropdown.show { display: block; }
+.menu-item {
+    display: block; width: 100%; padding: 10px; 
+    text-align: left; background: none; border: none; 
+    color: var(--text-main); cursor: pointer; font-size: 0.9rem;
+}
+.menu-item:hover { background: rgba(255,255,255,0.1); }
+.menu-item.delete { color: #e76f51; }
 
 .comments-section-wrapper { margin-top: 30px; border-top: 1px solid #ccc; padding-top: 20px; }
-.comment-item { background: rgba(0,0,0,0.05); padding: 10px; margin-bottom: 10px; border-radius: 5px; font-size: 0.95rem; }
-.comment-author { font-weight: bold; font-family: var(--font-ui); color: #8b5e3c; font-size: 0.85rem; }
+.comment-item { background: rgba(0,0,0,0.05); padding: 10px; margin-bottom: 10px; border-radius: 5px; font-size: 0.95rem; display: flex; justify-content: space-between; align-items: flex-start; }
+.comment-author { font-weight: bold; font-family: var(--font-ui); color: #8b5e3c; font-size: 0.85rem; display: block; }
 .comment-input-area { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
 
 .avatar-small { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); }
@@ -174,69 +195,23 @@ input, textarea { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid va
 
 /* === MOBILE STYLES === */
 @media (max-width: 600px) {
-    nav { 
-        display: block; 
-        text-align: center;
-        padding: 15px 10px;
-    }
-
-    .logo { 
-        width: 100%;
-        text-align: center;
-        margin-bottom: 10px; 
-        font-size: 1.4rem;
-    }
-
-    /* Controls Below */
-    .user-controls { 
-        display: flex; 
-        justify-content: center;
-        margin: 0 auto;
-        width: 100%;
-    }
-    
-    /* Force ROW layout for prompt + button */
-    .nav-group { 
-        flex-direction: row; 
-        width: auto; 
-        gap: 10px; 
-        justify-content: center;
-        align-items: center;
-    }
-
+    nav { display: block; text-align: center; padding: 15px 10px; }
+    .logo { width: 100%; text-align: center; margin-bottom: 10px; font-size: 1.4rem; }
+    .user-controls { display: flex; justify-content: center; margin: 0 auto; width: 100%; }
+    .nav-group { flex-direction: row; width: auto; gap: 10px; justify-content: center; align-items: center; }
     .save-prompt { display: inline-block; font-size: 0.75rem; }
     .btn-secondary { font-size: 0.8rem; padding: 6px 12px; }
-
-    /* Scroll Behavior */
     nav.scrolled .user-controls, nav.scrolled .save-prompt { display: none !important; }
     nav.scrolled { padding: 10px; border-bottom: none; }
     nav.scrolled .logo { margin-bottom: 0; transform: scale(0.9); }
-
-    /* General Layout */
     .action-bar { flex-direction: column; align-items: stretch; gap: 10px; }
     #guestPenName { width: 100%; max-width: 100%; margin: 0 0 10px 0; }
     .btn-primary { width: 100%; margin-bottom: 5px; }
     .welcome-content h1 { font-size: 1.8rem; }
     .modal-content.book-style { width: 95%; padding: 20px; }
     .modal-body-text { font-size: 1.1rem; }
-    
-    /* HERO HEADER FIX (Text + Icon on ONE line) */
-    .hero-header-row {
-        width: 100%;
-        margin-bottom: 25px; /* Spacing above video */
-        gap: 8px; /* Tight gap */
-    }
-    
-    .hero h2 {
-        font-size: 1rem;      
-        white-space: nowrap;  
-        width: auto; /* IMPORTANT: Lets icon sit next to it */
-        display: inline-block; /* Keeps it on the line */
-        margin: 0;
-    }
-    
-    .info-icon {
-        font-size: 0.8rem;
-        width: 20px; height: 20px;
-    }
+    .hero-header-row { width: 100%; margin-bottom: 25px; gap: 8px; }
+    .hero h2 { font-size: 1rem; white-space: nowrap; width: auto; display: inline-block; margin: 0; }
+    .info-icon { font-size: 0.8rem; width: 20px; height: 20px; }
+    .settings-grid { flex-direction: column; align-items: stretch; }
 }
