@@ -11,6 +11,16 @@ const commentGuestName = document.getElementById('commentGuestName');
 const authModal = document.getElementById('authModal');
 const mainNav = document.getElementById('mainNav');
 
+// New Info Elements
+const infoBtn = document.getElementById('infoBtn');
+const aboutModal = document.getElementById('aboutModal');
+
+// Upload Elements
+const changeAvatarBtn = document.getElementById('changeAvatarBtn');
+const avatarUploadInput = document.createElement('input'); // Created dynamically
+avatarUploadInput.type = 'file';
+avatarUploadInput.accept = 'image/*';
+
 let currentUser = null;
 let currentProfile = null;
 
@@ -37,24 +47,24 @@ async function init() {
     });
 }
 
-// --- SCROLL NAV ---
+// --- SCROLL & NAV ---
 window.addEventListener('scroll', () => {
-    if (window.scrollY > 50) {
-        mainNav.classList.add('scrolled');
-    } else {
-        mainNav.classList.remove('scrolled');
-    }
+    if (window.scrollY > 50) mainNav.classList.add('scrolled');
+    else mainNav.classList.remove('scrolled');
 });
 document.querySelector('.logo').addEventListener('click', () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
+// --- MODALS ---
+infoBtn.addEventListener('click', () => aboutModal.classList.remove('hidden'));
+
+function closeAllModals() { document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden')); }
+window.onclick = (e) => { if (e.target.classList.contains('modal')) closeAllModals(); };
+
 // --- AUTHENTICATION ---
 let isSignUp = false;
-
-document.getElementById('navLoginBtn').addEventListener('click', () => {
-    authModal.classList.remove('hidden');
-});
+document.getElementById('navLoginBtn').addEventListener('click', () => authModal.classList.remove('hidden'));
 
 document.querySelector('.auth-link').addEventListener('click', () => {
     isSignUp = !isSignUp;
@@ -72,8 +82,8 @@ document.getElementById('authActionBtn').addEventListener('click', async () => {
     const password = document.getElementById('passwordInput').value;
     const username = document.getElementById('usernameInput').value;
     const errorMsg = document.getElementById('authError');
-
     errorMsg.innerText = "";
+
     if(!email || !password) return errorMsg.innerText = "Please fill in all fields.";
 
     try {
@@ -95,9 +105,7 @@ document.getElementById('authActionBtn').addEventListener('click', async () => {
     }
 });
 
-document.getElementById('logoutBtn').addEventListener('click', async () => {
-    await supabase.auth.signOut();
-});
+document.getElementById('logoutBtn').addEventListener('click', async () => { await supabase.auth.signOut(); });
 
 async function fetchUserProfile() {
     if(!currentUser) return;
@@ -126,9 +134,7 @@ async function fetchStories() {
     const feed = document.getElementById('storyFeed');
     feed.innerHTML = '<p style="text-align:center;">Loading...</p>';
     const { data: stories, error } = await supabase
-        .from('stories')
-        .select(`*, profiles (username, avatar_url), comments (count)`)
-        .order('created_at', { ascending: false });
+        .from('stories').select(`*, profiles (username, avatar_url), comments (count)`).order('created_at', { ascending: false });
 
     if (error) return console.error(error);
     feed.innerHTML = '';
@@ -142,7 +148,7 @@ async function fetchStories() {
         let avatar = 'https://i.imgur.com/6UD0njE.png'; 
         let username = 'Guest';
         if (story.profiles) {
-            avatar = story.profiles.avatar_url;
+            avatar = story.profiles.avatar_url || 'https://i.imgur.com/6UD0njE.png';
             username = story.profiles.username;
         } else if (story.guest_name) {
             username = story.guest_name + " (Guest)";
@@ -177,17 +183,16 @@ function renderLeaderboard(stories) {
     });
 }
 
+// --- ACTIONS ---
 document.getElementById('publishBtn').addEventListener('click', async () => {
     const text = document.getElementById('mainStoryInput').value;
     const guestName = document.getElementById('guestPenName').value;
     if (!text) return alert("Write something first!");
     const payload = { content: text, votes: 0 };
-    if (currentUser) {
-        payload.user_id = currentUser.id;
-    } else {
+    if (currentUser) { payload.user_id = currentUser.id; } 
+    else {
         if (!guestName) return alert("Please enter a Pen Name to post as a Guest!");
         payload.guest_name = guestName;
-        payload.user_id = null;
     }
     const { error } = await supabase.from('stories').insert([payload]);
     if (error) alert(error.message); else {
@@ -202,14 +207,10 @@ async function toggleVote(event, id, currentVotes) {
     let votedStories = JSON.parse(localStorage.getItem('votedStories')) || [];
     let newVotes;
     const hasVoted = votedStories.includes(id);
-    if (hasVoted) {
-        newVotes = currentVotes - 1;
-        votedStories = votedStories.filter(storyId => storyId !== id);
-    } else {
-        newVotes = currentVotes + 1;
-        votedStories.push(id);
-    }
+    if (hasVoted) { newVotes = currentVotes - 1; votedStories = votedStories.filter(storyId => storyId !== id); } 
+    else { newVotes = currentVotes + 1; votedStories.push(id); }
     localStorage.setItem('votedStories', JSON.stringify(votedStories));
+    
     const btnElement = document.getElementById(`btn-${id}`);
     if(btnElement) {
         btnElement.innerHTML = (hasVoted ? '🤍 ' : '❤️ ') + `<span>${newVotes}</span>`;
@@ -220,6 +221,7 @@ async function toggleVote(event, id, currentVotes) {
     if (error) fetchStories(); 
 }
 
+// --- READ & COMMENTS ---
 let activeStoryId = null;
 async function openReadModal(story) {
     activeStoryId = story.id;
@@ -250,22 +252,22 @@ document.getElementById('postCommentBtn').addEventListener('click', async () => 
     const guestInput = document.getElementById('commentGuestName');
     if(!input.value) return;
     const payload = { content: input.value, story_id: activeStoryId };
-    if (currentUser) {
-        payload.user_id = currentUser.id;
-    } else {
+    if (currentUser) { payload.user_id = currentUser.id; } 
+    else {
         if(!guestInput.value) return alert("Please enter a name to comment!");
         payload.guest_name = guestInput.value;
-        payload.user_id = null;
     }
     await supabase.from('comments').insert(payload);
     input.value = '';
     fetchComments(activeStoryId);
 });
 
+// --- PROFILE ---
 document.getElementById('navProfileBtn').addEventListener('click', async () => {
     document.getElementById('profileName').innerText = currentProfile.username;
     document.getElementById('profileAvatar').src = currentProfile.avatar_url || 'https://i.imgur.com/6UD0njE.png';
     document.getElementById('profileModal').classList.remove('hidden');
+    
     const { data: myStories } = await supabase.from('stories').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
     const list = document.getElementById('myStoriesList');
     list.innerHTML = '';
@@ -277,12 +279,19 @@ document.getElementById('navProfileBtn').addEventListener('click', async () => {
     });
 });
 
-document.getElementById('changeAvatarBtn').addEventListener('click', async () => {
-    const newUrl = prompt("Enter new image URL:");
-    if(newUrl) {
-        await supabase.from('profiles').update({ avatar_url: newUrl }).eq('id', currentUser.id);
-        currentProfile.avatar_url = newUrl; updateUI(); document.getElementById('profileAvatar').src = newUrl;
-    }
+changeAvatarBtn.addEventListener('click', () => avatarUploadInput.click());
+avatarUploadInput.addEventListener('change', async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${currentUser.id}-${Math.random()}.${fileExt}`;
+    const { error: uploadError } = await supabase.storage.from('avatars').upload(fileName, file);
+    if (uploadError) return alert(uploadError.message);
+    const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(fileName);
+    await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', currentUser.id);
+    currentProfile.avatar_url = publicUrl;
+    document.getElementById('profileAvatar').src = publicUrl;
+    updateUI();
 });
 
 window.deleteStory = async function(id) {
@@ -292,8 +301,6 @@ window.deleteStory = async function(id) {
     }
 };
 
-function closeAllModals() { document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden')); }
-window.onclick = (e) => { if (e.target.classList.contains('modal')) closeAllModals(); };
 function escapeHtml(text) { if (!text) return ""; return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
 
 document.getElementById('enterBtn').addEventListener('click', () => {

@@ -8,13 +8,11 @@
     --font-ui: 'Nunito', sans-serif;
 }
 
-/* GLOBAL RESET */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
     font-family: var(--font-ui); color: var(--text-main); background-color: var(--warm-bg);
     overflow-x: hidden;
-    /* Removed the 'fadeInPage' animation here to stop the jank */
 }
 
 /* LAYOUT UTILITIES */
@@ -24,11 +22,8 @@ main { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
 
 /* === NAVIGATION === */
 nav {
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center;
-    padding: 25px 40px; 
-    background: var(--glass); 
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 25px 40px; background: var(--glass); 
     position: sticky; top: 0; z-index: 100;
     border-bottom: 1px solid rgba(255,255,255,0.1);
     transition: all 0.3s ease-in-out;
@@ -44,16 +39,9 @@ nav {
 .nav-group { display: flex; align-items: center; gap: 15px; }
 .save-prompt { font-size: 0.9rem; color: var(--text-muted); font-style: italic; white-space: nowrap; }
 
-/* === SCROLLED NAV STATE === */
-nav.scrolled {
-    background: rgba(20, 15, 10, 0.98); 
-    padding: 10px 20px;
-}
-/* Hide controls on scroll */
-nav.scrolled .user-controls,
-nav.scrolled .save-prompt {
-    opacity: 0; pointer-events: none; display: none;
-}
+/* SCROLLED NAV STATE */
+nav.scrolled { background: rgba(20, 15, 10, 0.98); padding: 10px 20px; }
+nav.scrolled .user-controls, nav.scrolled .save-prompt { opacity: 0; pointer-events: none; display: none; }
 nav.scrolled { justify-content: center; }
 
 /* === MODALS & AUTH === */
@@ -80,13 +68,11 @@ nav.scrolled { justify-content: center; }
 #welcomeOverlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background-color: var(--warm-bg); z-index: 9999;
-    display: flex; justify-content: center; align-items: center; 
-    transition: opacity 0.8s ease; /* Only animates when fading OUT */
+    display: flex; justify-content: center; align-items: center; transition: opacity 0.8s ease;
 }
 .welcome-content {
     text-align: center; padding: 40px; background: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--accent); border-radius: 15px; max-width: 600px; width: 90%;
-    /* Removed 'floatUp' animation */
 }
 .welcome-content h1 { font-family: var(--font-body); font-size: 2.5rem; color: var(--accent); margin-bottom: 20px; }
 .weekly-quote {
@@ -98,20 +84,33 @@ nav.scrolled { justify-content: center; }
 
 .hero { text-align: center; margin-bottom: 30px; background: var(--glass); padding: 30px; border-radius: 15px; }
 
+/* --- NEW HEADER WITH INFO BUTTON --- */
+.hero-header-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+.info-icon {
+    background: none; border: 1px solid var(--text-muted); 
+    color: var(--text-muted); border-radius: 50%; width: 24px; height: 24px;
+    display: flex; justify-content: center; align-items: center;
+    cursor: pointer; font-size: 0.9rem; transition: all 0.2s;
+}
+.info-icon:hover { color: var(--accent); border-color: var(--accent); transform: scale(1.1); }
+
 .writing-zone, .story-card { 
     background: var(--glass); padding: 25px; border-radius: 10px; 
     margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.1); 
 }
 
-/* --- WRITING BOX SIZE --- */
 .writing-zone textarea {
-    width: 100%; 
-    height: 400px; 
+    width: 100%; height: 400px; /* Fixed 400px */
     background: transparent; border: none;
     color: var(--text-main); font-family: var(--font-body);
     font-size: 1.2rem; resize: vertical; outline: none; margin-bottom: 5px;
 }
-
 .writing-zone textarea::placeholder { color: rgba(250, 237, 205, 0.5); }
 .char-counter { text-align: right; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px; }
 .action-bar { display: flex; justify-content: flex-end; gap: 15px; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; flex-wrap: wrap; }
@@ -154,63 +153,19 @@ input, textarea { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid va
 
 /* === MOBILE STYLES === */
 @media (max-width: 600px) {
-    nav { 
-        display: block; 
-        text-align: center;
-        padding: 15px 10px;
-    }
+    nav { display: block; text-align: center; padding: 15px 10px; }
+    .logo { width: 100%; text-align: center; margin-bottom: 10px; font-size: 1.4rem; }
+    .user-controls { display: flex; justify-content: center; margin: 0 auto; width: 100%; }
+    .nav-group { flex-direction: row; width: auto; gap: 10px; justify-content: center; align-items: center; }
+    .save-prompt { display: inline-block; font-size: 0.75rem; }
+    .btn-secondary { font-size: 0.8rem; padding: 6px 12px; }
 
-    .logo { 
-        width: 100%;
-        text-align: center;
-        margin-bottom: 10px; 
-        font-size: 1.4rem;
-    }
+    /* Scroll Behavior */
+    nav.scrolled .user-controls, nav.scrolled .save-prompt { display: none !important; }
+    nav.scrolled { padding: 10px; border-bottom: none; }
+    nav.scrolled .logo { margin-bottom: 0; transform: scale(0.9); }
 
-    /* 2. Controls Below - SINGLE LINE FIX */
-    .user-controls { 
-        display: flex; 
-        justify-content: center;
-        margin: 0 auto;
-        width: 100%;
-    }
-    
-    /* Force the nav group to be a ROW */
-    .nav-group { 
-        flex-direction: row; 
-        width: auto; 
-        gap: 10px; 
-        justify-content: center;
-        align-items: center;
-    }
-
-    /* 3. Unhide prompt and make it fit */
-    .save-prompt { 
-        display: inline-block; 
-        font-size: 0.75rem; 
-    }
-    
-    /* Adjust button size for mobile line */
-    .btn-secondary {
-        font-size: 0.8rem;
-        padding: 6px 12px;
-    }
-
-    /* 4. SCROLL BEHAVIOR */
-    nav.scrolled .user-controls,
-    nav.scrolled .save-prompt {
-        display: none !important;
-    }
-    nav.scrolled {
-        padding: 10px;
-        border-bottom: none;
-    }
-    nav.scrolled .logo {
-        margin-bottom: 0;
-        transform: scale(0.9);
-    }
-
-    /* General Mobile Layout */
+    /* General */
     .action-bar { flex-direction: column; align-items: stretch; gap: 10px; }
     #guestPenName { width: 100%; max-width: 100%; margin: 0 0 10px 0; }
     .btn-primary { width: 100%; margin-bottom: 5px; }
@@ -218,13 +173,20 @@ input, textarea { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid va
     .modal-content.book-style { width: 95%; padding: 20px; }
     .modal-body-text { font-size: 1.1rem; }
     
-    /* Text 25px above video */
+    /* HERO HEADER FIXES */
+    .hero-header-row {
+        width: 100%;
+        justify-content: center;
+        margin-bottom: 25px; /* 25px above player */
+    }
     .hero h2 {
         font-size: 1rem;      
         white-space: nowrap;  
-        width: 100%;          
         display: block;
-        margin-bottom: 25px; 
+        margin-bottom: 0; /* Margin handled by row now */
+    }
+    .info-icon {
+        font-size: 0.8rem;
+        width: 20px; height: 20px;
     }
 }
-

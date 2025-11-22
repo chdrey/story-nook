@@ -68,6 +68,24 @@
         </div>
     </div>
 
+    <div id="aboutModal" class="modal hidden">
+        <div class="modal-content book-style">
+            <span class="close-modal" onclick="closeAllModals()">&times;</span>
+            <h2 style="text-align:center; color:#d4a373; margin-bottom:20px;">About The Nook</h2>
+            <div class="modal-body-text" style="font-size: 1.1rem;">
+                <p>Welcome to <strong>The Story Nook</strong>, a digital hearth for writers, dreamers, and weary travelers.</p>
+                <p><strong>How it works:</strong></p>
+                <ul>
+                    <li>🔥 <strong>Watch:</strong> Every week, we feature a new ambience video to set the mood.</li>
+                    <li>✍️ <strong>Write:</strong> Let the scene inspire you. Write a flash-fiction story (up to 2,000 characters).</li>
+                    <li>❤️ <strong>Connect:</strong> Read stories by others, leave kind comments, and vote for your favorites.</li>
+                </ul>
+                <p>You can write as a Guest or create an account to save your stories to your profile.</p>
+                <p style="text-align:center; margin-top:20px; font-style:italic;">"Be kind, for everyone you meet is fighting a hard battle."</p>
+            </div>
+        </div>
+    </div>
+
     <nav id="mainNav">
         <div class="logo">The Story Nook 📚</div>
         
@@ -95,7 +113,11 @@
 
     <main>
         <section class="hero">
-            <h2>This Week's Inspiration</h2>
+            <div class="hero-header-row">
+                <h2>This Week's Inspiration</h2>
+                <button id="infoBtn" class="info-icon" aria-label="About">ⓘ</button>
+            </div>
+            
             <div class="video-wrapper">
                 <iframe id="youtubePlayer" src="" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
             </div>
