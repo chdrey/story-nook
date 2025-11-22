@@ -6,12 +6,20 @@
     <title>The Story Nook</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,700;1,300&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
+    <div id="welcomeOverlay">
+        <div class="welcome-content">
+            <h1>The Story Nook 📚</h1>
+            <p>A cozy place to write and relax.</p>
+            <button id="enterBtn" class="btn-primary large">Enter & Enable Sound</button>
+        </div>
+    </div>
+
     <div class="video-background">
-        <video autoplay muted loop playsinline id="bgVideo">
+        <video muted loop playsinline id="bgVideo">
             <source src="assets/fireplace.mp4" type="video/mp4">
         </video>
     </div>
@@ -32,14 +40,25 @@
         <section class="hero">
             <h2>This Week's Inspiration</h2>
             <div class="video-wrapper">
-                <iframe src="https://www.youtube.com/embed/L_LUpnjgPso?si=StartRelaxing" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                <iframe id="youtubePlayer" 
+                    src="" 
+                    title="YouTube video player" 
+                    frameborder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowfullscreen>
+                </iframe>
             </div>
         </section>
 
         <section class="writing-zone">
             <h3>Write your story here...</h3>
-            <textarea id="mainStoryInput" placeholder="The fire crackled, and suddenly..."></textarea>
             
+            <textarea id="mainStoryInput" maxlength="500" placeholder="The fire crackled, and suddenly..."></textarea>
+            
+            <div class="char-counter">
+                <span id="charCount">0</span>/500 characters
+            </div>
+
             <div class="action-bar">
                 <input type="text" id="guestPenName" placeholder="Pen Name">
                 <button id="publishBtn" class="btn-primary">Publish Story</button>

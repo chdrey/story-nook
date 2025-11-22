@@ -1,8 +1,9 @@
 // --- 1. CONFIGURATION ---
+// ✅ Keys are now automatically inserted
 const SUPABASE_URL = 'https://lypndarukqjtkyhxygwe.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5cG5kYXJ1a3FqdGt5aHh5Z3dlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3Nzc2NzAsImV4cCI6MjA3OTM1MzY3MH0.NE5Q1BFVsBDyKSUxHO--aR-jbSHSLW8klha7C7_VbUA';
 
-// Initialize the client (uses the CDN library from index.html)
+// Initialize the client
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // --- DOM Elements ---
@@ -13,6 +14,13 @@ const topStoriesContainer = document.getElementById('topStories');
 const mainStoryInput = document.getElementById('mainStoryInput');
 const publishBtn = document.getElementById('publishBtn');
 const guestPenNameInput = document.getElementById('guestPenName');
+const charCountDisplay = document.getElementById('charCount');
+
+// New Elements for Entrance
+const welcomeOverlay = document.getElementById('welcomeOverlay');
+const enterBtn = document.getElementById('enterBtn');
+const youtubePlayer = document.getElementById('youtubePlayer');
+const bgVideo = document.getElementById('bgVideo');
 
 let currentUser = null;
 
@@ -26,7 +34,27 @@ async function init() {
     await fetchStories();
 }
 
-// --- 2. DATABASE FUNCTIONS ---
+// --- 2. WELCOME & VIDEO LOGIC ---
+
+// Your chosen video starting at 1:43 (103 seconds)
+// Note: We ADD '&autoplay=1' so it starts immediately when the src is set
+const YOUTUBE_SOURCE = "https://www.youtube.com/embed/hVFaaUEIpzE?start=103&autoplay=1";
+
+enterBtn.addEventListener('click', () => {
+    // 1. Fade out overlay
+    welcomeOverlay.classList.add('hidden');
+    setTimeout(() => {
+        welcomeOverlay.classList.add('display-none');
+    }, 500);
+
+    // 2. Start the YouTube Video (With Sound)
+    youtubePlayer.src = YOUTUBE_SOURCE;
+
+    // 3. Ensure background fireplace is playing (muted loop)
+    bgVideo.play().catch(e => console.log("Auto-play prevented by browser policy (rare on click)"));
+});
+
+// --- 3. DATABASE FUNCTIONS ---
 
 async function fetchStories() {
     feed.innerHTML = '<p style="text-align:center; color:#888;">Loading stories...</p>';
@@ -57,12 +85,25 @@ async function postStory(author, text) {
     } else {
         mainStoryInput.value = '';
         guestPenNameInput.value = '';
+        charCountDisplay.innerText = '0';
         fetchStories();
     }
 }
 
 async function toggleVote(id, currentVotes) {
-    const newVotes = currentVotes + 1;
+    let votedStories = JSON.parse(localStorage.getItem('votedStories')) || [];
+    let newVotes;
+    const hasVoted = votedStories.includes(id);
+
+    if (hasVoted) {
+        newVotes = currentVotes - 1;
+        votedStories = votedStories.filter(storyId => storyId !== id);
+    } else {
+        newVotes = currentVotes + 1;
+        votedStories.push(id);
+    }
+
+    localStorage.setItem('votedStories', JSON.stringify(votedStories));
 
     const { error } = await supabase
         .from('stories')
@@ -71,16 +112,18 @@ async function toggleVote(id, currentVotes) {
 
     if (error) {
         console.error("Vote error:", error);
+        alert("Could not vote right now. Try again.");
     } else {
-        fetchStories();
+        fetchStories(); 
     }
 }
 
-// --- 3. RENDER FUNCTIONS ---
+// --- 4. RENDER FUNCTIONS ---
 
 function renderStories(stories) {
     feed.innerHTML = '';
-    
+    const votedStories = JSON.parse(localStorage.getItem('votedStories')) || [];
+
     if (!stories || stories.length === 0) {
         feed.innerHTML = '<p style="text-align:center;">No stories yet. Be the first!</p>';
         return;
@@ -89,13 +132,17 @@ function renderStories(stories) {
     stories.forEach(story => {
         const card = document.createElement('div');
         card.className = 'story-card';
-        
+
+        const isVoted = votedStories.includes(story.id);
+        const heartIcon = isVoted ? '❤️' : '🤍';
+        const heartClass = isVoted ? 'voted' : '';
+
         card.innerHTML = `
             <div class="story-text">${escapeHtml(story.content)}</div>
             <div class="story-meta">
                 <span>By @${escapeHtml(story.author)}</span>
-                <button class="vote-btn" onclick="toggleVote(${story.id}, ${story.votes})">
-                    ❤️ <span>${story.votes}</span>
+                <button class="vote-btn ${heartClass}" onclick="toggleVote(${story.id}, ${story.votes})">
+                    ${heartIcon} <span>${story.votes}</span>
                 </button>
             </div>
         `;
@@ -130,7 +177,17 @@ function escapeHtml(text) {
         .replace(/'/g, "&#039;");
 }
 
-// --- 4. INTERACTIONS ---
+// --- 5. INTERACTIONS ---
+
+mainStoryInput.addEventListener('input', () => {
+    const currentLength = mainStoryInput.value.length;
+    charCountDisplay.innerText = currentLength;
+    if (currentLength >= 450) {
+        charCountDisplay.style.color = "#e76f51"; 
+    } else {
+        charCountDisplay.style.color = "#ccd5ae"; 
+    }
+});
 
 publishBtn.addEventListener('click', () => {
     const text = mainStoryInput.value.trim();
@@ -140,7 +197,6 @@ publishBtn.addEventListener('click', () => {
         alert("Please write a story first!");
         return;
     }
-
     if (!currentUser) {
         const guestName = guestPenNameInput.value.trim();
         if (!guestName) {
@@ -149,7 +205,6 @@ publishBtn.addEventListener('click', () => {
         }
         authorName = guestName + " (Guest)";
     }
-
     postStory(authorName, text);
 });
 
