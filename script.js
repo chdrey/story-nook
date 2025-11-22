@@ -39,7 +39,7 @@ async function init() {
 }
 
 // --- 2. WELCOME LOGIC ---
-const YOUTUBE_SOURCE = "https://www.youtube.com/embed/hVFaaUEIpzE?start=103&autoplay=1";
+const YOUTUBE_SOURCE = "https://www.youtube.com/embed/hVFaaUEIpzE?start=0&autoplay=1";
 
 enterBtn.addEventListener('click', () => {
     welcomeOverlay.classList.add('hidden');
@@ -282,5 +282,6 @@ function checkLoginStatus() {
         guestPenNameInput.classList.remove('hidden');
     }
 }
+
 
 init();
