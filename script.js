@@ -1,7 +1,11 @@
 // --- 1. CONFIGURATION ---
 // PASTE YOUR SUPABASE KEYS HERE
-const SUPABASE_URL = https://lypndarukqjtkyhxygwe.supabase.co;
-const SUPABASE_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5cG5kYXJ1a3FqdGt5aHh5Z3dlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3Nzc2NzAsImV4cCI6MjA3OTM1MzY3MH0.NE5Q1BFVsBDyKSUxHO--aR-jbSHSLW8klha7C7_VbUA;
+
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = 'https://lypndarukqjtkyhxygwe.supabase.co'
+const supabaseKey = process.env.SUPABASE_KEY
+const supabase = createClient(supabaseUrl, supabaseKey)
 
 // Initialize the client
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
