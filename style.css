@@ -8,6 +8,7 @@
     --font-ui: 'Nunito', sans-serif;
 }
 
+/* GLOBAL RESET */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
@@ -23,24 +24,48 @@ main { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
 .full-width { width: 100%; }
 .hidden { display: none !important; }
 
-/* === NAVIGATION === */
+/* === NAVIGATION (Updated for Scroll Effect) === */
 nav {
     display: flex; justify-content: space-between; align-items: center;
     padding: 20px 40px; background: var(--glass); position: sticky; top: 0; z-index: 100;
     border-bottom: 1px solid rgba(255,255,255,0.1);
-    flex-wrap: wrap; gap: 15px;
+    transition: all 0.3s ease-in-out; /* Smooth transition */
 }
-.logo { font-size: 1.5rem; font-weight: bold; color: var(--accent); }
+
+/* Wrapper for everything except the logo */
+.nav-content-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: opacity 0.3s ease;
+}
+
+.logo { 
+    font-size: 1.5rem; font-weight: bold; color: var(--accent); 
+    cursor: pointer; /* Indicates it is clickable */
+    transition: transform 0.2s;
+}
+.logo:hover { transform: scale(1.02); }
+
+/* --- SCROLLED STATE (Applied via JS) --- */
+nav.scrolled {
+    justify-content: center; /* Center the logo */
+    padding: 10px 20px; /* Shrink height */
+    background: rgba(20, 15, 10, 0.95); /* Darker background */
+}
+
+/* Hide everything except logo when scrolled */
+nav.scrolled .nav-content-wrapper {
+    opacity: 0;
+    pointer-events: none;
+    display: none; /* Removes it from layout flow */
+}
 
 /* User Controls Group */
 .nav-group { display: flex; align-items: center; gap: 15px; }
 
-/* "Want to save your stories?" Text */
 .save-prompt {
-    font-size: 0.9rem;
-    color: var(--text-muted);
-    font-style: italic;
-    white-space: nowrap;
+    font-size: 0.9rem; color: var(--text-muted); font-style: italic; white-space: nowrap;
 }
 
 /* === MODALS & AUTH === */
@@ -55,14 +80,10 @@ nav {
     border-radius: 10px; width: 90%; max-width: 400px; text-align: center;
     border: 1px solid var(--accent);
 }
-/* The "Sign Up" Link Style */
 .switch-text { margin-top: 15px; font-size: 0.9rem; color: #ccc; }
 .auth-link {
-    color: var(--accent);
-    font-weight: bold;
-    text-decoration: underline;
-    cursor: pointer;
-    font-size: 1rem;
+    color: var(--accent); font-weight: bold; text-decoration: underline;
+    cursor: pointer; font-size: 1rem;
 }
 .auth-link:hover { color: #fff; }
 
@@ -157,6 +178,7 @@ input, textarea { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid va
 .goog-te-gadget-simple span { color: var(--accent) !important; }
 .goog-te-gadget-icon { display: none !important; }
 
+/* === MOBILE STYLES === */
 @media (max-width: 600px) {
     nav { justify-content: center; text-align: center; }
     .user-controls { width: 100%; margin-top: 10px; }
@@ -164,18 +186,19 @@ input, textarea { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid va
     .action-bar { flex-direction: column; align-items: stretch; gap: 10px; }
     #guestPenName { width: 100%; max-width: 100%; margin: 0 0 10px 0; }
     .btn-primary, .btn-secondary { width: 100%; margin-bottom: 5px; }
-    .hero h2 {
-        font-size: 1rem;      /* Smaller size */
-        white-space: nowrap;  /* Forces one line */
-        width: 100%;          /* Spans full width */
-        display: block;
-        margin-bottom: 10px;
-    }
     .welcome-content h1 { font-size: 1.8rem; }
     .modal-content.book-style { width: 95%; padding: 20px; }
     .modal-body-text { font-size: 1.1rem; }
     .logo { width: 100%; margin-bottom: 10px; }
-    
-    /* Hide the "Want to save..." text on very small screens to save space */
     .save-prompt { display: none; } 
+    
+    /* --- MOBILE HERO TEXT FIX --- */
+    /* This ensures text is one line and spaced 25px above video */
+    .hero h2 {
+        font-size: 1rem;      
+        white-space: nowrap;  
+        width: 100%;          
+        display: block;
+        margin-bottom: 25px; /* Exactly 25px */
+    }
 }
