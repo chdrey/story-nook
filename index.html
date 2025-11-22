@@ -28,9 +28,7 @@
             <input type="email" id="emailInput" placeholder="Email Address">
             <input type="password" id="passwordInput" placeholder="Password">
             <input type="text" id="usernameInput" placeholder="Choose a Pen Name" class="hidden">
-            
             <button id="authActionBtn" class="btn-primary full-width">Log In</button>
-            
             <p class="switch-text" id="switchAuthMode">Don't have an account? <span>Sign Up</span></p>
             <p id="authError" class="error-text"></p>
         </div>
@@ -48,8 +46,7 @@
             </div>
             <hr>
             <h3>My Stories</h3>
-            <div id="myStoriesList" class="my-stories-container">
-                </div>
+            <div id="myStoriesList" class="my-stories-container"></div>
         </div>
     </div>
 
@@ -63,6 +60,7 @@
                 <h4>Comments</h4>
                 <div id="modalCommentsList" class="comments-list"></div>
                 <div class="comment-input-area">
+                    <input type="text" id="commentGuestName" placeholder="Your Name" style="width: 30%; display:none;">
                     <input type="text" id="newCommentInput" placeholder="Be nice... write a comment">
                     <button id="postCommentBtn" class="btn-secondary small">Post</button>
                 </div>
@@ -72,12 +70,18 @@
 
     <nav>
         <div class="logo">The Story Nook 📚</div>
+        <div id="google_translate_element"></div>
+
         <div class="user-controls">
-            <button id="navLoginBtn" class="btn-secondary">Log In / Sign Up</button>
+            <div class="tooltip-container">
+                <button id="navLoginBtn" class="btn-secondary">Log In / Sign Up</button>
+                <span class="tooltip-text">Want to save your stories? Sign up!</span>
+            </div>
+
             <div id="userNavProfile" class="hidden" style="display: flex; align-items: center; gap: 10px;">
                 <span id="navUsername">Writer</span>
                 <img id="navAvatar" src="" class="avatar-small">
-                <button id="navProfileBtn" class="btn-secondary">My Profile</button>
+                <button id="navProfileBtn" class="btn-secondary">Profile</button>
                 <button id="logoutBtn" class="btn-secondary">Log Out</button>
             </div>
         </div>
@@ -98,18 +102,15 @@
             </div>
         </section>
 
-        <section id="writingZoneSection" class="writing-zone hidden">
+        <section id="writingZoneSection" class="writing-zone">
             <h3>Write your story here...</h3>
             <textarea id="mainStoryInput" maxlength="2000" placeholder="Once upon a time..."></textarea>
             <div class="char-counter"><span id="charCount">0</span>/2000 characters</div>
+            
             <div class="action-bar">
+                <input type="text" id="guestPenName" placeholder="Pen Name (Guest)">
                 <button id="publishBtn" class="btn-primary">Publish Story</button>
             </div>
-        </section>
-
-        <section id="guestPrompt" class="writing-zone" style="text-align: center;">
-            <h3>Join the Nook to write your story.</h3>
-            <p>Sign in to share your tales, collect hearts, and comment.</p>
         </section>
 
         <section class="leaderboard">
@@ -124,5 +125,11 @@
     </main>
 
     <script src="script.js"></script>
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+          new google.translate.TranslateElement({pageLanguage: 'en', includedLanguages: 'en,es', layout: google.translate.TranslateElement.InlineLayout.SIMPLE}, 'google_translate_element');
+        }
+    </script>
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
 </html>

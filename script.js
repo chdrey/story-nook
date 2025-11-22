@@ -6,18 +6,15 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // --- DOM Elements ---
 const navLoginBtn = document.getElementById('navLoginBtn');
 const userNavProfile = document.getElementById('userNavProfile');
-const writingZoneSection = document.getElementById('writingZoneSection');
-const guestPrompt = document.getElementById('guestPrompt');
+const guestPenNameInput = document.getElementById('guestPenName');
+const commentGuestName = document.getElementById('commentGuestName');
 const authModal = document.getElementById('authModal');
-const profileModal = document.getElementById('profileModal');
-const readModal = document.getElementById('readModal');
 
 let currentUser = null;
 let currentProfile = null;
 
 // --- INIT ---
 async function init() {
-    // Check Auth Status
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
         currentUser = session.user;
@@ -26,7 +23,6 @@ async function init() {
     updateUI();
     fetchStories();
 
-    // Listen for Auth Changes
     supabase.auth.onAuthStateChange(async (event, session) => {
         if (session) {
             currentUser = session.user;
@@ -36,7 +32,7 @@ async function init() {
             currentProfile = null;
         }
         updateUI();
-        fetchStories(); // Refresh stories to show correct delete buttons
+        fetchStories();
     });
 }
 
@@ -50,7 +46,7 @@ document.getElementById('navLoginBtn').addEventListener('click', () => {
 document.getElementById('switchAuthMode').addEventListener('click', () => {
     isSignUp = !isSignUp;
     document.getElementById('authTitle').innerText = isSignUp ? "Sign Up" : "Log In";
-    document.getElementById('authActionBtn').innerText = isSignUp ? "Sign Up" : "Log In";
+    document.getElementById('authActionBtn').innerText = isSignUp ? "Sign Up & Log In" : "Log In"; // Updated Text
     document.getElementById('usernameInput').classList.toggle('hidden', !isSignUp);
     document.getElementById('switchAuthMode').innerHTML = isSignUp ? "Already have an account? <span>Log In</span>" : "Don't have an account? <span>Sign Up</span>";
 });
@@ -61,17 +57,25 @@ document.getElementById('authActionBtn').addEventListener('click', async () => {
     const username = document.getElementById('usernameInput').value;
     const errorMsg = document.getElementById('authError');
 
+    errorMsg.innerText = "";
+
     if(!email || !password) return errorMsg.innerText = "Please fill in all fields.";
 
     try {
         if (isSignUp) {
             if(!username) return errorMsg.innerText = "Pen name required.";
-            const { error } = await supabase.auth.signUp({
+            
+            // Sign Up
+            const { data, error } = await supabase.auth.signUp({
                 email, password,
-                options: { data: { username: username } } // Stores username in metadata
+                options: { data: { username: username } }
             });
             if (error) throw error;
-            alert("Account created! You are logged in.");
+
+            // AUTO-LOGIN logic is handled by Supabase automatically if "Confirm Email" is off.
+            // The onAuthStateChange listener will catch it and update the UI.
+            alert("Welcome, " + username + "!");
+            
         } else {
             const { error } = await supabase.auth.signInWithPassword({ email, password });
             if (error) throw error;
@@ -87,24 +91,30 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
 });
 
 async function fetchUserProfile() {
+    if(!currentUser) return;
     const { data } = await supabase.from('profiles').select('*').eq('id', currentUser.id).single();
     currentProfile = data;
 }
 
 function updateUI() {
+    // This function controls showing/hiding elements based on login status
     if (currentUser && currentProfile) {
-        navLoginBtn.classList.add('hidden');
+        // LOGGED IN VIEW
+        navLoginBtn.parentElement.classList.add('hidden'); // Hide login button + tooltip
         userNavProfile.classList.remove('hidden');
-        writingZoneSection.classList.remove('hidden');
-        guestPrompt.classList.add('hidden');
         
+        guestPenNameInput.classList.add('hidden'); // Hide guest input
+        commentGuestName.style.display = 'none';   // Hide comment guest input
+
         document.getElementById('navUsername').innerText = currentProfile.username;
-        document.getElementById('navAvatar').src = currentProfile.avatar_url;
+        document.getElementById('navAvatar').src = currentProfile.avatar_url || 'https://i.imgur.com/6UD0njE.png';
     } else {
-        navLoginBtn.classList.remove('hidden');
+        // GUEST VIEW
+        navLoginBtn.parentElement.classList.remove('hidden');
         userNavProfile.classList.add('hidden');
-        writingZoneSection.classList.add('hidden');
-        guestPrompt.classList.remove('hidden');
+        
+        guestPenNameInput.classList.remove('hidden'); // Show guest input
+        commentGuestName.style.display = 'block';     // Show comment guest input
     }
 }
 
@@ -113,14 +123,10 @@ async function fetchStories() {
     const feed = document.getElementById('storyFeed');
     feed.innerHTML = '<p style="text-align:center;">Loading...</p>';
 
-    // Fetch Stories + Profile Info + Comment Count
+    // Note: We now select user_id AND guest_name
     const { data: stories, error } = await supabase
         .from('stories')
-        .select(`
-            *,
-            profiles (username, avatar_url),
-            comments (count)
-        `)
+        .select(`*, profiles (username, avatar_url), comments (count)`)
         .order('created_at', { ascending: false });
 
     if (error) return console.error(error);
@@ -136,10 +142,21 @@ async function fetchStories() {
 
         const commentCount = story.comments ? story.comments[0].count : 0;
         
+        // HYBRID DISPLAY LOGIC: Check if Profile exists, otherwise use Guest Name
+        let avatar = 'https://i.imgur.com/6UD0njE.png'; // Default
+        let username = 'Anonymous';
+
+        if (story.profiles) {
+            avatar = story.profiles.avatar_url;
+            username = story.profiles.username;
+        } else if (story.guest_name) {
+            username = story.guest_name + " (Guest)";
+        }
+
         card.innerHTML = `
             <div class="profile-header" style="margin-bottom:10px;">
-                <img src="${story.profiles.avatar_url}" class="avatar-small" style="margin-right:10px;">
-                <span style="color:#d4a373; font-weight:bold;">@${story.profiles.username}</span>
+                <img src="${avatar}" class="avatar-small" style="margin-right:10px;">
+                <span style="color:#d4a373; font-weight:bold;">@${username}</span>
             </div>
             <div class="story-text">${escapeHtml(story.content)}</div>
             <div class="story-meta">
@@ -156,42 +173,89 @@ function renderLeaderboard(stories) {
     container.innerHTML = '';
     stories.forEach(story => {
         if (story.votes > 0) {
+            let username = story.profiles ? story.profiles.username : (story.guest_name || 'Anonymous');
+            
             const div = document.createElement('div');
-            div.className = 'story-card'; // Reusing card style for consistency
+            div.className = 'story-card'; 
             div.style.padding = '10px';
             div.onclick = () => openReadModal(story);
-            div.innerHTML = `<strong>@${story.profiles.username}</strong> (${story.votes} ❤️)<br><small>${story.content.substring(0, 50)}...</small>`;
+            div.innerHTML = `<strong>@${username}</strong> (${story.votes} ❤️)<br><small>${story.content.substring(0, 50)}...</small>`;
             container.appendChild(div);
         }
     });
 }
 
-// --- PUBLISH STORY ---
+// --- PUBLISH STORY (Hybrid) ---
 document.getElementById('publishBtn').addEventListener('click', async () => {
     const text = document.getElementById('mainStoryInput').value;
+    const guestName = document.getElementById('guestPenName').value;
+
     if (!text) return alert("Write something first!");
 
-    const { error } = await supabase.from('stories').insert([{
+    const payload = {
         content: text,
-        user_id: currentUser.id, // Uses Auth ID
         votes: 0
-    }]);
+    };
+
+    // Logic: Are you logged in?
+    if (currentUser) {
+        payload.user_id = currentUser.id;
+    } else {
+        if (!guestName) return alert("Please enter a Pen Name to post as a Guest!");
+        payload.guest_name = guestName;
+        payload.user_id = null;
+    }
+
+    const { error } = await supabase.from('stories').insert([payload]);
 
     if (error) {
         alert(error.message);
     } else {
         document.getElementById('mainStoryInput').value = '';
+        document.getElementById('guestPenName').value = '';
         fetchStories();
     }
 });
 
-// --- READ MODAL & COMMENTS ---
+// --- VOTING (Restored LocalStorage Check) ---
+async function toggleVote(event, id, currentVotes) {
+    event.stopPropagation();
+
+    let votedStories = JSON.parse(localStorage.getItem('votedStories')) || [];
+    let newVotes;
+    const hasVoted = votedStories.includes(id);
+
+    if (hasVoted) {
+        newVotes = currentVotes - 1;
+        votedStories = votedStories.filter(storyId => storyId !== id);
+    } else {
+        newVotes = currentVotes + 1;
+        votedStories.push(id);
+    }
+    localStorage.setItem('votedStories', JSON.stringify(votedStories));
+
+    // Update UI instantly
+    const btnElement = document.getElementById(`btn-${id}`);
+    if(btnElement) {
+        btnElement.innerHTML = (hasVoted ? '🤍 ' : '❤️ ') + `<span>${newVotes}</span>`;
+        btnElement.classList.toggle('voted');
+        btnElement.onclick = (e) => toggleVote(e, id, newVotes);
+    }
+
+    const { error } = await supabase.from('stories').update({ votes: newVotes }).eq('id', id);
+    if (error) fetchStories(); // Revert if error
+}
+
+// --- READ MODAL & COMMENTS (Hybrid) ---
 let activeStoryId = null;
 
 async function openReadModal(story) {
     activeStoryId = story.id;
     const modal = document.getElementById('readModal');
-    document.getElementById('readModalAuthor').innerText = "By @" + story.profiles.username;
+    
+    let username = story.profiles ? story.profiles.username : (story.guest_name || 'Anonymous');
+    
+    document.getElementById('readModalAuthor').innerText = "By @" + username;
     document.getElementById('readModalText').innerText = story.content;
     
     modal.classList.remove('hidden');
@@ -212,87 +276,75 @@ async function fetchComments(storyId) {
     comments.forEach(c => {
         const div = document.createElement('div');
         div.className = 'comment-item';
-        div.innerHTML = `<div class="comment-author">@${c.profiles.username}</div><div>${escapeHtml(c.content)}</div>`;
+        
+        // Hybrid Comment Name Logic
+        let cUser = c.profiles ? c.profiles.username : (c.guest_name ? c.guest_name + " (Guest)" : 'Anonymous');
+        
+        div.innerHTML = `<div class="comment-author">@${cUser}</div><div>${escapeHtml(c.content)}</div>`;
         list.appendChild(div);
     });
 }
 
 document.getElementById('postCommentBtn').addEventListener('click', async () => {
     const input = document.getElementById('newCommentInput');
+    const guestInput = document.getElementById('commentGuestName');
+    
     if(!input.value) return;
-    if(!currentUser) return alert("Please log in to comment.");
 
-    await supabase.from('comments').insert({
+    const payload = {
         content: input.value,
-        story_id: activeStoryId,
-        user_id: currentUser.id
-    });
+        story_id: activeStoryId
+    };
+
+    if (currentUser) {
+        payload.user_id = currentUser.id;
+    } else {
+        if(!guestInput.value) return alert("Please enter a name to comment!");
+        payload.guest_name = guestInput.value;
+        payload.user_id = null;
+    }
+
+    await supabase.from('comments').insert(payload);
     input.value = '';
     fetchComments(activeStoryId);
 });
 
-// --- PROFILE MANAGEMENT ---
+// --- PROFILE & UTILS (Same as before) ---
 document.getElementById('navProfileBtn').addEventListener('click', async () => {
     document.getElementById('profileName').innerText = currentProfile.username;
-    document.getElementById('profileAvatar').src = currentProfile.avatar_url;
+    document.getElementById('profileAvatar').src = currentProfile.avatar_url || 'https://i.imgur.com/6UD0njE.png';
     document.getElementById('profileModal').classList.remove('hidden');
     
-    // Load User's Stories
-    const { data: myStories } = await supabase
-        .from('stories')
-        .select('*')
-        .eq('user_id', currentUser.id)
-        .order('created_at', { ascending: false });
-
+    const { data: myStories } = await supabase.from('stories').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
     const list = document.getElementById('myStoriesList');
     list.innerHTML = '';
-    
     myStories.forEach(story => {
         const div = document.createElement('div');
         div.className = 'my-story-item';
-        div.innerHTML = `
-            <div>
-                <small>${new Date(story.created_at).toLocaleDateString()}</small>
-                <p>${story.content.substring(0, 30)}...</p>
-                <small>❤️ ${story.votes}</small>
-            </div>
-            <button class="btn-delete" onclick="deleteStory(${story.id})">Delete</button>
-        `;
+        div.innerHTML = `<div><p>${story.content.substring(0, 30)}...</p><small>❤️ ${story.votes}</small></div><button class="btn-delete" onclick="deleteStory(${story.id})">Delete</button>`;
         list.appendChild(div);
     });
 });
 
 document.getElementById('changeAvatarBtn').addEventListener('click', async () => {
-    const newUrl = prompt("Enter new image URL for your avatar:");
+    const newUrl = prompt("Enter new image URL:");
     if(newUrl) {
-        const { error } = await supabase.from('profiles').update({ avatar_url: newUrl }).eq('id', currentUser.id);
-        if(!error) {
-            currentProfile.avatar_url = newUrl;
-            updateUI();
-            document.getElementById('profileAvatar').src = newUrl;
-        }
+        await supabase.from('profiles').update({ avatar_url: newUrl }).eq('id', currentUser.id);
+        currentProfile.avatar_url = newUrl; updateUI(); document.getElementById('profileAvatar').src = newUrl;
     }
 });
 
 window.deleteStory = async function(id) {
-    if(confirm("Are you sure you want to delete this story?")) {
+    if(confirm("Delete this story?")) {
         await supabase.from('stories').delete().eq('id', id);
-        document.getElementById('navProfileBtn').click(); // Refresh list
-        fetchStories(); // Refresh main feed
+        document.getElementById('navProfileBtn').click(); fetchStories();
     }
 };
 
-// --- UTILS ---
-function closeAllModals() {
-    document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden'));
-}
+function closeAllModals() { document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden')); }
 window.onclick = (e) => { if (e.target.classList.contains('modal')) closeAllModals(); };
-function escapeHtml(text) {
-    if (!text) return "";
-    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-}
+function escapeHtml(text) { if (!text) return ""; return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
 
-// --- WELCOME OVERLAY ---
 document.getElementById('enterBtn').addEventListener('click', () => {
     document.getElementById('welcomeOverlay').classList.add('hidden');
     document.getElementById('youtubePlayer').src = "https://www.youtube.com/embed/hVFaaUEIpzE?start=103&autoplay=1";
