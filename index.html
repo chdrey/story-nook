@@ -17,65 +17,99 @@
                 "The Road goes ever on and on, down from the door where it began. Now far ahead the Road has gone, and I must follow, if I can."
                 <footer>— J.R.R. Tolkien</footer>
             </blockquote>
-            <p class="welcome-subtext">Pull up a chair by the fire.</p>
             <button id="enterBtn" class="btn-primary large">Enter the Nook</button>
+        </div>
+    </div>
+
+    <div id="authModal" class="modal hidden">
+        <div class="modal-content narrow">
+            <span class="close-modal" onclick="closeAllModals()">&times;</span>
+            <h2 id="authTitle">Log In</h2>
+            <input type="email" id="emailInput" placeholder="Email Address">
+            <input type="password" id="passwordInput" placeholder="Password">
+            <input type="text" id="usernameInput" placeholder="Choose a Pen Name" class="hidden">
+            
+            <button id="authActionBtn" class="btn-primary full-width">Log In</button>
+            
+            <p class="switch-text" id="switchAuthMode">Don't have an account? <span>Sign Up</span></p>
+            <p id="authError" class="error-text"></p>
+        </div>
+    </div>
+
+    <div id="profileModal" class="modal hidden">
+        <div class="modal-content book-style">
+            <span class="close-modal" onclick="closeAllModals()">&times;</span>
+            <div class="profile-header">
+                <img id="profileAvatar" src="" alt="Avatar" class="avatar-large">
+                <div class="profile-info">
+                    <h2 id="profileName">Username</h2>
+                    <button id="changeAvatarBtn" class="btn-secondary small">Change Picture URL</button>
+                </div>
+            </div>
+            <hr>
+            <h3>My Stories</h3>
+            <div id="myStoriesList" class="my-stories-container">
+                </div>
         </div>
     </div>
 
     <div id="readModal" class="modal hidden">
         <div class="modal-content book-style">
-            <span class="close-modal">&times;</span>
+            <span class="close-modal" onclick="closeAllModals()">&times;</span>
             <h3 id="readModalAuthor">By @Author</h3>
-            <div id="readModalText" class="modal-body-text">
+            <div id="readModalText" class="modal-body-text"></div>
+            
+            <div class="comments-section-wrapper">
+                <h4>Comments</h4>
+                <div id="modalCommentsList" class="comments-list"></div>
+                <div class="comment-input-area">
+                    <input type="text" id="newCommentInput" placeholder="Be nice... write a comment">
+                    <button id="postCommentBtn" class="btn-secondary small">Post</button>
                 </div>
-            <div class="modal-footer">
-                <span id="readModalDate">Nov 22</span>
             </div>
         </div>
     </div>
+
+    <nav>
+        <div class="logo">The Story Nook 📚</div>
+        <div class="user-controls">
+            <button id="navLoginBtn" class="btn-secondary">Log In / Sign Up</button>
+            <div id="userNavProfile" class="hidden" style="display: flex; align-items: center; gap: 10px;">
+                <span id="navUsername">Writer</span>
+                <img id="navAvatar" src="" class="avatar-small">
+                <button id="navProfileBtn" class="btn-secondary">My Profile</button>
+                <button id="logoutBtn" class="btn-secondary">Log Out</button>
+            </div>
+        </div>
+    </nav>
 
     <div class="video-background">
         <video muted loop playsinline id="bgVideo">
             <source src="assets/fireplace.mp4" type="video/mp4">
         </video>
     </div>
-
     <div class="overlay"></div>
-
-    <nav>
-        <div class="logo">The Story Nook 📚</div>
-        <div class="user-controls">
-            <button id="loginBtn" class="btn-secondary">Log In</button>
-            <div id="userProfile" class="hidden">
-                <span id="usernameDisplay">Writer</span>
-            </div>
-        </div>
-    </nav>
 
     <main>
         <section class="hero">
             <h2>This Week's Inspiration</h2>
             <div class="video-wrapper">
-                <iframe id="youtubePlayer" 
-                    src="" 
-                    title="YouTube video player" 
-                    frameborder="0" 
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                    allowfullscreen>
-                </iframe>
+                <iframe id="youtubePlayer" src="" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
             </div>
         </section>
 
-        <section class="writing-zone">
+        <section id="writingZoneSection" class="writing-zone hidden">
             <h3>Write your story here...</h3>
             <textarea id="mainStoryInput" maxlength="2000" placeholder="Once upon a time..."></textarea>
-            <div class="char-counter">
-                <span id="charCount">0</span>/2000 characters
-            </div>
+            <div class="char-counter"><span id="charCount">0</span>/2000 characters</div>
             <div class="action-bar">
-                <input type="text" id="guestPenName" placeholder="Pen Name">
                 <button id="publishBtn" class="btn-primary">Publish Story</button>
             </div>
+        </section>
+
+        <section id="guestPrompt" class="writing-zone" style="text-align: center;">
+            <h3>Join the Nook to write your story.</h3>
+            <p>Sign in to share your tales, collect hearts, and comment.</p>
         </section>
 
         <section class="leaderboard">
