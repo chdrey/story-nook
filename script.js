@@ -9,6 +9,7 @@ const loggedInNav = document.getElementById('loggedInNav');
 const guestPenNameInput = document.getElementById('guestPenName');
 const commentGuestName = document.getElementById('commentGuestName');
 const authModal = document.getElementById('authModal');
+const mainNav = document.getElementById('mainNav'); // Main Nav Element
 
 let currentUser = null;
 let currentProfile = null;
@@ -36,6 +37,19 @@ async function init() {
     });
 }
 
+// --- SCROLL & NAV BEHAVIOR ---
+window.addEventListener('scroll', () => {
+    if (window.scrollY > 50) {
+        mainNav.classList.add('scrolled');
+    } else {
+        mainNav.classList.remove('scrolled');
+    }
+});
+
+document.querySelector('.logo').addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
 // --- AUTHENTICATION ---
 let isSignUp = false;
 
@@ -52,7 +66,6 @@ document.querySelector('.auth-link').addEventListener('click', () => {
         "Already have an account? <span class='auth-link'>Log In</span>" : 
         "Don't have an account? <span class='auth-link'>Sign Up</span>";
     
-    // Re-attach listener because innerHTML replaced the element
     document.querySelector('.auth-link').addEventListener('click', arguments.callee);
 });
 
@@ -102,7 +115,7 @@ function updateUI() {
         loggedOutNav.classList.add('hidden');
         loggedInNav.classList.remove('hidden');
         
-        guestPenNameInput.classList.add('hidden'); // Hide guest input
+        guestPenNameInput.classList.add('hidden'); 
         commentGuestName.style.display = 'none';
 
         document.getElementById('navUsername').innerText = currentProfile.username;
@@ -112,8 +125,8 @@ function updateUI() {
         loggedOutNav.classList.remove('hidden');
         loggedInNav.classList.add('hidden');
         
-        guestPenNameInput.classList.remove('hidden'); // Show guest input
-        commentGuestName.style.display = 'block';     // Show comment guest input
+        guestPenNameInput.classList.remove('hidden'); 
+        commentGuestName.style.display = 'block';     
     }
 }
 
@@ -140,7 +153,6 @@ async function fetchStories() {
 
         const commentCount = story.comments ? story.comments[0].count : 0;
         
-        // HYBRID DISPLAY LOGIC: Check if Profile exists, otherwise use Guest Name OR 'Guest'
         let avatar = 'https://i.imgur.com/6UD0njE.png'; 
         let username = 'Guest';
 
@@ -183,17 +195,14 @@ function renderLeaderboard(stories) {
     });
 }
 
-// --- PUBLISH STORY (Hybrid) ---
+// --- PUBLISH STORY ---
 document.getElementById('publishBtn').addEventListener('click', async () => {
     const text = document.getElementById('mainStoryInput').value;
     const guestName = document.getElementById('guestPenName').value;
 
     if (!text) return alert("Write something first!");
 
-    const payload = {
-        content: text,
-        votes: 0
-    };
+    const payload = { content: text, votes: 0 };
 
     if (currentUser) {
         payload.user_id = currentUser.id;
@@ -243,7 +252,7 @@ async function toggleVote(event, id, currentVotes) {
     if (error) fetchStories(); 
 }
 
-// --- READ MODAL & COMMENTS ---
+// --- READ MODAL ---
 let activeStoryId = null;
 
 async function openReadModal(story) {
@@ -287,10 +296,7 @@ document.getElementById('postCommentBtn').addEventListener('click', async () => 
     
     if(!input.value) return;
 
-    const payload = {
-        content: input.value,
-        story_id: activeStoryId
-    };
+    const payload = { content: input.value, story_id: activeStoryId };
 
     if (currentUser) {
         payload.user_id = currentUser.id;
@@ -305,7 +311,7 @@ document.getElementById('postCommentBtn').addEventListener('click', async () => 
     fetchComments(activeStoryId);
 });
 
-// --- PROFILE & UTILS ---
+// --- UTILS ---
 document.getElementById('navProfileBtn').addEventListener('click', async () => {
     document.getElementById('profileName').innerText = currentProfile.username;
     document.getElementById('profileAvatar').src = currentProfile.avatar_url || 'https://i.imgur.com/6UD0njE.png';
@@ -348,15 +354,11 @@ document.getElementById('enterBtn').addEventListener('click', () => {
     document.getElementById('bgVideo').play();
 });
 
-// Updated for 2000 character limit
 document.getElementById('mainStoryInput').addEventListener('input', (e) => {
     const currentLength = e.target.value.length;
     document.getElementById('charCount').innerText = currentLength;
-    if (currentLength >= 1900) {
-        document.getElementById('charCount').style.color = "#e76f51"; 
-    } else {
-        document.getElementById('charCount').style.color = "#ccd5ae"; 
-    }
+    if (currentLength >= 1900) document.getElementById('charCount').style.color = "#e76f51"; 
+    else document.getElementById('charCount').style.color = "#ccd5ae"; 
 });
 
 init();

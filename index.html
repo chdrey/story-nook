@@ -29,7 +29,6 @@
             <input type="password" id="passwordInput" placeholder="Password">
             <input type="text" id="usernameInput" placeholder="Choose a Pen Name" class="hidden">
             <button id="authActionBtn" class="btn-primary full-width">Log In</button>
-            
             <p class="switch-text" id="switchAuthMode">Don't have an account? <span class="auth-link">Sign Up</span></p>
             <p id="authError" class="error-text"></p>
         </div>
@@ -69,22 +68,24 @@
         </div>
     </div>
 
-    <nav>
+    <nav id="mainNav">
         <div class="logo">The Story Nook 📚</div>
-        <div id="google_translate_element"></div>
+        
+        <div id="navContentWrapper" class="nav-content-wrapper">
+            <div id="google_translate_element"></div>
 
-        <div class="user-controls">
-            
-            <div id="loggedOutNav" class="nav-group">
-                <span class="save-prompt">Want to save your stories?</span>
-                <button id="navLoginBtn" class="btn-secondary">Log In / Sign Up</button>
-            </div>
+            <div class="user-controls">
+                <div id="loggedOutNav" class="nav-group">
+                    <span class="save-prompt">Want to save your stories?</span>
+                    <button id="navLoginBtn" class="btn-secondary">Log In / Sign Up</button>
+                </div>
 
-            <div id="loggedInNav" class="nav-group hidden">
-                <span id="navUsername" style="font-weight:bold; color:#d4a373;">Writer</span>
-                <img id="navAvatar" src="" class="avatar-small">
-                <button id="navProfileBtn" class="btn-secondary">Profile</button>
-                <button id="logoutBtn" class="btn-secondary">Log Out</button>
+                <div id="loggedInNav" class="nav-group hidden">
+                    <span id="navUsername" style="font-weight:bold; color:#d4a373;">Writer</span>
+                    <img id="navAvatar" src="" class="avatar-small">
+                    <button id="navProfileBtn" class="btn-secondary">Profile</button>
+                    <button id="logoutBtn" class="btn-secondary">Log Out</button>
+                </div>
             </div>
         </div>
     </nav>
