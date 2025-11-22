@@ -1,13 +1,8 @@
 // --- 1. CONFIGURATION ---
-// PASTE YOUR SUPABASE KEYS HERE
+const SUPABASE_URL = 'https://lypndarukqjtkyhxygwe.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5cG5kYXJ1a3FqdGt5aHh5Z3dlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3Nzc2NzAsImV4cCI6MjA3OTM1MzY3MH0.NE5Q1BFVsBDyKSUxHO--aR-jbSHSLW8klha7C7_VbUA';
 
-import { createClient } from '@supabase/supabase-js'
-
-const supabaseUrl = 'https://lypndarukqjtkyhxygwe.supabase.co'
-const supabaseKey = process.env.SUPABASE_KEY
-const supabase = createClient(supabaseUrl, supabaseKey)
-
-// Initialize the client
+// Initialize the client (uses the CDN library from index.html)
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // --- DOM Elements ---
@@ -23,24 +18,19 @@ let currentUser = null;
 
 // --- Init ---
 async function init() {
-    // Check local storage for previous login
     const savedUser = localStorage.getItem('storyNookUser');
     if (savedUser) {
         currentUser = savedUser;
         checkLoginStatus();
     }
-
-    // Load stories from the real database
     await fetchStories();
 }
 
 // --- 2. DATABASE FUNCTIONS ---
 
-// Fetch Stories from Supabase
 async function fetchStories() {
     feed.innerHTML = '<p style="text-align:center; color:#888;">Loading stories...</p>';
     
-    // Get all stories, sorted by newest first
     const { data, error } = await supabase
         .from('stories')
         .select('*')
@@ -55,7 +45,6 @@ async function fetchStories() {
     }
 }
 
-// Publish a Story
 async function postStory(author, text) {
     const { error } = await supabase
         .from('stories')
@@ -66,18 +55,15 @@ async function postStory(author, text) {
     if (error) {
         alert("Error posting story: " + error.message);
     } else {
-        // Clear inputs and refresh feed
         mainStoryInput.value = '';
         guestPenNameInput.value = '';
         fetchStories();
     }
 }
 
-// Vote for a Story
 async function toggleVote(id, currentVotes) {
     const newVotes = currentVotes + 1;
 
-    // Update the database
     const { error } = await supabase
         .from('stories')
         .update({ votes: newVotes })
@@ -86,7 +72,7 @@ async function toggleVote(id, currentVotes) {
     if (error) {
         console.error("Vote error:", error);
     } else {
-        fetchStories(); // Refresh to show new vote count
+        fetchStories();
     }
 }
 
@@ -95,7 +81,7 @@ async function toggleVote(id, currentVotes) {
 function renderStories(stories) {
     feed.innerHTML = '';
     
-    if (stories.length === 0) {
+    if (!stories || stories.length === 0) {
         feed.innerHTML = '<p style="text-align:center;">No stories yet. Be the first!</p>';
         return;
     }
@@ -119,11 +105,10 @@ function renderStories(stories) {
 
 function updateLeaderboard(stories) {
     topStoriesContainer.innerHTML = '';
-    // Sort by votes (highest first) and take top 3
     const top3 = [...stories].sort((a, b) => b.votes - a.votes).slice(0, 3);
     
     top3.forEach(story => {
-        if(story.votes > 0) { // Only show if they have votes
+        if(story.votes > 0) { 
             const div = document.createElement('div');
             div.style.marginBottom = "10px";
             div.style.padding = "10px";
@@ -135,7 +120,6 @@ function updateLeaderboard(stories) {
     });
 }
 
-// Helper to prevent code injection (Security)
 function escapeHtml(text) {
     if (!text) return "";
     return text
@@ -173,7 +157,7 @@ loginBtn.addEventListener('click', () => {
     const name = prompt("Enter username:");
     if(name) {
         currentUser = name;
-        localStorage.setItem('storyNookUser', name); // Save login to browser
+        localStorage.setItem('storyNookUser', name);
         checkLoginStatus();
     }
 });
@@ -191,5 +175,4 @@ function checkLoginStatus() {
     }
 }
 
-// Run
 init();
