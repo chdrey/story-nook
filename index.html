@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Story Nook</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,700;1,300&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -13,8 +13,24 @@
     <div id="welcomeOverlay">
         <div class="welcome-content">
             <h1>The Story Nook 📚</h1>
-            <p>A cozy place to write and relax.</p>
-            <button id="enterBtn" class="btn-primary large">Enter & Enable Sound</button>
+            <blockquote class="weekly-quote">
+                "The Road goes ever on and on, down from the door where it began. Now far ahead the Road has gone, and I must follow, if I can."
+                <footer>— J.R.R. Tolkien</footer>
+            </blockquote>
+            <p class="welcome-subtext">Pull up a chair by the fire.</p>
+            <button id="enterBtn" class="btn-primary large">Enter the Nook</button>
+        </div>
+    </div>
+
+    <div id="readModal" class="modal hidden">
+        <div class="modal-content book-style">
+            <span class="close-modal">&times;</span>
+            <h3 id="readModalAuthor">By @Author</h3>
+            <div id="readModalText" class="modal-body-text">
+                </div>
+            <div class="modal-footer">
+                <span id="readModalDate">Nov 22</span>
+            </div>
         </div>
     </div>
 
@@ -52,13 +68,10 @@
 
         <section class="writing-zone">
             <h3>Write your story here...</h3>
-            
-            <textarea id="mainStoryInput" maxlength="500" placeholder="The fire crackled, and suddenly..."></textarea>
-            
+            <textarea id="mainStoryInput" maxlength="2000" placeholder="Once upon a time..."></textarea>
             <div class="char-counter">
-                <span id="charCount">0</span>/500 characters
+                <span id="charCount">0</span>/2000 characters
             </div>
-
             <div class="action-bar">
                 <input type="text" id="guestPenName" placeholder="Pen Name">
                 <button id="publishBtn" class="btn-primary">Publish Story</button>
