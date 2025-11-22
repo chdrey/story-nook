@@ -106,7 +106,7 @@ nav.scrolled { justify-content: center; }
 /* --- WRITING BOX SIZE --- */
 .writing-zone textarea {
     width: 100%; 
-    height: 600px; 
+    height: 400px; 
     background: transparent; border: none;
     color: var(--text-main); font-family: var(--font-body);
     font-size: 1.2rem; resize: vertical; outline: none; margin-bottom: 5px;
@@ -227,3 +227,4 @@ input, textarea { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid va
         margin-bottom: 25px; 
     }
 }
+
