@@ -15,11 +15,18 @@ const mainNav = document.getElementById('mainNav');
 const infoBtn = document.getElementById('infoBtn');
 const aboutModal = document.getElementById('aboutModal');
 
-// Upload Elements
+// Upload & Profile Elements
 const changeAvatarBtn = document.getElementById('changeAvatarBtn');
-const avatarUploadInput = document.createElement('input'); // Created dynamically
+const avatarUploadInput = document.createElement('input'); 
 avatarUploadInput.type = 'file';
 avatarUploadInput.accept = 'image/*';
+
+// Settings Elements
+const updateUsernameInput = document.getElementById('updateUsernameInput');
+const saveUsernameBtn = document.getElementById('saveUsernameBtn');
+const newPasswordInput = document.getElementById('newPasswordInput');
+const changePasswordBtn = document.getElementById('changePasswordBtn');
+const deleteAccountBtn = document.getElementById('deleteAccountBtn');
 
 let currentUser = null;
 let currentProfile = null;
@@ -125,7 +132,7 @@ function updateUI() {
         loggedOutNav.classList.remove('hidden');
         loggedInNav.classList.add('hidden');
         guestPenNameInput.classList.remove('hidden'); 
-        commentGuestName.style.display = 'block';     
+        commentGuestName.style.display = 'block';      
     }
 }
 
@@ -140,27 +147,59 @@ async function fetchStories() {
     feed.innerHTML = '';
     const topStories = [...stories].sort((a, b) => b.votes - a.votes).slice(0, 3);
     renderLeaderboard(topStories);
+    
     stories.forEach(story => {
         const card = document.createElement('div');
         card.className = 'story-card';
-        card.onclick = () => openReadModal(story);
+        // Only click to read if not clicking a button
+        card.onclick = (e) => {
+            if(!e.target.closest('button') && !e.target.closest('.menu-container')) openReadModal(story);
+        };
+
         const commentCount = story.comments ? story.comments[0].count : 0;
         let avatar = 'https://i.imgur.com/6UD0njE.png'; 
         let username = 'Guest';
+        let isOwner = false;
+
         if (story.profiles) {
             avatar = story.profiles.avatar_url || 'https://i.imgur.com/6UD0njE.png';
             username = story.profiles.username;
+            if(currentUser && story.user_id === currentUser.id) isOwner = true;
         } else if (story.guest_name) {
             username = story.guest_name + " (Guest)";
         }
+
+        // Check if user has voted
+        const userIdKey = currentUser ? currentUser.id : 'guest';
+        const hasVoted = JSON.parse(localStorage.getItem(`voted_stories_${userIdKey}`))?.includes(story.id);
+
+        let menuHtml = '';
+        if(isOwner) {
+            menuHtml = `
+            <div class="menu-container">
+                <button class="menu-trigger" onclick="toggleMenu(this)">⋮</button>
+                <div class="menu-dropdown">
+                    <button class="menu-item" onclick="editStoryInit(${story.id})">Edit</button>
+                    <button class="menu-item delete" onclick="deleteStory(${story.id})">Delete</button>
+                </div>
+            </div>`;
+        }
+
         card.innerHTML = `
-            <div class="profile-header" style="margin-bottom:10px;">
-                <img src="${avatar}" class="avatar-small" style="margin-right:10px;">
-                <span style="color:#d4a373; font-weight:bold;">@${username}</span>
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div class="profile-header" style="margin-bottom:10px;">
+                    <img src="${avatar}" class="avatar-small" style="margin-right:10px;">
+                    <span style="color:#d4a373; font-weight:bold;">@${username}</span>
+                </div>
+                ${menuHtml}
             </div>
-            <div class="story-text">${escapeHtml(story.content)}</div>
+            
+            <div class="story-text" id="story-text-${story.id}">${escapeHtml(story.content)}</div>
+            
             <div class="story-meta">
-                <span>❤️ ${story.votes}</span>
+                <button id="btn-${story.id}" class="vote-btn ${hasVoted ? 'voted' : ''}" onclick="toggleVote(event, ${story.id}, ${story.votes})">
+                    ${hasVoted ? '❤️' : '🤍'} <span>${story.votes}</span>
+                </button>
                 <span>💬 ${commentCount} comments</span>
             </div>
         `;
@@ -183,7 +222,7 @@ function renderLeaderboard(stories) {
     });
 }
 
-// --- ACTIONS ---
+// --- ACTIONS & VOTING ---
 document.getElementById('publishBtn').addEventListener('click', async () => {
     const text = document.getElementById('mainStoryInput').value;
     const guestName = document.getElementById('guestPenName').value;
@@ -204,22 +243,86 @@ document.getElementById('publishBtn').addEventListener('click', async () => {
 
 async function toggleVote(event, id, currentVotes) {
     event.stopPropagation();
-    let votedStories = JSON.parse(localStorage.getItem('votedStories')) || [];
-    let newVotes;
+    
+    // Use User ID or 'guest' to key the local storage
+    const userIdKey = currentUser ? currentUser.id : 'guest';
+    const storageKey = `voted_stories_${userIdKey}`;
+    
+    let votedStories = JSON.parse(localStorage.getItem(storageKey)) || [];
     const hasVoted = votedStories.includes(id);
-    if (hasVoted) { newVotes = currentVotes - 1; votedStories = votedStories.filter(storyId => storyId !== id); } 
-    else { newVotes = currentVotes + 1; votedStories.push(id); }
-    localStorage.setItem('votedStories', JSON.stringify(votedStories));
+
+    if (hasVoted) { 
+        alert("You have already voted for this story.");
+        return; 
+    }
+
+    // Optimistic Update
+    const newVotes = currentVotes + 1; 
+    votedStories.push(id); 
+    localStorage.setItem(storageKey, JSON.stringify(votedStories));
     
     const btnElement = document.getElementById(`btn-${id}`);
     if(btnElement) {
-        btnElement.innerHTML = (hasVoted ? '🤍 ' : '❤️ ') + `<span>${newVotes}</span>`;
-        btnElement.classList.toggle('voted');
-        btnElement.onclick = (e) => toggleVote(e, id, newVotes);
+        btnElement.innerHTML = `❤️ <span>${newVotes}</span>`;
+        btnElement.classList.add('voted');
+        btnElement.onclick = null; // Disable click visually
     }
+
     const { error } = await supabase.from('stories').update({ votes: newVotes }).eq('id', id);
-    if (error) fetchStories(); 
+    if (error) {
+        console.error("Vote failed", error);
+        // Revert if error
+        votedStories = votedStories.filter(sid => sid !== id);
+        localStorage.setItem(storageKey, JSON.stringify(votedStories));
+        fetchStories();
+    }
 }
+
+// --- EDIT & DELETE (3 DOTS) ---
+window.toggleMenu = function(btn) {
+    // Close others
+    document.querySelectorAll('.menu-dropdown').forEach(d => {
+        if(d !== btn.nextElementSibling) d.classList.remove('show');
+    });
+    btn.nextElementSibling.classList.toggle('show');
+}
+// Close menus when clicking elsewhere
+window.addEventListener('click', (e) => {
+    if(!e.target.matches('.menu-trigger')) {
+        document.querySelectorAll('.menu-dropdown').forEach(d => d.classList.remove('show'));
+    }
+});
+
+window.deleteStory = async function(id) {
+    if(confirm("Are you sure you want to delete this story?")) {
+        await supabase.from('stories').delete().eq('id', id);
+        fetchStories();
+        // If profile modal is open, refresh that too
+        if(!document.getElementById('profileModal').classList.contains('hidden')) {
+            document.getElementById('navProfileBtn').click();
+        }
+    }
+};
+
+window.editStoryInit = function(id) {
+    // Replace text with textarea
+    const textDiv = document.getElementById(`story-text-${id}`);
+    const currentText = textDiv.innerText;
+    textDiv.innerHTML = `
+        <textarea id="edit-area-${id}" style="height:150px;">${currentText}</textarea>
+        <div style="text-align:right;">
+            <button class="btn-secondary small" onclick="fetchStories()">Cancel</button>
+            <button class="btn-primary" onclick="saveStoryEdit(${id})">Save</button>
+        </div>
+    `;
+};
+
+window.saveStoryEdit = async function(id) {
+    const newText = document.getElementById(`edit-area-${id}`).value;
+    const { error } = await supabase.from('stories').update({ content: newText }).eq('id', id);
+    if(error) alert("Error updating story");
+    fetchStories();
+};
 
 // --- READ & COMMENTS ---
 let activeStoryId = null;
@@ -238,13 +341,40 @@ async function fetchComments(storyId) {
     list.innerHTML = 'Loading...';
     const { data: comments } = await supabase.from('comments').select('*, profiles(username)').eq('story_id', storyId).order('created_at', { ascending: true });
     list.innerHTML = '';
+    
     comments.forEach(c => {
         const div = document.createElement('div');
         div.className = 'comment-item';
         let cUser = c.profiles ? c.profiles.username : (c.guest_name ? c.guest_name + " (Guest)" : 'Guest');
-        div.innerHTML = `<div class="comment-author">@${cUser}</div><div>${escapeHtml(c.content)}</div>`;
+        
+        // 3-dots for comments
+        let menuHtml = '';
+        if(currentUser && c.user_id === currentUser.id) {
+            menuHtml = `
+            <div class="menu-container">
+                <button class="menu-trigger" onclick="toggleMenu(this)" style="font-size:1rem;">⋮</button>
+                <div class="menu-dropdown">
+                    <button class="menu-item delete" onclick="deleteComment(${c.id})">Delete</button>
+                </div>
+            </div>`;
+        }
+
+        div.innerHTML = `
+            <div style="flex-grow:1;">
+                <span class="comment-author">@${cUser}</span>
+                <div>${escapeHtml(c.content)}</div>
+            </div>
+            ${menuHtml}
+        `;
         list.appendChild(div);
     });
+}
+
+window.deleteComment = async function(id) {
+    if(confirm("Delete comment?")) {
+        await supabase.from('comments').delete().eq('id', id);
+        fetchComments(activeStoryId);
+    }
 }
 
 document.getElementById('postCommentBtn').addEventListener('click', async () => {
@@ -262,12 +392,13 @@ document.getElementById('postCommentBtn').addEventListener('click', async () => 
     fetchComments(activeStoryId);
 });
 
-// --- PROFILE ---
+// --- PROFILE & SETTINGS ---
 document.getElementById('navProfileBtn').addEventListener('click', async () => {
-    document.getElementById('profileName').innerText = currentProfile.username;
+    document.getElementById('profileNameDisplay').innerText = currentProfile.username;
     document.getElementById('profileAvatar').src = currentProfile.avatar_url || 'https://i.imgur.com/6UD0njE.png';
     document.getElementById('profileModal').classList.remove('hidden');
     
+    // Load My Stories for management
     const { data: myStories } = await supabase.from('stories').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
     const list = document.getElementById('myStoriesList');
     list.innerHTML = '';
@@ -294,27 +425,35 @@ avatarUploadInput.addEventListener('change', async (event) => {
     updateUI();
 });
 
-window.deleteStory = async function(id) {
-    if(confirm("Delete this story?")) {
-        await supabase.from('stories').delete().eq('id', id);
-        document.getElementById('navProfileBtn').click(); fetchStories();
+// Update Username
+saveUsernameBtn.addEventListener('click', async () => {
+    const newName = updateUsernameInput.value;
+    if(!newName) return;
+    const { error } = await supabase.from('profiles').update({ username: newName }).eq('id', currentUser.id);
+    if(error) alert("Error updating name");
+    else {
+        alert("Username updated!");
+        currentProfile.username = newName;
+        updateUI();
+        document.getElementById('profileNameDisplay').innerText = newName;
+        updateUsernameInput.value = '';
     }
-};
-
-function escapeHtml(text) { if (!text) return ""; return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
-
-document.getElementById('enterBtn').addEventListener('click', () => {
-    document.getElementById('welcomeOverlay').classList.add('hidden');
-    document.getElementById('youtubePlayer').src = "https://www.youtube.com/embed/hVFaaUEIpzE?start=103&autoplay=1";
-    document.getElementById('bgVideo').muted = false;
-    document.getElementById('bgVideo').play();
 });
 
-document.getElementById('mainStoryInput').addEventListener('input', (e) => {
-    const currentLength = e.target.value.length;
-    document.getElementById('charCount').innerText = currentLength;
-    if (currentLength >= 1900) document.getElementById('charCount').style.color = "#e76f51"; 
-    else document.getElementById('charCount').style.color = "#ccd5ae"; 
+// Change Password
+changePasswordBtn.addEventListener('click', async () => {
+    const newPass = newPasswordInput.value;
+    if(!newPass) return alert("Enter a new password");
+    // Supabase allows updating password without old password if session is active
+    const { error } = await supabase.auth.updateUser({ password: newPass });
+    if(error) alert(error.message);
+    else {
+        alert("Password changed successfully!");
+        newPasswordInput.value = '';
+    }
 });
 
-init();
+// Delete Account
+deleteAccountBtn.addEventListener('click', async () => {
+    if(confirm("⚠️ ARE YOU SURE? This will delete your profile data. You cannot undo this.")) {
+        // 1. Delete Profile (Cascades stories/comments if set up in
