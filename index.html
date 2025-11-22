@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Story Nook</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,700;1,300&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="video-background">
+        <video autoplay muted loop playsinline id="bgVideo">
+            <source src="assets/fireplace.mp4" type="video/mp4">
+        </video>
+    </div>
+
+    <div class="overlay"></div>
+
+    <nav>
+        <div class="logo">The Story Nook 🕯️</div>
+        <div class="user-controls">
+            <button id="loginBtn" class="btn-secondary">Log In</button>
+            <div id="userProfile" class="hidden">
+                <span id="usernameDisplay">Writer</span>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <section class="hero">
+            <h2>This Week's Inspiration</h2>
+            <div class="video-wrapper">
+                <iframe width="560" height="315" src="https://www.youtube.com/embed/L_LUpnjgPso?si=StartRelaxing" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+        </section>
+
+        <section class="writing-zone">
+            <h3>Write your story here...</h3>
+            <textarea id="mainStoryInput" placeholder="The fire crackled, and suddenly..."></textarea>
+            
+            <div class="action-bar">
+                <input type="text" id="guestPenName" placeholder="Sign as (Pen Name)...">
+                
+                <button id="publishBtn" class="btn-primary">Publish Story</button>
+            </div>
+        </section>
+
+        <section class="leaderboard">
+            <h3>🏆 This Week's Top Stories</h3>
+            <div class="top-stories-container" id="topStories"></div>
+        </section>
+
+        <section class="feed">
+            <h3>Latest Submissions</h3>
+            <div id="storyFeed"></div>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
