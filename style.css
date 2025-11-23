@@ -195,14 +195,11 @@ input, textarea { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid va
     /* REMOVED USERNAME ON MOBILE */
     #navUsername { display: none; }
 
-    /* 2. Scroll Animation: The "Unified Squeeze" */
+    /* 2. Scroll Animation: The "Unified Squeeze" - Adjusted */
     nav.scrolled {
-        /* MATH: 
-           Logo (~150px) + LoginBtn (~70px) = ~220px total width needed.
-           50% - 125px = Center box of 250px.
-           This guarantees they meet in middle but don't wrap.
-        */
-        padding: 10px calc(50% - 125px); 
+        /* MATH UPDATED: Changed 125px to 145px. 
+           This reduces the padding, so they stop closer to the edges. */
+        padding: 10px calc(50% - 145px); 
     }
 
     /* 3. Organized Mobile Intro Screen */
@@ -226,3 +223,4 @@ input, textarea { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid va
     .action-bar { flex-direction: column; }
     .btn-primary { width: 100%; }
 }
+
