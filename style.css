@@ -8,25 +8,39 @@
     --font-ui: 'Nunito', sans-serif;
 }
 
+/* GLOBAL RESET */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* MOBILE SCROLL FIX: Use min-height instead of fixed height */
-body {
-    font-family: var(--font-ui); color: var(--text-main); background-color: var(--warm-bg);
-    overflow-x: hidden;
-    min-height: 100vh; 
-    overflow-y: auto;
+/* === CRITICAL SCROLL FIX === */
+html, body {
+    width: 100%;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-ui); 
+    color: var(--text-main); 
+    background-color: var(--warm-bg);
+    overflow-x: hidden; /* Prevent side scrolling */
+    overflow-y: auto;   /* Allow vertical scrolling */
+    -webkit-overflow-scrolling: touch; /* Smooth scroll on iOS */
 }
 
 /* UTILITIES */
-main { max-width: 900px; margin: 0 auto; padding: 40px 20px; padding-bottom: 100px; }
+main { 
+    max-width: 900px; 
+    margin: 0 auto; 
+    padding: 40px 20px; 
+    padding-bottom: 150px; /* Extra space at bottom for mobile */
+}
 .full-width { width: 100%; }
 .hidden { display: none !important; }
 .subtext { font-style:italic; font-size:0.9rem; color:var(--text-muted); margin-bottom:10px; }
 
 /* === NAVIGATION === */
 nav {
-    display: flex; justify-content: space-between; align-items: center;
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
     padding: 20px 40px; 
     background: var(--glass); 
     position: sticky; top: 0; z-index: 100;
@@ -38,7 +52,7 @@ nav {
 .nav-group { display: flex; align-items: center; gap: 15px; }
 .save-prompt { font-size: 0.9rem; color: var(--text-muted); font-style: italic; }
 
-/* New Profile Trigger Button */
+/* Profile Trigger Button */
 .profile-trigger {
     display: flex; align-items: center; gap: 10px;
     background: transparent; border: none; cursor: pointer;
@@ -48,22 +62,15 @@ nav {
 .profile-trigger span { font-family: var(--font-ui); font-weight: bold; color: var(--accent); font-size: 1rem; }
 .profile-trigger .avatar-small { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
 
-/* === SCROLLED NAV STATE (Butter Smooth) === */
+/* === SCROLLED NAV STATE === */
 nav.scrolled {
     background: rgba(20, 15, 10, 0.98); 
     padding: 10px 20px;
 }
-
-/* Hide Logout Button Smoothly */
+/* Hide Logout Button Smoothly on scroll */
 nav.scrolled #logoutBtn {
-    opacity: 0;
-    transform: translateX(20px);
-    pointer-events: none;
-    width: 0;
-    padding: 0;
-    margin: 0;
-    overflow: hidden;
-    transition: all 0.4s ease;
+    opacity: 0; transform: translateX(20px); pointer-events: none;
+    width: 0; padding: 0; margin: 0; overflow: hidden; transition: all 0.4s ease;
 }
 
 /* === MODALS === */
@@ -103,7 +110,7 @@ nav.scrolled #logoutBtn {
 .flair-preview { width: 50px; height: 50px; border-radius: 50%; margin-bottom: 5px; background-color: #ddd; }
 .flair-item span { font-size: 0.75rem; color: #555; }
 
-/* === FLAIR STYLES (AVATAR BORDERS) === */
+/* FLAIR FRAMES */
 .frame-oak { border: 3px solid #8b5e3c; padding: 1px; }
 .frame-silver { border: 3px solid #C0C0C0; box-shadow: 0 0 4px rgba(192, 192, 192, 0.6); }
 .frame-gold-ornate { border: 4px double #D4AF37; padding: 1px; }
@@ -115,7 +122,7 @@ nav.scrolled #logoutBtn {
     100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); }
 }
 
-/* === UI ELEMENTS === */
+/* UI ELEMENTS */
 #welcomeOverlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background-color: var(--warm-bg); z-index: 9999;
@@ -131,7 +138,8 @@ nav.scrolled #logoutBtn {
     margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.1); position: relative;
 }
 .writing-zone textarea {
-    width: 100%; height: 200px; /* Optimized Height */
+    width: 100%; 
+    height: 400px; /* Desktop Height */
     background: transparent; border: none; color: var(--text-main); font-family: var(--font-body); font-size: 1.2rem; resize: vertical; outline: none;
 }
 .action-bar { display: flex; justify-content: flex-end; gap: 15px; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; flex-wrap: wrap; }
@@ -151,7 +159,6 @@ input, textarea { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid va
 .vote-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem; padding: 5px 10px; border-radius: 20px; }
 .vote-btn.voted { color: #e76f51; font-weight: bold; }
 
-/* MENU & COMMENTS */
 .menu-container { position: relative; }
 .menu-trigger { background: transparent; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; padding: 0 10px; }
 .menu-dropdown { display: none; position: absolute; right: 0; top: 100%; background: #3d2b20; border: 1px solid var(--accent); border-radius: 5px; z-index: 200; min-width: 100px; }
@@ -166,12 +173,51 @@ input, textarea { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid va
 .video-wrapper { position: relative; width: 100%; padding-bottom: 56.25%; height: 0; border-radius: 10px; overflow: hidden; }
 .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
 
-/* MOBILE */
+/* === MOBILE OPTIMIZATION === */
 @media (max-width: 600px) {
-    nav { display: block; text-align: center; padding: 15px 10px; }
-    .user-controls { justify-content: center; }
+    /* 1. Fix Header Layout */
+    nav { 
+        display: flex;
+        flex-direction: column; 
+        align-items: center; 
+        padding: 15px;
+        gap: 15px;
+    }
+    
+    .logo { 
+        width: 100%; 
+        text-align: center; 
+        margin-bottom: 5px; 
+    }
+
+    /* 2. Center Log In & Stack Text */
+    .nav-group {
+        flex-direction: column; /* Stack text on top of button */
+        text-align: center;
+        gap: 8px;
+        width: 100%;
+    }
+    
+    .save-prompt {
+        display: block; /* Force it to its own line */
+        margin-bottom: 0;
+    }
+
+    #navLoginBtn {
+        width: 100%;
+        max-width: 200px;
+    }
+
+    /* 3. Fix "Can't see entries" issue */
+    /* Reduce text box height on mobile so it doesn't take full screen */
+    .writing-zone textarea {
+        height: 150px; 
+    }
+    
+    /* 4. General Layout Fixes */
     .hero-header-row { width: 100%; gap: 8px; }
     .settings-grid { flex-direction: column; }
-    #guestPenName { width: 100%; }
-    nav.scrolled #logoutBtn { display: none; } /* Fallback */
+    #guestPenName { width: 100%; margin-bottom: 10px; }
+    .action-bar { flex-direction: column; }
+    .btn-primary { width: 100%; }
 }
