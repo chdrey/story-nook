@@ -30,7 +30,6 @@ document.addEventListener('DOMContentLoaded', () => {
         supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     } catch (err) { return; }
 
-    // VARS
     let currentUser = null;
     let currentProfile = null;
     let isAdmin = false;
@@ -58,7 +57,6 @@ document.addEventListener('DOMContentLoaded', () => {
             isAdmin = false;
         }
         updateUI();
-        // Refresh stories to update delete buttons
         fetchStories();
     }
 
@@ -106,7 +104,49 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- STORIES & VOTING ---
+    // --- AUTH LOGIC (FIXED) ---
+    let isSignUp = false;
+    const authModal = document.getElementById('authModal');
+    document.getElementById('navLoginBtn').onclick = () => authModal.classList.remove('hidden');
+
+    document.getElementById('authSwitchBtn').onclick = function() {
+        isSignUp = !isSignUp;
+        document.getElementById('authTitle').innerText = isSignUp ? "Sign Up" : "Log In";
+        document.getElementById('authActionBtn').innerText = isSignUp ? "Create Account" : "Log In";
+        document.getElementById('authToggleText').innerText = isSignUp ? "Already have an account?" : "Don't have an account?";
+        this.innerText = isSignUp ? "Log In" : "Sign Up";
+        document.getElementById('usernameInput').classList.toggle('hidden', !isSignUp);
+    };
+
+    document.getElementById('authActionBtn').onclick = async function() {
+        const email = document.getElementById('emailInput').value;
+        const password = document.getElementById('passwordInput').value;
+        const username = document.getElementById('usernameInput').value;
+        const errorMsg = document.getElementById('authError');
+        errorMsg.innerText = "";
+
+        if(!email || !password) return errorMsg.innerText = "All fields required";
+
+        try {
+            if(isSignUp) {
+                if(!username) return errorMsg.innerText = "Pen Name required";
+                const { error } = await supabase.auth.signUp({
+                    email, password,
+                    options: { data: { username: username } }
+                });
+                if(error) throw error;
+                alert("Welcome!");
+            } else {
+                const { error } = await supabase.auth.signInWithPassword({ email, password });
+                if(error) throw error;
+            }
+            closeAllModals();
+        } catch(e) {
+            errorMsg.innerText = e.message;
+        }
+    };
+
+    // --- STORIES ---
     async function fetchStories() {
         const feed = document.getElementById('storyFeed');
         if(!feed) return;
@@ -192,7 +232,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- TOGGLE VOTE LOGIC ---
     window.toggleVote = async function(event, id, currentVotes) {
         event.stopPropagation();
         const userIdKey = currentUser ? currentUser.id : 'guest';
@@ -203,32 +242,24 @@ document.addEventListener('DOMContentLoaded', () => {
         
         let newVotes;
         if (hasVoted) {
-            // If already voted, remove vote
             newVotes = Math.max(0, currentVotes - 1);
             votedStories = votedStories.filter(storyId => storyId !== id);
         } else {
-            // If not voted, add vote
             newVotes = currentVotes + 1;
             votedStories.push(id);
         }
 
-        // Update Local Storage
         localStorage.setItem(storageKey, JSON.stringify(votedStories));
-        
-        // Update UI Button
         const btn = document.getElementById(`btn-${id}`);
         if(btn) {
             btn.innerHTML = `${!hasVoted ? '❤️' : '🤍'} <span>${newVotes}</span>`;
             btn.classList.toggle('voted');
-            // Important: Update the click handler with the new vote count
             btn.onclick = (e) => window.toggleVote(e, id, newVotes); 
         }
-
-        // Send to Database
         await supabase.from('stories').update({ votes: newVotes }).eq('id', id);
     }
 
-    // --- PASSPORT (FLAIRS) ---
+    // --- PASSPORT & FLAIRS ---
     if(document.getElementById('navProfileBtn')) {
         document.getElementById('navProfileBtn').addEventListener('click', async () => {
             document.getElementById('profileModal').classList.remove('hidden');
@@ -275,10 +306,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- MODALS & ACTIONS ---
     window.closeAllModals = function() { document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden')); }
     window.onclick = (e) => { if (e.target.classList.contains('modal')) closeAllModals(); };
-
     window.toggleMenu = function(btn) {
         document.querySelectorAll('.menu-dropdown').forEach(d => d.classList.remove('show'));
         btn.nextElementSibling.classList.toggle('show');
@@ -313,7 +342,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ACTIONS
     window.deleteStory = async (id) => {
         if(confirm("Delete this story?")) {
             await supabase.from('stories').delete().eq('id', id);
@@ -337,7 +365,6 @@ document.addEventListener('DOMContentLoaded', () => {
         await supabase.from('stories').update({ content: val }).eq('id', id);
         fetchStories();
     }
-
     function escapeHtml(text) { return text ? text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") : ""; }
 
     document.getElementById('publishBtn').addEventListener('click', async () => {
@@ -366,7 +393,6 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchComments(activeStoryId);
     });
 
-    document.getElementById('navLoginBtn').onclick = () => document.getElementById('authModal').classList.remove('hidden');
     document.getElementById('logoutBtn').onclick = async () => { await supabase.auth.signOut(); };
     
     initApp();
