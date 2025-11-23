@@ -174,14 +174,14 @@ input, textarea { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid va
 @media (max-width: 600px) {
     /* 1. Header Layout */
     nav { 
-        /* Initial State: Space Between pins them to edges */
+        /* Initial State: Standard spacing (Symmetrical Margins) */
         padding: 15px 20px; 
         display: flex; 
         flex-direction: row; 
         flex-wrap: nowrap;
         justify-content: space-between; 
         align-items: center;
-        /* Animate padding for the squeeze effect */
+        /* Animation setup */
         transition: padding 0.5s cubic-bezier(0.25, 1, 0.5, 1);
     }
 
@@ -189,28 +189,17 @@ input, textarea { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid va
     .nav-group { flex-shrink: 0; transition: all 0.4s ease; display: flex; align-items: center;}
     
     .save-prompt { display: none; } 
-
-    /* 2. Scroll Animation: The "Squeeze" */
-    nav.scrolled {
-        /* Increase side padding massively to force elements to center */
-        padding: 10px calc(50% - 95px); 
-    }
     
-    /* Username Animation */
-    #navUsername {
-        opacity: 1;
-        max-width: 150px; 
-        margin-right: 10px;
-        transition: all 0.4s ease;
-        white-space: nowrap;
-        overflow: hidden;
-    }
+    /* REMOVED USERNAME ON MOBILE */
+    #navUsername { display: none; }
 
-    /* Fade name and shrink on scroll so Avatar hits Logo */
-    nav.scrolled #navUsername {
-        opacity: 0;
-        max-width: 0; 
-        margin-right: 0; 
+    /* 2. Scroll Animation: The "Unified Squeeze" */
+    nav.scrolled {
+        /* MATH: 50% = Center of screen. 
+           -115px allows roughly 230px of central space.
+           This fits (Logo + Avatar) OR (Logo + Login Btn) comfortably.
+        */
+        padding: 10px calc(50% - 115px); 
     }
 
     /* 3. Organized Mobile Intro Screen */
