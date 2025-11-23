@@ -38,7 +38,7 @@ nav {
     position: fixed; top: 0; left: 0; z-index: 1000; 
     border-bottom: 1px solid rgba(255,255,255,0.1);
     backdrop-filter: blur(10px);
-    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); /* Smoother physics */
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 .logo { font-size: 1.5rem; font-weight: bold; color: var(--accent); cursor: pointer; white-space: nowrap; transition: all 0.4s ease; }
@@ -55,7 +55,7 @@ nav {
 .profile-trigger span { 
     font-family: var(--font-ui); font-weight: bold; color: var(--accent); font-size: 1rem; 
     transition: all 0.3s ease;
-    opacity: 1; max-width: 100px; /* For animation */
+    opacity: 1; max-width: 100px; 
 }
 .profile-trigger .avatar-small { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
 
@@ -94,139 +94,3 @@ nav.scrolled {
 .settings-section, .passport-section {
     background: rgba(0,0,0,0.03); padding: 15px; border-radius: 8px;
     margin-bottom: 20px; border: 1px dashed #d4a37355;
-}
-.settings-grid { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
-.account-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
-
-.flair-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 15px; margin-top: 15px; }
-.flair-item { display: flex; flex-direction: column; align-items: center; cursor: pointer; opacity: 0.5; transition: all 0.2s; text-align: center; }
-.flair-item.unlocked { opacity: 1; }
-.flair-item:hover { transform: translateY(-3px); }
-.flair-item.selected .flair-preview { background: rgba(212, 163, 115, 0.3); box-shadow: 0 0 10px var(--accent); }
-.flair-preview { width: 50px; height: 50px; border-radius: 50%; margin-bottom: 5px; background-color: #ddd; }
-.flair-item span { font-size: 0.75rem; color: #555; }
-
-/* FLAIR FRAMES */
-.frame-oak { border: 3px solid #8b5e3c; padding: 1px; }
-.frame-silver { border: 3px solid #C0C0C0; box-shadow: 0 0 4px rgba(192, 192, 192, 0.6); }
-.frame-gold-ornate { border: 4px double #D4AF37; padding: 1px; }
-.frame-glowing-gold { border: 3px solid #FFD700; animation: goldPulse 2s infinite; }
-.frame-diamond { border: 3px solid #b9f2ff; box-shadow: 0 0 10px #00e5ff; }
-@keyframes goldPulse {
-    0% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7); }
-    70% { box-shadow: 0 0 10px 10px rgba(255, 215, 0, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); }
-}
-
-/* UI ELEMENTS */
-#welcomeOverlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background-color: var(--warm-bg); z-index: 9999;
-    display: flex; justify-content: center; align-items: center; transition: opacity 0.8s ease;
-}
-.welcome-content { 
-    text-align: center; padding: 40px; background: rgba(255, 255, 255, 0.05); 
-    border: 1px solid var(--accent); border-radius: 15px; width: 90%; max-width: 600px; 
-    display: flex; flex-direction: column; gap: 35px; align-items: center;
-}
-.hero { text-align: center; margin-bottom: 30px; background: var(--glass); padding: 30px; border-radius: 15px; }
-
-.hero-header-row { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 20px; }
-.info-icon { background: none; border: 1px solid var(--text-muted); color: var(--text-muted); border-radius: 50%; width: 24px; height: 24px; cursor: pointer; }
-
-.writing-zone, .story-card { 
-    background: var(--glass); padding: 25px; border-radius: 10px; 
-    margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.1); position: relative;
-}
-.writing-zone textarea { width: 100%; height: 400px; background: transparent; border: none; color: var(--text-main); font-family: var(--font-body); font-size: 1.2rem; resize: vertical; outline: none; }
-.action-bar { display: flex; justify-content: flex-end; gap: 15px; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; flex-wrap: wrap; }
-
-input, textarea { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--accent); color: white; padding: 10px; border-radius: 5px; }
-.modal-content.book-style input { background: rgba(0,0,0,0.05); border: 1px solid #8b5e3c; color: #333; }
-#guestPenName, #commentGuestName { background: rgba(0,0,0,0.2); border: 1px solid var(--text-muted); color: white; width: 200px; }
-#commentGuestName { background: rgba(0,0,0,0.05); border: 1px solid #8b5e3c; color: #333; }
-
-.btn-primary { background: var(--accent); color: #2c1e16; border: none; padding: 10px 25px; border-radius: 20px; cursor: pointer; font-weight: bold; }
-.btn-secondary { background: transparent; border: 1px solid var(--accent); color: var(--accent); padding: 8px 16px; border-radius: 20px; cursor: pointer; }
-.btn-delete { background: #e76f51; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-weight:bold; }
-
-.story-card { border-left: 4px solid var(--accent); cursor: pointer; transition: background 0.2s; }
-.story-card:hover { background: rgba(30, 25, 20, 0.95); }
-.story-meta { display: flex; justify-content: space-between; color: var(--text-muted); align-items: center; margin-top: 15px; }
-.vote-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem; padding: 5px 10px; border-radius: 20px; }
-.vote-btn.voted { color: #e76f51; font-weight: bold; }
-
-.menu-container { position: relative; }
-.menu-trigger { background: transparent; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; padding: 0 10px; }
-.menu-dropdown { display: none; position: absolute; right: 0; top: 100%; background: #3d2b20; border: 1px solid var(--accent); border-radius: 5px; z-index: 200; min-width: 100px; }
-.menu-dropdown.show { display: block; }
-.menu-item { display: block; width: 100%; padding: 10px; text-align: left; background: none; border: none; color: var(--text-main); cursor: pointer; }
-.menu-item.delete { color: #e76f51; }
-.comment-item { background: rgba(0,0,0,0.05); padding: 10px; margin-bottom: 10px; border-radius: 5px; display: flex; justify-content: space-between; }
-
-.video-background { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; }
-.video-background video { width: 100%; height: 100%; object-fit: cover; }
-.overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(30, 20, 10, 0.6); z-index: -1; backdrop-filter: blur(2px); }
-.video-wrapper { position: relative; width: 100%; padding-bottom: 56.25%; height: 0; border-radius: 10px; overflow: hidden; }
-.video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-
-/* === MOBILE OPTIMIZATION === */
-@media (max-width: 600px) {
-    /* 1. Header Layout */
-    nav { 
-        padding: 15px; 
-        /* Trick to allow smooth animation to center: Use centered flex with large gap */
-        display: flex; 
-        flex-direction: row; 
-        flex-wrap: nowrap;
-        justify-content: center; 
-        align-items: center;
-        gap: 25vw; /* Start far apart */
-    }
-    .logo { font-size: 1.2rem; flex-shrink: 0; }
-    .nav-group { flex-shrink: 0; }
-    .save-prompt { display: none; } 
-
-    /* 2. Scroll Animation: Meet smoothly in middle */
-    nav.scrolled {
-        padding: 10px 15px;
-        gap: 20px; /* Animate gap to bring them together */
-        justify-content: center;
-    }
-    /* Hide username on scroll */
-    nav.scrolled #navUsername {
-        opacity: 0;
-        max-width: 0;
-        margin: 0;
-        padding: 0;
-        overflow: hidden;
-    }
-
-    /* 3. Organized Mobile Intro Screen */
-    .welcome-content { padding: 30px 20px; gap: 20px; }
-    .welcome-content h1 { font-size: 1.8rem; line-height: 1.2; white-space: nowrap; }
-    .weekly-quote { font-size: 1rem; line-height: 1.6; text-align: center; }
-
-    /* 4. Redesigned Mobile Profile Modal (Natural fit) */
-    .modal-content.book-style {
-        width: 95%; /* Use almost full width */
-        max-height: 80vh; /* Leave room at top/bottom to tap off */
-        padding: 20px; /* Less padding */
-        margin: 20px auto;
-        border-radius: 12px;
-    }
-    .modal-content.book-style input {
-        font-size: 16px; /* Prevents iOS zoom */
-        margin-bottom: 5px;
-    }
-    .profile-header {
-        flex-direction: column;
-        text-align: center;
-        gap: 10px;
-    }
-    .settings-grid { flex-direction: column; }
-    #guestPenName { width: 100%; margin-bottom: 10px; }
-    .action-bar { flex-direction: column; }
-    .btn-primary { width: 100%; }
-}
-
