@@ -30,7 +30,6 @@
                 <input type="email" id="emailInput" placeholder="Email Address" autocomplete="email">
                 <input type="password" id="passwordInput" placeholder="Password" autocomplete="current-password">
                 <input type="text" id="usernameInput" placeholder="Choose a Pen Name" class="hidden" autocomplete="username">
-                
                 <button id="authActionBtn" class="btn-primary full-width">Log In</button>
             </div>
 
@@ -74,7 +73,11 @@
                     <input type="password" id="newPasswordInput" placeholder="New Password">
                     <button id="changePasswordBtn" class="btn-secondary small">Update</button>
                 </div>
-                <button id="deleteAccountBtn" class="btn-delete full-width" style="margin-top:10px;">Delete Account</button>
+                
+                <div class="account-actions">
+                    <button id="logoutBtn" class="btn-secondary full-width">Log Out</button>
+                    <button id="deleteAccountBtn" class="btn-delete full-width">Delete Account</button>
+                </div>
             </div>
 
             <hr>
@@ -115,9 +118,6 @@
                     <span id="navUsername">Writer</span>
                     <img id="navAvatar" src="" class="avatar-small">
                 </button>
-                <div class="logout-wrapper">
-                    <button id="logoutBtn" class="btn-secondary">Log Out</button>
-                </div>
             </div>
         </div>
     </nav>
