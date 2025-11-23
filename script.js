@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- AUTH LOGIC (FIXED) ---
+    // --- AUTH LOGIC ---
     let isSignUp = false;
     const authModal = document.getElementById('authModal');
     document.getElementById('navLoginBtn').onclick = () => authModal.classList.remove('hidden');
