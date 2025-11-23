@@ -1,9 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
     
-    // REPLACE THIS WITH YOUR EMAIL TO BE ADMIN
+    // REPLACE WITH YOUR ADMIN EMAIL
     const ADMIN_EMAIL = 'your_admin_email@example.com'; 
 
-    // 1. ENTER BUTTON (Failsafe)
+    // 1. ENTER BUTTON
     const enterBtn = document.getElementById('enterBtn');
     if (enterBtn) {
         enterBtn.addEventListener('click', () => {
@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
             handleUserSession(session);
         });
 
-        fetchStories(); // Load stories immediately (even for guests)
+        fetchStories(); 
     }
 
     async function handleUserSession(session) {
@@ -58,6 +58,8 @@ document.addEventListener('DOMContentLoaded', () => {
             isAdmin = false;
         }
         updateUI();
+        // Refresh stories to update delete buttons
+        fetchStories();
     }
 
     // --- UI UPDATES ---
@@ -69,7 +71,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function fetchUserProfile() {
         if(!currentUser) return;
-        // Fetch profile AND the selected flair css_class
         const { data } = await supabase
             .from('profiles')
             .select('*, flairs(css_class)')
@@ -95,11 +96,9 @@ document.addEventListener('DOMContentLoaded', () => {
             
             avatars.forEach(img => {
                 img.src = currentProfile.avatar_url || 'https://i.imgur.com/6UD0njE.png';
-                // Reset classes then add specific flair
                 img.className = img.id === 'navAvatar' ? 'avatar-small' : 'avatar-large';
                 if(flairClass) img.classList.add(flairClass);
             });
-
         } else {
             loggedOut.classList.remove('hidden');
             loggedIn.classList.add('hidden');
@@ -151,12 +150,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 username = story.guest_name + " (Guest)";
             }
 
-            // Vote Check
             const userIdKey = currentUser ? currentUser.id : 'guest';
             const votedStories = JSON.parse(localStorage.getItem(`voted_${userIdKey}`)) || [];
             const hasVoted = votedStories.includes(story.id);
 
-            // Menu (Edit/Delete) - Show if Owner OR Admin
             let menuHtml = '';
             if(isOwner || isAdmin) {
                 menuHtml = `
@@ -186,10 +183,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
             
-            // Click card to read (ignore buttons)
             card.addEventListener('click', (e) => {
                 if(!e.target.closest('button') && !e.target.closest('.menu-container') && !e.target.closest('textarea')) {
-                    // We need to pass the full story object manually since onclick stringify is messy
                     openReadModal(story); 
                 }
             });
@@ -197,7 +192,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- FIXED VOTING LOGIC (Toggle) ---
+    // --- TOGGLE VOTE LOGIC ---
     window.toggleVote = async function(event, id, currentVotes) {
         event.stopPropagation();
         const userIdKey = currentUser ? currentUser.id : 'guest';
@@ -207,28 +202,29 @@ document.addEventListener('DOMContentLoaded', () => {
         const hasVoted = votedStories.includes(id);
         
         let newVotes;
-        
         if (hasVoted) {
-            // REMOVE VOTE
+            // If already voted, remove vote
             newVotes = Math.max(0, currentVotes - 1);
             votedStories = votedStories.filter(storyId => storyId !== id);
         } else {
-            // ADD VOTE
+            // If not voted, add vote
             newVotes = currentVotes + 1;
             votedStories.push(id);
         }
 
-        // Optimistic UI Update
+        // Update Local Storage
         localStorage.setItem(storageKey, JSON.stringify(votedStories));
+        
+        // Update UI Button
         const btn = document.getElementById(`btn-${id}`);
         if(btn) {
             btn.innerHTML = `${!hasVoted ? '❤️' : '🤍'} <span>${newVotes}</span>`;
             btn.classList.toggle('voted');
-            // Update the onclick function to reflect the new vote count for next click
+            // Important: Update the click handler with the new vote count
             btn.onclick = (e) => window.toggleVote(e, id, newVotes); 
         }
 
-        // Database Update
+        // Send to Database
         await supabase.from('stories').update({ votes: newVotes }).eq('id', id);
     }
 
@@ -244,26 +240,18 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadPassport() {
         const grid = document.getElementById('flairGrid');
         grid.innerHTML = 'Loading...';
-        
-        // Get all flairs and user's earned flairs
         const { data: allFlairs } = await supabase.from('flairs').select('*');
         const { data: userFlairs } = await supabase.from('user_flairs').select('flair_id').eq('user_id', currentUser.id);
-        
         const earnedIds = userFlairs.map(uf => uf.flair_id);
         grid.innerHTML = '';
 
         allFlairs.forEach(f => {
             const isUnlocked = earnedIds.includes(f.id);
             const isSelected = currentProfile.selected_flair_id === f.id;
-            
             const div = document.createElement('div');
             div.className = `flair-item ${isUnlocked ? 'unlocked' : ''} ${isSelected ? 'selected' : ''}`;
             if(isUnlocked) div.onclick = () => equipFlair(f.id);
-            
-            div.innerHTML = `
-                <div class="flair-preview ${f.css_class}" style="background:#333;"></div>
-                <span>${f.name}</span>
-            `;
+            div.innerHTML = `<div class="flair-preview ${f.css_class}" style="background:#333;"></div><span>${f.name}</span>`;
             grid.appendChild(div);
         });
     }
@@ -271,8 +259,8 @@ document.addEventListener('DOMContentLoaded', () => {
     async function equipFlair(id) {
         await supabase.from('profiles').update({ selected_flair_id: id }).eq('id', currentUser.id);
         await fetchUserProfile();
-        updateUI(); // Refreshes avatar immediately
-        loadPassport(); // Refreshes selection highlight
+        updateUI();
+        loadPassport();
     }
 
     async function loadMyStories() {
@@ -296,16 +284,13 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.nextElementSibling.classList.toggle('show');
     }
 
-    // We need to store the active story for comments
     let activeStoryId = null;
     window.openReadModal = async function(storyObjOrId) {
-        // Handle if passed ID (from leaderboard) or Object (from feed)
         let story = storyObjOrId;
         if (typeof storyObjOrId === 'number') {
             const { data } = await supabase.from('stories').select('*, profiles(username)').eq('id', storyObjOrId).single();
             story = data;
         }
-
         activeStoryId = story.id;
         const modal = document.getElementById('readModal');
         let username = story.profiles ? story.profiles.username : (story.guest_name || 'Guest');
@@ -324,14 +309,11 @@ document.addEventListener('DOMContentLoaded', () => {
             let u = c.profiles ? c.profiles.username : (c.guest_name || 'Guest');
             let delBtn = (isAdmin || (currentUser && c.user_id === currentUser.id)) ? 
                 `<button class="btn-delete" style="font-size:0.7rem;" onclick="deleteComment(${c.id})">X</button>` : '';
-            list.innerHTML += `<div class="comment-item">
-                <div><strong>@${u}</strong>: ${escapeHtml(c.content)}</div>
-                ${delBtn}
-            </div>`;
+            list.innerHTML += `<div class="comment-item"><div><strong>@${u}</strong>: ${escapeHtml(c.content)}</div>${delBtn}</div>`;
         });
     }
 
-    // GLOBAL ACTIONS
+    // ACTIONS
     window.deleteStory = async (id) => {
         if(confirm("Delete this story?")) {
             await supabase.from('stories').delete().eq('id', id);
@@ -348,8 +330,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.editStoryInit = (id) => {
         const d = document.getElementById(`story-text-${id}`);
         const txt = d.innerText;
-        d.innerHTML = `<textarea id="edit-${id}" style="height:100px">${txt}</textarea>
-        <button class="btn-primary" onclick="saveStory(${id})">Save</button>`;
+        d.innerHTML = `<textarea id="edit-${id}" style="height:100px">${txt}</textarea><button class="btn-primary" onclick="saveStory(${id})">Save</button>`;
     }
     window.saveStory = async (id) => {
         const val = document.getElementById(`edit-${id}`).value;
@@ -357,10 +338,8 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchStories();
     }
 
-    // Helper
     function escapeHtml(text) { return text ? text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") : ""; }
 
-    // Listeners
     document.getElementById('publishBtn').addEventListener('click', async () => {
         const txt = document.getElementById('mainStoryInput').value;
         const pen = document.getElementById('guestPenName').value;
@@ -368,7 +347,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const payload = { content: txt, votes: 0 };
         if(currentUser) payload.user_id = currentUser.id;
         else { if(!pen) return alert("Pen name needed"); payload.guest_name = pen; }
-        
         const { error } = await supabase.from('stories').insert(payload);
         if(error) alert(error.message); else {
             document.getElementById('mainStoryInput').value = '';
@@ -388,10 +366,8 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchComments(activeStoryId);
     });
 
-    // Auth Buttons
     document.getElementById('navLoginBtn').onclick = () => document.getElementById('authModal').classList.remove('hidden');
     document.getElementById('logoutBtn').onclick = async () => { await supabase.auth.signOut(); };
     
-    // Init
     initApp();
 });
