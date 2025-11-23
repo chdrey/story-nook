@@ -37,13 +37,39 @@
     <div id="profileModal" class="modal hidden">
         <div class="modal-content book-style">
             <span class="close-modal" onclick="closeAllModals()">&times;</span>
+            
             <div class="profile-header">
-                <img id="profileAvatar" src="" alt="Avatar" class="avatar-large">
+                <div class="avatar-wrapper">
+                    <img id="profileAvatar" src="" alt="Avatar" class="avatar-large">
+                    </div>
                 <div class="profile-info">
-                    <h2 id="profileName">Username</h2>
-                    <button id="changeAvatarBtn" class="btn-secondary small">Change Picture URL</button>
+                    <h2 id="profileNameDisplay">Username</h2>
+                    <button id="changeAvatarBtn" class="btn-secondary small">Change Picture</button>
                 </div>
             </div>
+
+            <div class="passport-section">
+                <h3>🎖️ Author's Passport</h3>
+                <p class="subtext">Select a frame to equip.</p>
+                <div id="flairGrid" class="flair-grid">
+                    </div>
+            </div>
+            
+            <hr>
+
+            <div class="settings-section">
+                <h4>⚙️ Settings</h4>
+                <div class="settings-grid">
+                    <input type="text" id="updateUsernameInput" placeholder="New Pen Name">
+                    <button id="saveUsernameBtn" class="btn-secondary small">Update</button>
+                </div>
+                <div class="settings-grid">
+                    <input type="password" id="newPasswordInput" placeholder="New Password">
+                    <button id="changePasswordBtn" class="btn-secondary small">Update</button>
+                </div>
+                <button id="deleteAccountBtn" class="btn-delete full-width" style="margin-top:10px;">Delete Account</button>
+            </div>
+
             <hr>
             <h3>My Stories</h3>
             <div id="myStoriesList" class="my-stories-container"></div>
@@ -72,15 +98,13 @@
         <div class="modal-content book-style">
             <span class="close-modal" onclick="closeAllModals()">&times;</span>
             <h2 style="text-align:center; color:#d4a373; margin-bottom:20px;">About The Nook</h2>
-            <div class="modal-body-text" style="font-size: 1.1rem;">
-                <p>Welcome to <strong>The Story Nook</strong>, a digital hearth for writers, dreamers, and weary travelers.</p>
-                <p><strong>How it works:</strong></p>
+            <div class="modal-body-text">
+                <p>Welcome to <strong>The Story Nook</strong>.</p>
                 <ul>
-                    <li>🔥 <strong>Watch:</strong> Every week, we feature a new ambience video to set the mood.</li>
-                    <li>✍️ <strong>Write:</strong> Let the scene inspire you. Write a flash-fiction story (up to 2,000 characters).</li>
-                    <li>❤️ <strong>Connect:</strong> Read stories by others, leave kind comments, and vote for your favorites.</li>
+                    <li>🔥 <strong>Watch:</strong> Relax with the ambience.</li>
+                    <li>✍️ <strong>Write:</strong> Flash fiction (max 2000 chars).</li>
+                    <li>❤️ <strong>Connect:</strong> Read, vote, and comment.</li>
                 </ul>
-                <p>You can write as a Guest or create an account to save your stories to your profile.</p>
                 <p style="text-align:center; margin-top:20px; font-style:italic;">"Be kind, for everyone you meet is fighting a hard battle."</p>
             </div>
         </div>
@@ -91,14 +115,15 @@
         
         <div class="user-controls">
             <div id="loggedOutNav" class="nav-group">
-                <span class="save-prompt">Want to save your stories?</span>
-                <button id="navLoginBtn" class="btn-secondary">Log In / Sign Up</button>
+                <span class="save-prompt">Want to save stories?</span>
+                <button id="navLoginBtn" class="btn-secondary">Log In</button>
             </div>
 
             <div id="loggedInNav" class="nav-group hidden">
-                <span id="navUsername" style="font-weight:bold; color:#d4a373;">Writer</span>
-                <img id="navAvatar" src="" class="avatar-small">
-                <button id="navProfileBtn" class="btn-secondary">Profile</button>
+                <button id="navProfileBtn" class="profile-trigger">
+                    <span id="navUsername">Writer</span>
+                    <img id="navAvatar" src="" class="avatar-small">
+                </button>
                 <button id="logoutBtn" class="btn-secondary">Log Out</button>
             </div>
         </div>
@@ -117,7 +142,6 @@
                 <h2>This Week's Inspiration</h2>
                 <button id="infoBtn" class="info-icon" aria-label="About">ⓘ</button>
             </div>
-            
             <div class="video-wrapper">
                 <iframe id="youtubePlayer" src="" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
             </div>
@@ -135,7 +159,7 @@
         </section>
 
         <section class="leaderboard">
-            <h3>🏆 This Week's Top Stories</h3>
+            <h3>🏆 Top Stories</h3>
             <div class="top-stories-container" id="topStories"></div>
         </section>
 
