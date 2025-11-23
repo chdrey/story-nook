@@ -181,7 +181,7 @@ input, textarea { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid va
         flex-wrap: nowrap;
         justify-content: center; 
         align-items: center;
-        gap: 60%; /* Start far apart */
+        gap: 25vw; /* Start far apart */
     }
     .logo { font-size: 1.2rem; flex-shrink: 0; }
     .nav-group { flex-shrink: 0; }
@@ -229,3 +229,4 @@ input, textarea { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid va
     .action-bar { flex-direction: column; }
     .btn-primary { width: 100%; }
 }
+
