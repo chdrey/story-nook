@@ -23,7 +23,7 @@ html, body {
 /* UTILITIES */
 main { 
     max-width: 900px; margin: 0 auto; 
-    padding: 120px 20px 100px 20px; /* Increased top padding because Nav is Fixed */
+    padding: 120px 20px 100px 20px; 
 }
 .full-width { width: 100%; }
 .hidden { display: none !important; }
@@ -35,7 +35,7 @@ nav {
     padding: 20px 40px; 
     width: 100%;
     background: var(--glass); 
-    position: fixed; top: 0; left: 0; z-index: 1000; /* Fixed position ensures smoothness */
+    position: fixed; top: 0; left: 0; z-index: 1000; 
     border-bottom: 1px solid rgba(255,255,255,0.1);
     backdrop-filter: blur(10px);
     transition: all 0.3s ease;
@@ -57,11 +57,10 @@ nav {
 
 /* === SCROLLED NAV STATE === */
 nav.scrolled {
-    padding: 10px 40px; /* Shrink padding */
+    padding: 10px 40px;
     background: var(--glass-nav);
     box-shadow: 0 5px 20px rgba(0,0,0,0.5);
 }
-/* Animate logout wrapper */
 nav.scrolled .logout-wrapper {
     opacity: 0; width: 0; margin-left: 0; pointer-events: none; overflow: hidden;
 }
@@ -77,10 +76,9 @@ nav.scrolled .logout-wrapper {
     background: #3d2b20; color: var(--text-main); padding: 30px;
     border-radius: 10px; width: 90%; max-width: 400px; text-align: center; 
     border: 1px solid var(--accent);
-    display: flex; flex-direction: column; gap: 20px; /* Proper spacing */
+    display: flex; flex-direction: column; gap: 20px; 
 }
 
-/* Auth Form Spacing */
 .auth-form-container {
     display: flex; flex-direction: column; gap: 15px; width: 100%;
 }
@@ -135,7 +133,15 @@ nav.scrolled .logout-wrapper {
     background-color: var(--warm-bg); z-index: 9999;
     display: flex; justify-content: center; align-items: center; transition: opacity 0.8s ease;
 }
-.welcome-content { text-align: center; padding: 40px; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--accent); border-radius: 15px; width: 90%; max-width: 600px; }
+.welcome-content { 
+    text-align: center; padding: 40px; 
+    background: rgba(255, 255, 255, 0.05); 
+    border: 1px solid var(--accent); 
+    border-radius: 15px; 
+    width: 90%; max-width: 600px; 
+    /* FIXED SPACING HERE */
+    display: flex; flex-direction: column; gap: 35px; align-items: center;
+}
 .hero { text-align: center; margin-bottom: 30px; background: var(--glass); padding: 30px; border-radius: 15px; }
 
 .hero-header-row { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 20px; }
@@ -182,13 +188,36 @@ input, textarea { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid va
 
 /* === MOBILE OPTIMIZATION === */
 @media (max-width: 600px) {
-    /* Fix Header Layout */
-    nav { padding: 15px; display: flex; flex-direction: row; flex-wrap: wrap; justify-content: space-between; }
-    .logo { font-size: 1.2rem; order: 1; }
-    .nav-group { order: 2; justify-content: flex-end; }
+    /* 1. Fix Header Layout: No Wrap, Space Between */
+    nav { 
+        padding: 15px; 
+        display: flex; 
+        flex-direction: row; 
+        flex-wrap: nowrap; /* Forces single line */
+        justify-content: space-between; /* Pushes logo left, login right */
+        align-items: center;
+    }
+    .logo { font-size: 1.2rem; flex-shrink: 0; }
+    .nav-group { flex-shrink: 0; }
 
-    /* On small screens, hide the "Want to save?" text if tight, or stack it */
+    /* Hide save text on mobile to save space */
     .save-prompt { display: none; } 
+
+    /* 2. Organized Mobile Intro Screen */
+    .welcome-content {
+        padding: 30px 20px;
+        gap: 20px; /* Slightly tighter gap on mobile */
+    }
+    .welcome-content h1 {
+        font-size: 1.8rem;
+        line-height: 1.2;
+        white-space: nowrap; /* Keeps title on one line as requested */
+    }
+    .weekly-quote {
+        font-size: 1rem;
+        line-height: 1.6;
+        text-align: center;
+    }
 
     /* Inspiration Section */
     .hero-header-row { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 15px; }
