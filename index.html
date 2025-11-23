@@ -21,26 +21,34 @@
         </div>
     </div>
 
-    <!-- AUTH MODAL -->
+    <!-- AUTH MODAL (Fixed Layout) -->
     <div id="authModal" class="modal hidden">
         <div class="modal-content narrow">
             <span class="close-modal" onclick="closeAllModals()">&times;</span>
             <h2 id="authTitle">Log In</h2>
-            <input type="email" id="emailInput" placeholder="Email Address">
-            <input type="password" id="passwordInput" placeholder="Password">
-            <input type="text" id="usernameInput" placeholder="Choose a Pen Name" class="hidden">
-            <button id="authActionBtn" class="btn-primary full-width">Log In</button>
-            <p class="switch-text" id="switchAuthMode">Don't have an account? <span class="auth-link">Sign Up</span></p>
+            
+            <div class="auth-form-container">
+                <input type="email" id="emailInput" placeholder="Email Address" autocomplete="email">
+                <input type="password" id="passwordInput" placeholder="Password" autocomplete="current-password">
+                <!-- Username hidden by default -->
+                <input type="text" id="usernameInput" placeholder="Choose a Pen Name" class="hidden" autocomplete="username">
+                
+                <button id="authActionBtn" class="btn-primary full-width">Log In</button>
+            </div>
+
+            <div class="auth-toggle-wrapper">
+                <span id="authToggleText">Don't have an account?</span>
+                <button id="authSwitchBtn" class="text-link">Sign Up</button>
+            </div>
             <p id="authError" class="error-text"></p>
         </div>
     </div>
 
-    <!-- PROFILE MODAL (Passport & Settings) -->
+    <!-- PROFILE MODAL -->
     <div id="profileModal" class="modal hidden">
         <div class="modal-content book-style">
             <span class="close-modal" onclick="closeAllModals()">&times;</span>
             
-            <!-- Identity -->
             <div class="profile-header">
                 <div class="avatar-wrapper">
                     <img id="profileAvatar" src="" alt="Avatar" class="avatar-large">
@@ -51,18 +59,14 @@
                 </div>
             </div>
 
-            <!-- Passport (Flairs) -->
             <div class="passport-section">
                 <h3>🎖️ Author's Passport</h3>
                 <p class="subtext">Select a frame to equip.</p>
-                <div id="flairGrid" class="flair-grid">
-                    <!-- JS will populate this -->
-                </div>
+                <div id="flairGrid" class="flair-grid"></div>
             </div>
             
             <hr>
 
-            <!-- Settings -->
             <div class="settings-section">
                 <h4>⚙️ Settings</h4>
                 <div class="settings-grid">
@@ -133,7 +137,6 @@
                     <span id="navUsername">Writer</span>
                     <img id="navAvatar" src="" class="avatar-small">
                 </button>
-                <!-- Wraps logout so we can animate it out cleanly -->
                 <div class="logout-wrapper">
                     <button id="logoutBtn" class="btn-secondary">Log Out</button>
                 </div>
