@@ -21,6 +21,7 @@
         </div>
     </div>
 
+    <!-- AUTH MODAL -->
     <div id="authModal" class="modal hidden">
         <div class="modal-content narrow">
             <span class="close-modal" onclick="closeAllModals()">&times;</span>
@@ -34,29 +35,34 @@
         </div>
     </div>
 
+    <!-- PROFILE MODAL (Passport & Settings) -->
     <div id="profileModal" class="modal hidden">
         <div class="modal-content book-style">
             <span class="close-modal" onclick="closeAllModals()">&times;</span>
             
+            <!-- Identity -->
             <div class="profile-header">
                 <div class="avatar-wrapper">
                     <img id="profileAvatar" src="" alt="Avatar" class="avatar-large">
-                    </div>
+                </div>
                 <div class="profile-info">
                     <h2 id="profileNameDisplay">Username</h2>
                     <button id="changeAvatarBtn" class="btn-secondary small">Change Picture</button>
                 </div>
             </div>
 
+            <!-- Passport (Flairs) -->
             <div class="passport-section">
                 <h3>🎖️ Author's Passport</h3>
                 <p class="subtext">Select a frame to equip.</p>
                 <div id="flairGrid" class="flair-grid">
-                    </div>
+                    <!-- JS will populate this -->
+                </div>
             </div>
             
             <hr>
 
+            <!-- Settings -->
             <div class="settings-section">
                 <h4>⚙️ Settings</h4>
                 <div class="settings-grid">
@@ -76,6 +82,7 @@
         </div>
     </div>
 
+    <!-- READ STORY MODAL -->
     <div id="readModal" class="modal hidden">
         <div class="modal-content book-style">
             <span class="close-modal" onclick="closeAllModals()">&times;</span>
@@ -94,6 +101,7 @@
         </div>
     </div>
 
+    <!-- ABOUT MODAL -->
     <div id="aboutModal" class="modal hidden">
         <div class="modal-content book-style">
             <span class="close-modal" onclick="closeAllModals()">&times;</span>
@@ -110,6 +118,7 @@
         </div>
     </div>
 
+    <!-- NAVIGATION -->
     <nav id="mainNav">
         <div class="logo">The Story Nook 📚</div>
         
@@ -124,11 +133,15 @@
                     <span id="navUsername">Writer</span>
                     <img id="navAvatar" src="" class="avatar-small">
                 </button>
-                <button id="logoutBtn" class="btn-secondary">Log Out</button>
+                <!-- Wraps logout so we can animate it out cleanly -->
+                <div class="logout-wrapper">
+                    <button id="logoutBtn" class="btn-secondary">Log Out</button>
+                </div>
             </div>
         </div>
     </nav>
 
+    <!-- BACKGROUND -->
     <div class="video-background">
         <video muted loop playsinline id="bgVideo">
             <source src="assets/fireplace.mp4" type="video/mp4">
@@ -136,6 +149,7 @@
     </div>
     <div class="overlay"></div>
 
+    <!-- MAIN CONTENT -->
     <main>
         <section class="hero">
             <div class="hero-header-row">
