@@ -8,21 +8,19 @@
     --font-ui: 'Nunito', sans-serif;
 }
 
-/* GLOBAL RESET */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 /* === CRITICAL SCROLL FIX === */
 html, body {
     width: 100%;
-    min-height: 100vh;
+    min-height: 100%;
     margin: 0;
     padding: 0;
     font-family: var(--font-ui); 
     color: var(--text-main); 
     background-color: var(--warm-bg);
-    overflow-x: hidden; /* Prevent side scrolling */
-    overflow-y: auto;   /* Allow vertical scrolling */
-    -webkit-overflow-scrolling: touch; /* Smooth scroll on iOS */
+    overflow-y: scroll; /* Force scrollbar to appear */
+    -webkit-overflow-scrolling: touch;
 }
 
 /* UTILITIES */
@@ -30,7 +28,8 @@ main {
     max-width: 900px; 
     margin: 0 auto; 
     padding: 40px 20px; 
-    padding-bottom: 150px; /* Extra space at bottom for mobile */
+    /* Ensure padding doesn't block scroll */
+    padding-bottom: 100px; 
 }
 .full-width { width: 100%; }
 .hidden { display: none !important; }
@@ -48,9 +47,9 @@ nav {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.logo { font-size: 1.5rem; font-weight: bold; color: var(--accent); cursor: pointer; }
+.logo { font-size: 1.5rem; font-weight: bold; color: var(--accent); cursor: pointer; white-space: nowrap; }
 .nav-group { display: flex; align-items: center; gap: 15px; }
-.save-prompt { font-size: 0.9rem; color: var(--text-muted); font-style: italic; }
+.save-prompt { font-size: 0.9rem; color: var(--text-muted); font-style: italic; white-space: nowrap; }
 
 /* Profile Trigger Button */
 .profile-trigger {
@@ -67,10 +66,18 @@ nav.scrolled {
     background: rgba(20, 15, 10, 0.98); 
     padding: 10px 20px;
 }
-/* Hide Logout Button Smoothly on scroll */
-nav.scrolled #logoutBtn {
-    opacity: 0; transform: translateX(20px); pointer-events: none;
-    width: 0; padding: 0; margin: 0; overflow: hidden; transition: all 0.4s ease;
+/* Animate the logout wrapper width/opacity */
+nav.scrolled .logout-wrapper {
+    opacity: 0;
+    width: 0;
+    margin-left: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+.logout-wrapper {
+    transition: all 0.4s ease;
+    opacity: 1;
+    width: auto;
 }
 
 /* === MODALS === */
@@ -130,6 +137,8 @@ nav.scrolled #logoutBtn {
 }
 .welcome-content { text-align: center; padding: 40px; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--accent); border-radius: 15px; width: 90%; max-width: 600px; }
 .hero { text-align: center; margin-bottom: 30px; background: var(--glass); padding: 30px; border-radius: 15px; }
+
+/* HERO HEADER: Desktop default (Centered) */
 .hero-header-row { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 20px; }
 .info-icon { background: none; border: 1px solid var(--text-muted); color: var(--text-muted); border-radius: 50%; width: 24px; height: 24px; cursor: pointer; }
 
@@ -139,7 +148,7 @@ nav.scrolled #logoutBtn {
 }
 .writing-zone textarea {
     width: 100%; 
-    height: 400px; /* Desktop Height */
+    height: 400px;
     background: transparent; border: none; color: var(--text-main); font-family: var(--font-body); font-size: 1.2rem; resize: vertical; outline: none;
 }
 .action-bar { display: flex; justify-content: flex-end; gap: 15px; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; flex-wrap: wrap; }
@@ -175,49 +184,39 @@ input, textarea { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid va
 
 /* === MOBILE OPTIMIZATION === */
 @media (max-width: 600px) {
-    /* 1. Fix Header Layout */
-    nav { 
-        display: flex;
-        flex-direction: column; 
-        align-items: center; 
-        padding: 15px;
-        gap: 15px;
-    }
     
-    .logo { 
-        width: 100%; 
-        text-align: center; 
-        margin-bottom: 5px; 
-    }
-
-    /* 2. Center Log In & Stack Text */
+    /* 1. Header: Layout pushed to sides */
+    nav { padding: 15px 15px; }
+    
+    .logo { font-size: 1.2rem; }
+    
     .nav-group {
-        flex-direction: column; /* Stack text on top of button */
-        text-align: center;
+        flex-direction: row; /* Keep items in a row */
         gap: 8px;
-        width: 100%;
-    }
-    
-    .save-prompt {
-        display: block; /* Force it to its own line */
-        margin-bottom: 0;
+        justify-content: flex-end; /* Push to right */
     }
 
-    #navLoginBtn {
-        width: 100%;
-        max-width: 200px;
-    }
-
-    /* 3. Fix "Can't see entries" issue */
-    /* Reduce text box height on mobile so it doesn't take full screen */
-    .writing-zone textarea {
-        height: 150px; 
-    }
+    /* Hide prompts if screen is super small, or keep them */
+    .save-prompt { display: none; } /* Too cluttered on mobile usually */
     
-    /* 4. General Layout Fixes */
-    .hero-header-row { width: 100%; gap: 8px; }
+    /* 2. Inspiration: Text line above, Icon right */
+    .hero-header-row {
+        display: flex;
+        justify-content: space-between; /* Text left, Icon right */
+        align-items: center;
+        width: 100%;
+        margin-bottom: 15px;
+    }
+    .hero h2 { font-size: 1.1rem; margin: 0; text-align: left; }
+    .info-icon { flex-shrink: 0; }
+
+    /* 3. Writing Box & General Layout */
+    .writing-zone textarea { height: 150px; }
     .settings-grid { flex-direction: column; }
     #guestPenName { width: 100%; margin-bottom: 10px; }
     .action-bar { flex-direction: column; }
     .btn-primary { width: 100%; }
+    
+    /* Ensure content isn't hidden behind padding */
+    main { padding-bottom: 150px; }
 }
