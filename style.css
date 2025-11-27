@@ -59,6 +59,15 @@ nav {
 }
 .profile-trigger .avatar-small { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
 
+/* NEW: CONTROL SIZE OF PROFILE MODAL PICTURE */
+.avatar-large {
+    width: 80px;  /* Resized to be smaller */
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--accent);
+}
+
 /* === SCROLLED NAV STATE (Desktop) === */
 nav.scrolled {
     padding: 10px 40px;
@@ -228,3 +237,4 @@ input, textarea { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid va
     .action-bar { flex-direction: column; }
     .btn-primary { width: 100%; }
 }
+
