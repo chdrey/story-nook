@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Website Loaded v4.1 - Tooltips Logic");
+    console.log("Website Loaded v4.2");
 
-    // --- 1. INFO BUTTON (Main Page) ---
+    // --- 1. INFO BUTTON ---
     const infoBtn = document.getElementById('infoBtn');
     if (infoBtn) {
         infoBtn.onclick = () => {
@@ -13,7 +13,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const passportInfoBtn = document.getElementById('passportInfoBtn');
     if (passportInfoBtn) {
         passportInfoBtn.onclick = () => {
-            // Just open the static guide. No counting logic needed here.
             document.getElementById('passportInfoModal').classList.remove('hidden');
         };
     }
@@ -176,7 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if(document.getElementById('navProfileBtn')) {
             document.getElementById('navProfileBtn').addEventListener('click', async () => {
                 document.getElementById('profileModal').classList.remove('hidden');
-                loadPassport(); // This now includes counts
+                loadPassport();
                 loadMyStories();
             });
         }
