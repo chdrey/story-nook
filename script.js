@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Website Loaded v23.0 - Avatar Upload");
+    console.log("Website Loaded v25.0 - TOP 3 LOGIC FIXED");
 
     // ==========================================
     // 1. SUPABASE CONFIGURATION
@@ -121,10 +121,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         avatars.forEach(img => {
             if(img) {
-                // Add timestamp to force refresh if URL is same but image changed
                 const url = profileData.avatar_url || 'https://i.imgur.com/6UD0njE.png';
                 img.src = url;
-                
                 if(img.id === 'navAvatar') {
                     img.className = 'avatar-small';
                     img.classList.remove('frame-wood', 'frame-stone', 'frame-iron', 'frame-gold', 'frame-diamond', 'frame-copper');
@@ -160,6 +158,27 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
+    // Feedback Modal logic
+    window.openFeedback = () => {
+        document.getElementById('feedbackModal').classList.remove('hidden');
+        if(currentUser) {
+            document.getElementById('feedbackEmail').classList.add('hidden');
+        } else {
+            document.getElementById('feedbackEmail').classList.remove('hidden');
+        }
+    };
+
+    const submitFeedbackBtn = document.getElementById('submitFeedbackBtn');
+    if(submitFeedbackBtn) {
+        submitFeedbackBtn.onclick = () => {
+            const txt = document.getElementById('feedbackText').value;
+            if(!txt) return alert("Please write something!");
+            alert("🦉 An owl has been dispatched to The High Council! (Simulated)");
+            document.getElementById('feedbackText').value = '';
+            closeModal('feedbackModal');
+        };
+    }
+
     // Modal Closing
     window.closeModal = (id) => {
         const modal = document.getElementById(id);
@@ -181,83 +200,132 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================
-    // 4. AVATAR UPLOAD LOGIC (NEW)
+    // 4. AVATAR UPLOAD LOGIC
     // ==========================================
-    
-    // Trigger hidden input
     const profileAvatar = document.getElementById('profileAvatar');
     const avatarInput = document.getElementById('avatarUploadInput');
 
     if(profileAvatar && avatarInput) {
         profileAvatar.onclick = () => {
-            // Only allow upload if NOT in admin view mode
             if(!document.getElementById('profileModal').classList.contains('admin-view')) {
                 avatarInput.click();
             }
         };
 
-        // Handle File Selection
         avatarInput.onchange = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
-
-            // Optional: Check file size (e.g. max 2MB)
             if (file.size > 2000000) return alert("File is too big! Max 2MB.");
 
             const overlay = document.getElementById('avatarEditOverlay');
-            if(overlay) overlay.innerText = "⏳"; // Show loading icon
+            if(overlay) overlay.innerText = "⏳";
 
             try {
-                // 1. Upload to Supabase Storage
-                // We use timestamp to make filename unique
                 const fileName = `${currentUser.id}/${Date.now()}.png`; 
                 const { error: uploadError } = await supabase.storage.from('avatars').upload(fileName, file, {
                     cacheControl: '3600',
                     upsert: false
                 });
-
                 if (uploadError) throw uploadError;
 
-                // 2. Get Public URL
                 const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(fileName);
 
-                // 3. Update Profile Database
                 const { error: dbError } = await supabase
                     .from('profiles')
                     .update({ avatar_url: publicUrl })
                     .eq('id', currentUser.id);
-
                 if (dbError) throw dbError;
 
-                // 4. Refresh UI
                 await fetchUserProfile();
                 updateUI();
-                if(overlay) overlay.innerText = "📷"; // Reset icon
+                if(overlay) overlay.innerText = "📷";
 
             } catch (error) {
                 console.error("Upload failed:", error);
-                alert("Upload failed. Make sure you created the 'avatars' bucket in Supabase!");
+                alert("Upload failed. Make sure 'avatars' bucket exists in Supabase Storage!");
                 if(overlay) overlay.innerText = "❌";
             }
         };
     }
 
     // ==========================================
-    // 5. STORY LOGIC
+    // 5. STORY LOGIC - SEPARATE QUERIES (FIXED)
     // ==========================================
+
+    function createStoryCardHTML(story, isTopSection = false) {
+        const authorName = story.guest_name || (story.profiles ? story.profiles.username : 'Anonymous');
+        const authorAvatar = (story.profiles && story.profiles.avatar_url) ? story.profiles.avatar_url : 'https://i.imgur.com/6UD0njE.png';
+        const commentCount = (story.comments && story.comments[0]) ? story.comments[0].count : 0;
+        const isOwner = isAdmin || (currentUser && story.user_id === currentUser.id);
+        
+        let menuItems = `<button onclick="event.stopPropagation(); reportContent('story', ${story.id})">⚠️ Report</button>`;
+        if (isOwner) {
+            menuItems += `<button onclick="event.stopPropagation(); deleteStory(${story.id})" class="text-red">🗑️ Delete</button>`;
+        }
+
+        const menuHTML = `
+            <div class="action-column">
+                <button class="menu-trigger" onclick="event.stopPropagation(); toggleMenu('story-menu-${story.id}-${isTopSection ? 'top' : 'feed'}')">⋮</button>
+                <div id="story-menu-${story.id}-${isTopSection ? 'top' : 'feed'}" class="menu-dropdown">
+                    ${menuItems}
+                </div>
+                <button class="vote-btn" onclick="event.stopPropagation(); voteStory('${story.id}', ${story.votes})">
+                    ❤️ <span style="font-size:0.8rem">${story.votes || 0}</span>
+                </button>
+                <div style="font-size:0.8rem; color:var(--text-muted); text-align:center; margin-top:2px;">
+                    💬 ${commentCount}
+                </div>
+            </div>
+        `;
+
+        return `
+            <div class="story-card" onclick="openReadModal(${story.id})">
+                <div class="story-header-row">
+                    <img src="${authorAvatar}" class="feed-avatar" alt="Avatar">
+                    <span class="story-author">${escapeHtml(authorName)}</span>
+                </div>
+                <p style="font-size: 1.1rem; margin-bottom: 10px;">"${escapeHtml(story.content.substring(0, 200))}${story.content.length > 200 ? '...' : ''}"</p>
+                <div class="story-meta" style="justify-content: flex-end;">
+                    ${menuHTML}
+                </div>
+            </div>
+        `;
+    }
 
     async function fetchStories() {
         const feed = document.getElementById('storyFeed');
         const top = document.getElementById('topStories');
+        
         if (!feed) return;
         feed.innerHTML = '<p style="text-align:center; color:#ccc;">Gathering tales...</p>';
 
-        const { data: stories, error } = await supabase
+        // --- 1. FETCH TOP 3 STORIES (Votes > 0) ---
+        if(top) {
+            const { data: topStories } = await supabase
+                .from('stories')
+                .select('*, profiles(username, avatar_url, selected_flair_id), comments(count)')
+                .is('deleted_at', null)
+                .gt('votes', 0) // MUST have at least 1 vote
+                .order('votes', { ascending: false })
+                .limit(3);
+
+            top.innerHTML = '';
+            if(topStories && topStories.length > 0) {
+                topStories.forEach(story => {
+                    top.insertAdjacentHTML('beforeend', createStoryCardHTML(story, true));
+                });
+            } else {
+                top.innerHTML = '<p style="text-align:center; color:#777; font-style:italic;">No top stories yet. Vote for one!</p>';
+            }
+        }
+
+        // --- 2. FETCH FEED (LATEST 30) ---
+        const { data: feedStories, error } = await supabase
             .from('stories')
             .select('*, profiles(username, avatar_url, selected_flair_id), comments(count)')
             .is('deleted_at', null)
             .order('created_at', { ascending: false })
-            .limit(20);
+            .limit(30);
 
         if (error) {
             console.error("Error loading stories:", error);
@@ -266,53 +334,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         feed.innerHTML = '';
-        if (top) top.innerHTML = '';
-
-        if (stories.length === 0) {
+        if (feedStories.length === 0) {
             feed.innerHTML = '<p style="text-align:center">No stories yet. Be the first!</p>';
             return;
         }
 
-        stories.forEach(story => {
-            const authorName = story.guest_name || (story.profiles ? story.profiles.username : 'Anonymous');
-            const isTopStory = story.votes >= 5; 
-            const commentCount = (story.comments && story.comments[0]) ? story.comments[0].count : 0;
-            const isOwner = isAdmin || (currentUser && story.user_id === currentUser.id);
-            
-            let menuItems = `<button onclick="event.stopPropagation(); reportContent('story', ${story.id})">⚠️ Report</button>`;
-            if (isOwner) {
-                menuItems += `<button onclick="event.stopPropagation(); deleteStory(${story.id})" class="text-red">🗑️ Delete</button>`;
-            }
-
-            const menuHTML = `
-                <div class="action-column">
-                    <button class="menu-trigger" onclick="event.stopPropagation(); toggleMenu('story-menu-${story.id}')">⋮</button>
-                    <div id="story-menu-${story.id}" class="menu-dropdown">
-                        ${menuItems}
-                    </div>
-                    <button class="vote-btn" onclick="event.stopPropagation(); voteStory('${story.id}', ${story.votes})">
-                        ❤️ <span style="font-size:0.8rem">${story.votes || 0}</span>
-                    </button>
-                    <div style="font-size:0.8rem; color:var(--text-muted); text-align:center; margin-top:2px;">
-                        💬 ${commentCount}
-                    </div>
-                </div>
-            `;
-
-            const cardHTML = `
-                <div class="story-card" onclick="openReadModal(${story.id})">
-                    <p style="font-size: 1.1rem; margin-bottom: 10px;">"${escapeHtml(story.content.substring(0, 200))}${story.content.length > 200 ? '...' : ''}"</p>
-                    <div class="story-meta">
-                        <span>✍️ ${escapeHtml(authorName)}</span>
-                        ${menuHTML}
-                    </div>
-                </div>
-            `;
-
-            feed.insertAdjacentHTML('beforeend', cardHTML);
-            if (isTopStory && top) {
-                top.insertAdjacentHTML('beforeend', cardHTML);
-            }
+        feedStories.forEach(story => {
+            feed.insertAdjacentHTML('beforeend', createStoryCardHTML(story, false));
         });
     }
 
@@ -362,7 +390,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================
     window.openReadModal = async (story) => {
         if(typeof story === 'number') { 
-            const {data} = await supabase.from('stories').select('*, profiles(username)').eq('id', story).single(); 
+            const {data} = await supabase.from('stories').select('*, profiles(username, avatar_url)').eq('id', story).single(); 
             story = data; 
         }
         
@@ -382,7 +410,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const { data: comments } = await supabase
             .from('comments')
-            .select('*, profiles(username)')
+            .select('*, profiles(username, avatar_url)')
             .eq('story_id', storyId)
             .is('deleted_at', null) 
             .order('created_at', {ascending: true});
@@ -395,7 +423,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         comments.forEach(c => {
             const u = c.profiles ? c.profiles.username : c.guest_name;
+            const uAvatar = (c.profiles && c.profiles.avatar_url) ? c.profiles.avatar_url : 'https://i.imgur.com/6UD0njE.png';
             const isOwner = isAdmin || (currentUser && c.user_id === currentUser.id);
+            
             let menuItems = `<button onclick="event.stopPropagation(); reportContent('comment', ${c.id})">⚠️ Report</button>`;
             if (isOwner) {
                 menuItems += `<button onclick="event.stopPropagation(); deleteComment(${c.id})" class="text-red">🗑️ Delete</button>`;
@@ -412,7 +442,13 @@ document.addEventListener('DOMContentLoaded', () => {
             
             list.innerHTML += `
                 <div class="comment-item">
-                    <div><strong>@${u}</strong>: ${escapeHtml(c.content)}</div>
+                    <div style="display:flex; gap:10px; align-items:flex-start;">
+                        <img src="${uAvatar}" class="feed-avatar" style="width:30px; height:30px;">
+                        <div>
+                            <strong>@${u}</strong><br>
+                            ${escapeHtml(c.content)}
+                        </div>
+                    </div>
                     ${menuHTML}
                 </div>`;
         });
@@ -571,8 +607,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         modal.classList.remove('hidden'); 
         modal.classList.add('admin-view'); 
-        
-        // Add "no-click" class to wrapper to disable upload hover effect
         document.querySelector('.avatar-wrapper').classList.add('no-click');
 
         document.getElementById('settingsSection').classList.add('hidden');
@@ -602,8 +636,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const grid = document.getElementById('flairGrid');
         
         modal.classList.remove('admin-view');
-        
-        // Remove "no-click" to enable upload
         document.querySelector('.avatar-wrapper').classList.remove('no-click');
 
         document.getElementById('settingsSection').classList.remove('hidden');
@@ -734,7 +766,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loadPassportForUser(currentUser.id);
     }
 
-    // === PROFILE STORY LOADER ===
+    // === PROFILE STORY LOADER (SOFT DELETE & ACCORDION) ===
     async function loadStoriesForUser(targetId) {
         const list = document.getElementById('myStoriesList');
         if(!list) return;
