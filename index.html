@@ -47,17 +47,18 @@
             
             <div class="profile-header">
                 <div class="avatar-wrapper">
-                    <img id="profileAvatar" src="" alt="Avatar" class="avatar-large">
+                    <img id="profileAvatar" src="" alt="Avatar" class="avatar-large profile-trigger-action">
+                    <p style="font-size:0.8rem; color:var(--text-muted); margin-top:5px;">(Tap to change)</p>
                 </div>
                 <div class="profile-info">
                     <h2 id="profileNameDisplay">Username</h2>
-                    <button id="changeAvatarBtn" class="btn-secondary small">Change Picture</button>
+                    <p class="subtext" style="margin-top:0;">Pen Name (Permanent)</p>
                 </div>
             </div>
 
             <div class="passport-section">
                 <h3>🎖️ Author's Passport</h3>
-                <p class="subtext">Select a frame to equip.</p>
+                <p class="subtext">Progress through material frames by earning achievements.</p>
                 <div id="flairGrid" class="flair-grid"></div>
             </div>
             
@@ -65,24 +66,27 @@
 
             <div class="settings-section">
                 <h4>⚙️ Settings</h4>
-                <div class="settings-grid">
-                    <input type="text" id="updateUsernameInput" placeholder="New Pen Name">
-                    <button id="saveUsernameBtn" class="btn-secondary small">Update</button>
-                </div>
-                <div class="settings-grid">
+                <p class="subtext">Pen names are permanent marks of your journey.</p>
+                
+                <div class="settings-grid" style="margin-top: 15px;">
                     <input type="password" id="newPasswordInput" placeholder="New Password">
                     <button id="changePasswordBtn" class="btn-secondary small">Update</button>
                 </div>
                 
-                <div class="account-actions">
-                    <button id="logoutBtn" class="btn-secondary full-width">Log Out</button>
-                    <button id="deleteAccountBtn" class="btn-delete full-width">Delete Account</button>
-                </div>
+                <button id="logoutBtn" class="btn-secondary full-width" style="margin-top: 15px;">Log Out</button>
             </div>
 
             <hr>
             <h3>My Stories</h3>
             <div id="myStoriesList" class="my-stories-container"></div>
+
+            <hr style="border-color: #e76f51; opacity: 0.3;">
+            
+            <div class="danger-zone">
+                <h4 style="color: #e76f51;">⚠️ Danger Zone</h4>
+                <p class="subtext" style="color: #c44536;">Deleting your account is permanent and cannot be undone. All your stories will be lost.</p>
+                <button id="deleteAccountBtn" class="btn-delete-final full-width">Delete Account Forever</button>
+            </div>
         </div>
     </div>
 
@@ -185,8 +189,6 @@
                 overlay.style.opacity = '0';
                 setTimeout(() => overlay.classList.add('hidden'), 800);
             }
-            
-            // Try to play video/audio
             const bgVideo = document.getElementById('bgVideo');
             if (bgVideo) {
                 bgVideo.muted = false;
