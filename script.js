@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Website Loaded v16.0 - Comment UX & Design");
+    console.log("Website Loaded v17.0 - FINAL PROFILE FIX");
 
     // ==========================================
     // 1. SUPABASE CONFIGURATION
@@ -91,14 +91,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const loggedOut = document.getElementById('loggedOutNav');
         const loggedIn = document.getElementById('loggedInNav');
         const guestInput = document.getElementById('guestPenName');
-        const commentGuestInput = document.getElementById('commentGuestName'); // New check
+        const commentGuestInput = document.getElementById('commentGuestName');
         
         if (currentUser && currentProfile) {
             loggedOut.classList.add('hidden');
             loggedIn.classList.remove('hidden');
             guestInput.classList.add('hidden');
-            
-            // HIDE COMMENT NAME INPUT IF LOGGED IN
             if(commentGuestInput) commentGuestInput.classList.add('hidden');
             
             const navUser = document.getElementById('navUsername');
@@ -113,8 +111,6 @@ document.addEventListener('DOMContentLoaded', () => {
             loggedOut.classList.remove('hidden');
             loggedIn.classList.add('hidden');
             guestInput.classList.remove('hidden');
-            
-            // SHOW COMMENT NAME INPUT IF LOGGED OUT
             if(commentGuestInput) commentGuestInput.classList.remove('hidden');
         }
     }
@@ -148,7 +144,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (navProfileBtn) {
         navProfileBtn.onclick = (e) => {
             e.stopPropagation(); 
-            document.getElementById('profileModal').classList.remove('hidden');
+            // Trigger the "My View" reset logic
+            window.resetProfileModalToMyView();
         };
     }
 
@@ -165,14 +162,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const modal = document.getElementById(id);
         if (modal) {
             modal.classList.add('hidden');
-            if(id === 'profileModal') resetProfileModalToMyView();
+            // If closing profile, reset view state in background
+            if(id === 'profileModal') setTimeout(() => resetProfileModalToMyView(), 300);
         }
     }
     
     window.onclick = (e) => {
         if (e.target.classList.contains('modal')) {
             e.target.classList.add('hidden');
-            resetProfileModalToMyView();
+            if(e.target.id === 'profileModal') setTimeout(() => resetProfileModalToMyView(), 300);
         }
     };
 
@@ -187,7 +185,6 @@ document.addEventListener('DOMContentLoaded', () => {
     async function fetchStories() {
         const feed = document.getElementById('storyFeed');
         const top = document.getElementById('topStories');
-        
         if (!feed) return;
         feed.innerHTML = '<p style="text-align:center; color:#ccc;">Gathering tales...</p>';
 
@@ -216,11 +213,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const authorName = story.guest_name || (story.profiles ? story.profiles.username : 'Anonymous');
             const isTopStory = story.votes >= 5; 
             const commentCount = (story.comments && story.comments[0]) ? story.comments[0].count : 0;
-
             const isOwner = isAdmin || (currentUser && story.user_id === currentUser.id);
             
             let menuItems = `<button onclick="event.stopPropagation(); reportContent('story', ${story.id})">⚠️ Report</button>`;
-            
             if (isOwner) {
                 menuItems += `<button onclick="event.stopPropagation(); deleteStory(${story.id})" class="text-red">🗑️ Delete</button>`;
             }
@@ -231,11 +226,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div id="story-menu-${story.id}" class="menu-dropdown">
                         ${menuItems}
                     </div>
-                    
                     <button class="vote-btn" onclick="event.stopPropagation(); voteStory('${story.id}', ${story.votes})">
                         ❤️ <span style="font-size:0.8rem">${story.votes || 0}</span>
                     </button>
-                    
                     <div style="font-size:0.8rem; color:var(--text-muted); text-align:center; margin-top:2px;">
                         💬 ${commentCount}
                     </div>
@@ -263,11 +256,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if(publishBtn) publishBtn.onclick = async () => {
         const txt = document.getElementById('mainStoryInput').value;
         const pen = document.getElementById('guestPenName').value;
-        
         if(!txt) return alert("Write a story first!");
         
         const payload = { content: txt, votes: 0 };
-        
         if(currentUser) {
             payload.user_id = currentUser.id; 
         } else { 
@@ -290,12 +281,9 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('authModal').classList.remove('hidden');
             return;
         }
-        
         const newVotes = (currentVotes || 0) + 1;
-        const { error } = await supabase.from('stories').update({ votes: newVotes }).eq('id', storyId);
-
-        if (error) console.error("Voting failed:", error);
-        else fetchStories();
+        await supabase.from('stories').update({ votes: newVotes }).eq('id', storyId);
+        fetchStories();
     };
 
     window.deleteStory = async (id) => { 
@@ -344,9 +332,7 @@ document.addEventListener('DOMContentLoaded', () => {
         comments.forEach(c => {
             const u = c.profiles ? c.profiles.username : c.guest_name;
             const isOwner = isAdmin || (currentUser && c.user_id === currentUser.id);
-            
             let menuItems = `<button onclick="event.stopPropagation(); reportContent('comment', ${c.id})">⚠️ Report</button>`;
-            
             if (isOwner) {
                 menuItems += `<button onclick="event.stopPropagation(); deleteComment(${c.id})" class="text-red">🗑️ Delete</button>`;
             }
@@ -372,11 +358,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if(postCommentBtn) postCommentBtn.onclick = async () => {
         const val = document.getElementById('newCommentInput').value;
         const guestNameInput = document.getElementById('commentGuestName');
-
         if(!val) return;
         
         const payload = { content: val, story_id: activeStoryId };
-        
         if(currentUser) {
             payload.user_id = currentUser.id; 
         } else { 
@@ -420,7 +404,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const username = document.getElementById('usernameInput').value;
             const errorMsg = document.getElementById('authError');
             errorMsg.innerText = "";
-
             if(!email || !password) return errorMsg.innerText = "All fields required";
 
             try {
@@ -454,7 +437,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ==========================================
-    // 7. ADMIN DASHBOARD
+    // 7. ADMIN DASHBOARD & PROFILE LOGIC
     // ==========================================
     window.switchAdminTab = (tab) => {
         document.querySelectorAll('.admin-tab-content').forEach(d => d.classList.add('hidden'));
@@ -485,7 +468,6 @@ document.addEventListener('DOMContentLoaded', () => {
         users.forEach(u => {
             const card = document.createElement('div');
             card.className = 'admin-user-card';
-            
             const earned = u.user_flairs.map(f => f.flair_id);
             let badgeHtml = '';
             
@@ -519,45 +501,47 @@ document.addEventListener('DOMContentLoaded', () => {
     const adminSearch = document.getElementById('adminUserSearch');
     if(adminSearch) adminSearch.addEventListener('keyup', () => window.loadAllUsers());
 
- window.viewUserProfile = async (userId) => {
+    // === CRITICAL PROFILE FIX ===
+    window.viewUserProfile = async (userId) => {
         const modal = document.getElementById('profileModal');
+        const grid = document.getElementById('flairGrid');
         
-        // FIX: Show the modal FIRST so the Grid has a width to calculate layout
+        // 1. Show modal IMMEDIATELY so it takes up space in the DOM
         modal.classList.remove('hidden'); 
         modal.classList.add('admin-view'); 
         
-        // Hide standard profile elements
+        // 2. Hide standard profile elements
         document.getElementById('settingsSection').classList.add('hidden');
         document.getElementById('deleteSection').classList.add('hidden');
         document.getElementById('adminDashboardBtn').classList.add('hidden');
 
-        // Show loading state immediately so it doesn't look broken
+        // 3. Show loading state
         document.getElementById('profileNameDisplay').innerText = "Loading...";
-        document.getElementById('profileAvatar').src = 'https://i.imgur.com/6UD0njE.png'; // default placeholder
-        document.getElementById('flairGrid').innerHTML = '<p>Loading Passport...</p>';
+        document.getElementById('profileAvatar').src = 'https://i.imgur.com/6UD0njE.png'; 
+        if(grid) grid.innerHTML = '<p style="text-align:center; padding:20px;">Loading Badges...</p>';
 
-        // NOW fetch the data
+        // 4. Fetch User Data
         const { data: targetUser } = await supabase.from('profiles').select('*').eq('id', userId).single();
-        
-        if(!targetUser) {
-            alert("User data missing.");
-            modal.classList.add('hidden');
-            return;
-        }
+        if(!targetUser) { alert("User data missing."); modal.classList.add('hidden'); return; }
 
-        // Populate Data
+        // 5. Populate Basic Info
         document.getElementById('profileNameDisplay').innerText = targetUser.username;
         const bigAvatar = document.getElementById('profileAvatar');
         bigAvatar.src = targetUser.avatar_url || 'https://i.imgur.com/6UD0njE.png';
         bigAvatar.classList.remove('profile-trigger-action'); 
 
-        // Load the badges and stories AFTER the modal is visible
-        loadPassportForUser(userId); 
-        loadStoriesForUser(userId);  
+        // 6. DELAY BADGE LOAD to ensure grid paint
+        setTimeout(() => {
+            loadPassportForUser(userId); 
+            loadStoriesForUser(userId);  
+        }, 50);
     };
 
     window.resetProfileModalToMyView = () => {
         const modal = document.getElementById('profileModal');
+        const grid = document.getElementById('flairGrid');
+        
+        modal.classList.remove('hidden'); // Ensure visible
         modal.classList.remove('admin-view');
         
         document.getElementById('settingsSection').classList.remove('hidden');
@@ -569,8 +553,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const bigAvatar = document.getElementById('profileAvatar');
             bigAvatar.src = currentProfile.avatar_url || 'https://i.imgur.com/6UD0njE.png';
             bigAvatar.classList.add('profile-trigger-action');
-            loadPassportForUser(currentUser.id);
-            loadStoriesForUser(currentUser.id);
+            if(grid) grid.innerHTML = 'Loading...';
+            
+            // DELAY HERE TOO
+            setTimeout(() => {
+                loadPassportForUser(currentUser.id);
+                loadStoriesForUser(currentUser.id);
+            }, 50);
         }
     }
 
@@ -599,10 +588,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const inputId = `winner${place}Input`;
         const username = document.getElementById(inputId).value;
         if(!username) return alert("Enter username");
-        
         const { data: user } = await supabase.from('profiles').select('id').eq('username', username).single();
         if(!user) return alert("User not found");
-        
         let badgeId = (place === 1) ? 5 : (place === 2) ? 4 : 3;
         await supabase.from('user_flairs').insert({ user_id: user.id, flair_id: badgeId });
         alert(`Awarded Badge #${badgeId} to ${username}!`);
@@ -610,12 +597,12 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ==========================================
-    // 8. PASSPORT & PROFILE
+    // 8. PASSPORT & PROFILE (UNIFIED LOGIC)
     // ==========================================
     async function loadPassportForUser(targetId) {
         const grid = document.getElementById('flairGrid');
         if(!grid) return;
-        grid.innerHTML = 'Loading...';
+        grid.innerHTML = ''; // Clear loading
         
         const { data: userFlairs } = await supabase.from('user_flairs').select('flair_id').eq('user_id', targetId);
         const counts = {};
@@ -634,25 +621,26 @@ document.addEventListener('DOMContentLoaded', () => {
             { id: 6, name: "The Trilogy Master", css: "frame-diamond" }
         ];
 
-        grid.innerHTML = '';
-
         badgeDefinitions.forEach(def => {
             const isUnlocked = earnedIds.includes(def.id);
             const isSelected = selectedId === def.id;
             
             const div = document.createElement('div');
+            // Show as "locked" if not owned
             div.className = `flair-item ${isUnlocked ? 'unlocked' : 'locked'} ${isSelected ? 'selected' : ''}`;
             
+            // Only allow clicking if you own it AND it's your profile
             if(isUnlocked && targetId === currentUser.id) {
                 div.onclick = () => equipFlair(def.id);
             }
             
+            // If unlocked, show visual. If locked, show generic frame.
             const visualClass = isUnlocked ? def.css : 'frame-locked';
 
             div.innerHTML = `
                 <div class="flair-preview ${visualClass}"></div>
                 <span>${def.name}</span>
-                <div class="my-badge-tooltip">Times earned: ${counts[def.id] || 0}</div>
+                ${isUnlocked ? `<div class="my-badge-tooltip">Times earned: ${counts[def.id] || 0}</div>` : ''}
             `;
             grid.appendChild(div);
         });
@@ -669,19 +657,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const list = document.getElementById('myStoriesList');
         if(!list) return;
         list.innerHTML = '';
-        
         const { data: myStories } = await supabase.from('stories').select('*').eq('user_id', targetId).order('created_at', { ascending: false });
-        
         if(!myStories || myStories.length === 0) { list.innerHTML = '<p class="subtext">No stories yet.</p>'; return; }
         
         myStories.forEach(s => {
             const details = document.createElement('details');
             details.style.borderBottom = "1px solid #ccc"; details.style.padding = "10px 0";
-            
             const summary = document.createElement('summary');
             summary.style.cssText = "display:flex; justify-content:space-between; cursor:pointer; font-weight:bold;";
             summary.innerHTML = `<span>${escapeHtml(s.content.substring(0,30))}...</span>`;
-            
             if(targetId === currentUser.id || isAdmin) {
                 const del = document.createElement('button');
                 del.innerText = 'X'; del.className = 'btn-delete';
@@ -705,16 +689,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const ytPlayer = document.getElementById('youtubePlayer');
         if (ytPlayer) ytPlayer.src = "https://www.youtube.com/embed/hVFaaUEIpzE?start=103&autoplay=1&mute=0";
     }
-    
+
     // ==========================================
     // 9. MENU & REPORT LOGIC
     // ==========================================
-
     window.toggleMenu = (elementId) => {
         document.querySelectorAll('.menu-dropdown').forEach(el => {
             if(el.id !== elementId) el.classList.remove('show');
         });
-        
         const menu = document.getElementById(elementId);
         if(menu) menu.classList.toggle('show');
     };
@@ -727,5 +709,4 @@ document.addEventListener('DOMContentLoaded', () => {
         alert(`Thanks for reporting this ${type}. The admins have been notified.`);
         document.querySelectorAll('.menu-dropdown').forEach(el => el.classList.remove('show'));
     };
-
 });
