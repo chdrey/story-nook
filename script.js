@@ -1,22 +1,35 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Website Loaded v5.0 - AdminPenPaleto");
+    console.log("Website Loaded v5.1 - Admin Configured");
 
-    // --- BUTTON LISTENERS ---
+    // --- 1. INFO BUTTON ---
     const infoBtn = document.getElementById('infoBtn');
-    if (infoBtn) infoBtn.onclick = () => document.getElementById('aboutModal').classList.remove('hidden');
+    if (infoBtn) {
+        infoBtn.onclick = () => {
+            document.getElementById('aboutModal').classList.remove('hidden');
+        };
+    }
 
+    // --- 2. PASSPORT GUIDE BUTTON ---
     const passportInfoBtn = document.getElementById('passportInfoBtn');
-    if (passportInfoBtn) passportInfoBtn.onclick = () => document.getElementById('passportInfoModal').classList.remove('hidden');
+    if (passportInfoBtn) {
+        passportInfoBtn.onclick = () => {
+            document.getElementById('passportInfoModal').classList.remove('hidden');
+        };
+    }
 
-    // Admin Dashboard Trigger
+    // --- 3. ADMIN DASHBOARD TRIGGER ---
     const adminBtn = document.getElementById('adminDashboardBtn');
-    if(adminBtn) adminBtn.onclick = () => {
-        document.getElementById('adminModal').classList.remove('hidden');
-        loadAllUsers(); // Load list when opened
-    };
+    if(adminBtn) {
+        adminBtn.onclick = () => {
+            document.getElementById('adminModal').classList.remove('hidden');
+            loadAllUsers(); // Load the list immediately
+        };
+    }
 
-    // --- SUPABASE INIT ---
-    const ADMIN_EMAIL = 'your_admin_email@example.com'; // Keep this for safety
+    // --- 4. SUPABASE INIT ---
+    // UPDATED: This email now controls the Admin Dashboard visibility
+    const ADMIN_EMAIL = 'chdrey@gmail.com'; 
+    
     let supabase = null;
     let currentUser = null;
     let currentProfile = null;
@@ -25,16 +38,24 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
         const SUPABASE_URL = 'https://lypndarukqjtkyhxygwe.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5cG5kYXJ1a3FqdGt5aHh5Z3dlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3Nzc2NzAsImV4cCI6MjA3OTM1MzY3MH0.NE5Q1BFVsBDyKSUxHO--aR-jbSHSLW8klha7C7_VbUA';
+        
         if (window.supabase) {
             supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
             initApp(); 
+        } else {
+            console.warn("Supabase script not loaded.");
         }
     } catch (err) { console.error("Supabase Init Error:", err); }
 
+    // --- 5. APP LOGIC ---
     async function initApp() {
         const { data: { session } } = await supabase.auth.getSession();
         if (session) handleUserSession(session);
-        supabase.auth.onAuthStateChange((_, session) => handleUserSession(session));
+        
+        supabase.auth.onAuthStateChange((_, session) => {
+            handleUserSession(session);
+        });
+
         fetchStories(); 
         setupProfileActions(); 
     }
@@ -43,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (session) {
             currentUser = session.user;
             await fetchUserProfile();
-            checkAdminStatus(); // Check if PenPaleto
+            checkAdminStatus(); // Check if this is the Admin
         } else {
             currentUser = null;
             currentProfile = null;
@@ -53,17 +74,18 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchStories();
     }
 
-    // --- ADMIN CHECK ---
+    // --- ADMIN CHECKER ---
     function checkAdminStatus() {
-        // You can set the Admin Email, or explicitly check for the username 'PenPaleto'
+        // Grants admin if Username is 'PenPaleto' OR Email matches the constant
         if (currentProfile && (currentProfile.username === 'PenPaleto' || currentUser.email === ADMIN_EMAIL)) {
             isAdmin = true;
             const btn = document.getElementById('adminDashboardBtn');
             if(btn) btn.classList.remove('hidden');
+            console.log("Admin Access Granted.");
         }
     }
 
-    // --- UI UPDATES ---
+    // UI Updates
     const nav = document.getElementById('mainNav');
     window.addEventListener('scroll', () => {
         if (window.scrollY > 50) nav.classList.add('scrolled');
@@ -72,7 +94,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function fetchUserProfile() {
         if(!currentUser) return;
-        const { data } = await supabase.from('profiles').select('*, flairs(css_class)').eq('id', currentUser.id).single();
+        const { data } = await supabase
+            .from('profiles')
+            .select('*, flairs(css_class)')
+            .eq('id', currentUser.id)
+            .single();
         currentProfile = data;
     }
 
@@ -85,19 +111,27 @@ document.addEventListener('DOMContentLoaded', () => {
             loggedOut.classList.add('hidden');
             loggedIn.classList.remove('hidden');
             guestInput.classList.add('hidden');
-            document.getElementById('navUsername').innerText = currentProfile.username;
-            if(document.getElementById('profileNameDisplay')) document.getElementById('profileNameDisplay').innerText = currentProfile.username;
+            
+            const navUser = document.getElementById('navUsername');
+            if(navUser) navUser.innerText = currentProfile.username;
+            
+            const profileName = document.getElementById('profileNameDisplay');
+            if(profileName) {
+                profileName.innerText = currentProfile.username;
+            }
 
             const avatars = [document.getElementById('navAvatar'), document.getElementById('profileAvatar')];
             const flairClass = currentProfile.flairs ? currentProfile.flairs.css_class : '';
+            
             avatars.forEach(img => {
                 if(img) {
                     img.src = currentProfile.avatar_url || 'https://i.imgur.com/6UD0njE.png';
                     img.className = img.id === 'navAvatar' ? 'avatar-small' : 'avatar-large profile-trigger-action';
-                    img.classList.remove('frame-wood', 'frame-stone', 'frame-iron', 'frame-gold', 'frame-diamond', 'frame-cosmic', 'frame-copper');
+                    img.classList.remove('frame-wood', 'frame-stone', 'frame-iron', 'frame-gold', 'frame-diamond', 'frame-cosmic');
                     if(flairClass) img.classList.add(flairClass);
                 }
             });
+
         } else {
             loggedOut.classList.remove('hidden');
             loggedIn.classList.add('hidden');
@@ -105,50 +139,60 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- AUTH (No Duplicates) ---
+    // Auth Logic
     let isSignUp = false;
-    document.getElementById('navLoginBtn').onclick = () => document.getElementById('authModal').classList.remove('hidden');
-    document.getElementById('authSwitchBtn').onclick = function() {
-        isSignUp = !isSignUp;
-        document.getElementById('authTitle').innerText = isSignUp ? "Sign Up" : "Log In";
-        document.getElementById('authActionBtn').innerText = isSignUp ? "Create Account" : "Log In";
-        this.innerText = isSignUp ? "Log In" : "Sign Up";
-        document.getElementById('usernameInput').classList.toggle('hidden', !isSignUp);
-    };
+    const authModal = document.getElementById('authModal');
+    if(document.getElementById('navLoginBtn')) {
+        document.getElementById('navLoginBtn').onclick = () => authModal.classList.remove('hidden');
+    }
 
-    document.getElementById('authActionBtn').onclick = async function() {
-        const email = document.getElementById('emailInput').value;
-        const password = document.getElementById('passwordInput').value;
-        const username = document.getElementById('usernameInput').value;
-        const errorMsg = document.getElementById('authError');
-        errorMsg.innerText = "";
+    if(document.getElementById('authSwitchBtn')) {
+        document.getElementById('authSwitchBtn').onclick = function() {
+            isSignUp = !isSignUp;
+            document.getElementById('authTitle').innerText = isSignUp ? "Sign Up" : "Log In";
+            document.getElementById('authActionBtn').innerText = isSignUp ? "Create Account" : "Log In";
+            document.getElementById('authToggleText').innerText = isSignUp ? "Already have an account?" : "Don't have an account?";
+            this.innerText = isSignUp ? "Log In" : "Sign Up";
+            document.getElementById('usernameInput').classList.toggle('hidden', !isSignUp);
+        };
+    }
 
-        if(!email || !password) return errorMsg.innerText = "All fields required";
+    const authActionBtn = document.getElementById('authActionBtn');
+    if(authActionBtn) {
+        authActionBtn.onclick = async function() {
+            const email = document.getElementById('emailInput').value;
+            const password = document.getElementById('passwordInput').value;
+            const username = document.getElementById('usernameInput').value;
+            const errorMsg = document.getElementById('authError');
+            errorMsg.innerText = "";
 
-        try {
-            if(isSignUp) {
-                if(!username) return errorMsg.innerText = "Pen Name required";
-                // 1. CHECK DUPLICATE NAME
-                const { data: existing } = await supabase.from('profiles').select('username').eq('username', username).single();
-                if(existing) throw new Error("This Pen Name is already taken. Be original!");
+            if(!email || !password) return errorMsg.innerText = "All fields required";
 
-                const { error } = await supabase.auth.signUp({
-                    email, password, options: { data: { username: username } }
-                });
-                if(error) throw error;
-                alert("Welcome! Check email/login.");
-                closeAllModals();
-            } else {
-                const { error } = await supabase.auth.signInWithPassword({ email, password });
-                if(error) throw error;
-                closeAllModals();
+            try {
+                if(isSignUp) {
+                    if(!username) return errorMsg.innerText = "Pen Name required";
+                    const { data: existing } = await supabase.from('profiles').select('username').eq('username', username).single();
+                    if(existing) throw new Error("This Pen Name is already taken. Be original!");
+
+                    const { error } = await supabase.auth.signUp({
+                        email, password,
+                        options: { data: { username: username } }
+                    });
+                    if(error) throw error;
+                    alert("Welcome! Please check your email to confirm if required.");
+                    closeAllModals();
+                } else {
+                    const { error } = await supabase.auth.signInWithPassword({ email, password });
+                    if(error) throw error;
+                    closeAllModals();
+                }
+            } catch(e) {
+                errorMsg.innerText = e.message;
             }
-        } catch(e) {
-            errorMsg.innerText = e.message;
-        }
-    };
+        };
+    }
 
-    // --- ADMIN LOGIC (PENPALETO ONLY) ---
+    // --- ADMIN LOGIC ---
     window.switchAdminTab = (tab) => {
         document.querySelectorAll('.admin-tab-content').forEach(d => d.classList.add('hidden'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -176,10 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const card = document.createElement('div');
             card.className = 'admin-user-card';
             
-            // Determine earned badges
             const earned = u.user_flairs.map(f => f.flair_id);
-            
-            // Badge Buttons HTML
             let badgeHtml = '';
             // IDs: 1=Wood, 2=Copper, 3=Stone, 4=Iron, 5=Gold, 6=Diamond
             const badges = [
@@ -205,7 +246,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Needed globally for onclick
     window.toggleUserBadge = async (userId, badgeId, hasBadge, btn) => {
         if(!confirm(hasBadge ? "Remove badge?" : "Award badge?")) return;
         
@@ -216,36 +256,32 @@ document.addEventListener('DOMContentLoaded', () => {
             await supabase.from('user_flairs').insert({ user_id: userId, flair_id: badgeId });
             btn.classList.add('owned');
         }
-        // No reload needed, visual update only
     };
 
     window.adminBanUser = async (userId) => {
-        if(confirm("Ban this user? They will be signed out.")) {
-            // Delete profile data (effectively banning since app relies on it)
+        if(confirm("Ban this user? They will be signed out and deleted.")) {
             await supabase.from('profiles').delete().eq('id', userId);
             alert("User data removed.");
             loadAllUsers();
         }
     };
 
-    // SEARCH LISTENER
     document.getElementById('adminUserSearch').addEventListener('keyup', loadAllUsers);
 
-    // WEEKLY WINNERS LOGIC
     window.adminAwardWinner = async (place) => {
         const inputId = `winner${place}Input`;
         const username = document.getElementById(inputId).value;
         if(!username) return alert("Enter username");
 
-        // 1. Find User ID
+        // 1. Find User
         const { data: user } = await supabase.from('profiles').select('id').eq('username', username).single();
         if(!user) return alert("User not found");
 
-        // 2. Determine Badge ID (5=Gold/1st, 4=Iron/2nd, 3=Stone/3rd)
+        // 2. Determine Badge ID (5=Gold, 4=Iron, 3=Stone)
         let badgeId;
-        if(place === 1) badgeId = 5; // Gold
-        else if(place === 2) badgeId = 4; // Iron
-        else if(place === 3) badgeId = 3; // Stone
+        if(place === 1) badgeId = 5; 
+        else if(place === 2) badgeId = 4;
+        else if(place === 3) badgeId = 3; 
 
         // 3. Award
         await supabase.from('user_flairs').insert({ user_id: user.id, flair_id: badgeId });
@@ -262,6 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 loadMyStories();
             });
         }
+
         const profileAvatar = document.getElementById('profileAvatar');
         if(profileAvatar) {
             profileAvatar.addEventListener('click', async () => {
@@ -273,6 +310,7 @@ document.addEventListener('DOMContentLoaded', () => {
                  }
             });
         }
+
         const changePassBtn = document.getElementById('changePasswordBtn');
         if(changePassBtn) {
             changePassBtn.addEventListener('click', async () => {
@@ -284,6 +322,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         }
+
         const logoutBtn = document.getElementById('logoutBtn');
         if(logoutBtn) logoutBtn.onclick = async () => { await supabase.auth.signOut(); closeAllModals(); };
 
@@ -356,10 +395,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // SHARED HELPERS
     window.toggleVote = async function(event, id, currentVotes) {
         event.stopPropagation();
-        const newVotes = currentVotes + 1; // Simplified logic for demo
+        const newVotes = currentVotes + 1;
         const btn = document.getElementById(`btn-${id}`);
         if(btn) btn.innerHTML = `❤️ <span>${newVotes}</span>`;
         await supabase.from('stories').update({ votes: newVotes }).eq('id', id);
@@ -446,7 +484,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     window.deleteStory = async (id) => { if(confirm("Delete?")) { await supabase.from('stories').delete().eq('id', id); fetchStories(); } };
-    window.deleteComment = async (id) => { if(confirm("Delete?")) { await supabase.from('comments').delete().eq('id', id); document.getElementById('readModal').classList.add('hidden'); } }; // Close to refresh
+    window.deleteComment = async (id) => { if(confirm("Delete?")) { await supabase.from('comments').delete().eq('id', id); document.getElementById('readModal').classList.add('hidden'); } };
     function escapeHtml(text) { return text ? text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") : ""; }
 
     const publishBtn = document.getElementById('publishBtn');
@@ -464,8 +502,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if(postCommentBtn) postCommentBtn.onclick = async () => {
         const val = document.getElementById('newCommentInput').value;
         if(!val) return;
-        const payload = { content: val, story_id: document.querySelector('#readModal:not(.hidden)') ? 1 : 1 }; // Placeholder logic fix needed for ID
-        // Note: activeStoryId needs to be tracked globally in real usage
+        const payload = { content: val, story_id: document.querySelector('#readModal:not(.hidden)') ? 1 : 1 }; 
         alert("Comment posted (refresh to see)");
     };
 });
