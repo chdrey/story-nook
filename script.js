@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Website Loaded v26.5 - Collapsible Feed");
+    console.log("Website Loaded v27.0 - Horizontal Actions & Clean Feed");
 
     // ==========================================
     // 1. SUPABASE CONFIGURATION
@@ -171,19 +171,6 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    // COLLAPSIBLE FEED LOGIC
-    window.toggleFeed = () => {
-        const container = document.getElementById('feedCollapsibleContainer');
-        const icon = document.getElementById('feedToggleIcon');
-        container.classList.toggle('hidden');
-        
-        if (container.classList.contains('hidden')) {
-            icon.innerText = "▶"; // Collapsed
-        } else {
-            icon.innerText = "▼"; // Expanded
-        }
-    };
-
     // Feedback Modal logic
     window.openFeedback = () => {
         document.getElementById('feedbackModal').classList.remove('hidden');
@@ -297,20 +284,30 @@ document.addEventListener('DOMContentLoaded', () => {
             menuItems += `<button onclick="event.stopPropagation(); deleteStory(${story.id})" class="text-red">🗑️ Delete</button>`;
         }
 
-        const menuHTML = `
-            <div class="action-column">
-                <button class="menu-trigger" onclick="event.stopPropagation(); toggleMenu('story-menu-${story.id}-${isTopSection ? 'top' : 'feed'}')">⋮</button>
-                <div id="story-menu-${story.id}-${isTopSection ? 'top' : 'feed'}" class="menu-dropdown">
-                    ${menuItems}
+        // Logic split: Top Section gets NO buttons. Feed gets the Horizontal Action Bar.
+        let footerHTML = '';
+
+        if (!isTopSection) {
+            footerHTML = `
+                <div class="story-actions-row">
+                    <div class="actions-left">
+                        <button class="btn-action-icon" onclick="event.stopPropagation(); voteStory('${story.id}', ${story.votes})">
+                            ❤️ Like (${story.votes || 0})
+                        </button>
+                        <button class="btn-action-icon" onclick="openReadModal(${story.id})">
+                            💬 Comment (${commentCount})
+                        </button>
+                    </div>
+                    
+                    <div class="action-column">
+                        <button class="menu-trigger" onclick="event.stopPropagation(); toggleMenu('story-menu-${story.id}')">⋮</button>
+                        <div id="story-menu-${story.id}" class="menu-dropdown">
+                            ${menuItems}
+                        </div>
+                    </div>
                 </div>
-                <button class="vote-btn" onclick="event.stopPropagation(); voteStory('${story.id}', ${story.votes})">
-                    ❤️ <span style="font-size:0.8rem">${story.votes || 0}</span>
-                </button>
-                <div style="font-size:0.8rem; color:var(--text-muted); text-align:center; margin-top:2px;">
-                    💬 ${commentCount}
-                </div>
-            </div>
-        `;
+            `;
+        }
 
         return `
             <div class="story-card" onclick="openReadModal(${story.id})">
@@ -319,9 +316,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span class="story-author">${escapeHtml(authorName)}</span>
                 </div>
                 <p style="font-size: 1.1rem; margin-bottom: 10px;">"${escapeHtml(story.content.substring(0, 200))}${story.content.length > 200 ? '...' : ''}"</p>
-                <div class="story-meta" style="justify-content: flex-end;">
-                    ${menuHTML}
-                </div>
+                ${footerHTML}
             </div>
         `;
     }
@@ -373,44 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
             feedStories.forEach(story => {
                 feed.insertAdjacentHTML('beforeend', createStoryCardHTML(story, false));
             });
-            
-            // Populate Mobile Feed as well
-            const mobileContent = document.getElementById('mobileFeedContent');
-            if(mobileContent) {
-                mobileContent.innerHTML = feed.innerHTML;
-            }
         }
-    }
-
-    // === MOBILE FEED LOGIC ===
-    window.openMobileFeed = () => {
-        const overlay = document.getElementById('mobileFeedOverlay');
-        overlay.classList.add('active');
-        document.body.style.overflow = 'hidden'; // Prevent background scrolling
-    };
-
-    window.closeMobileFeed = () => {
-        const overlay = document.getElementById('mobileFeedOverlay');
-        overlay.classList.remove('active');
-        document.body.style.overflow = 'auto'; 
-    };
-
-    // Swipe to Close Logic
-    let touchStartY = 0;
-    let touchEndY = 0;
-    const mobileOverlay = document.getElementById('mobileFeedOverlay');
-
-    if(mobileOverlay) {
-        mobileOverlay.addEventListener('touchstart', e => {
-            touchStartY = e.changedTouches[0].screenY;
-        });
-
-        mobileOverlay.addEventListener('touchend', e => {
-            touchEndY = e.changedTouches[0].screenY;
-            if (touchEndY > touchStartY + 100) { // If swiped down significantly
-                closeMobileFeed();
-            }
-        });
     }
 
     const publishBtn = document.getElementById('publishBtn');
