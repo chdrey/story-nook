@@ -39,10 +39,22 @@
         </div>
     </div>
 
+    <div id="feedbackModal" class="modal hidden">
+        <div class="modal-content narrow">
+            <span class="close-modal" onclick="closeModal('feedbackModal')">&times;</span>
+            <h2 style="color:#d4a373;">🦉 Send an Owl</h2>
+            <p style="color:#ccc; font-size:0.9rem; margin-bottom:15px;">Have a suggestion? A bug report? Or just want to say hi to the Librarian?</p>
+            <div class="auth-form-container">
+                <input type="email" id="feedbackEmail" placeholder="Your Email (so we can reply)" class="hidden"> 
+                <textarea id="feedbackText" placeholder="Write your missive here..." style="height:100px; resize:none;"></textarea>
+                <button id="submitFeedbackBtn" class="btn-primary full-width">Send to The High Council</button>
+            </div>
+        </div>
+    </div>
+
     <div id="profileModal" class="modal hidden">
         <div class="modal-content book-style">
             <span class="close-modal" onclick="closeModal('profileModal')">&times;</span>
-            
             <div class="profile-header">
                 <div class="avatar-wrapper">
                     <img id="profileAvatar" src="" alt="Avatar" class="avatar-large profile-trigger-action">
@@ -53,11 +65,9 @@
                     <h2 id="profileNameDisplay">Loading...</h2>
                 </div>
             </div>
-
             <button id="adminDashboardBtn" class="btn-primary full-width hidden" style="background:#2c3e50; margin-bottom:20px; border:1px solid #d4a373;">
                 👑 Control Panel
             </button>
-
             <div class="passport-section">
                 <div class="passport-header-row">
                     <h3>🎖️ Author's Passport</h3>
@@ -65,9 +75,7 @@
                 </div>
                 <div id="flairGrid" class="flair-grid"></div>
             </div>
-            
             <hr>
-
             <div id="settingsSection" class="settings-section">
                 <h4>⚙️ Settings</h4>
                 <div class="settings-grid" style="margin-top: 15px;">
@@ -76,13 +84,10 @@
                 </div>
                 <button id="logoutBtn" class="btn-secondary full-width" style="margin-top: 15px;">Log Out</button>
             </div>
-
             <hr>
             <h3>My Stories</h3>
             <div id="myStoriesList" class="my-stories-container"></div>
-
             <hr style="border-color: #e76f51; opacity: 0.3;">
-            
             <div id="deleteSection" class="delete-section">
                 <button id="deleteAccountBtn" class="btn-delete-final full-width">Delete Account</button>
             </div>
@@ -94,7 +99,6 @@
             <span class="close-modal" onclick="closeModal('passportInfoModal')">&times;</span>
             <h2 class="guide-title">Passport Guide</h2>
             <p class="guide-desc">Collect badges to unlock new profile frames.</p>
-
             <div class="badge-guide-grid">
                 <div class="guide-item"><div class="flair-preview frame-wood guide-badge"></div><div><strong>The Bard</strong><br><small>Participated in the weekly prompt.</small></div></div>
                 <div class="guide-item"><div class="flair-preview frame-copper guide-badge"></div><div><strong>Talk of the Nook</strong><br><small>Most comments in a week.</small></div></div>
@@ -110,75 +114,23 @@
         <div class="modal-content book-style full-screen-mobile">
             <span class="close-modal" onclick="closeModal('adminModal')">&times;</span>
             <h2 style="color:#e76f51; text-align:center;">👑 Control Panel</h2>
-            
             <div class="admin-tabs">
                 <button class="tab-btn active" onclick="switchAdminTab('users')">Users & Badges</button>
                 <button class="tab-btn" onclick="switchAdminTab('contest')">Manual Awards</button>
             </div>
-
             <div id="adminTabUsers" class="admin-tab-content">
                 <input type="text" id="adminUserSearch" placeholder="Search user by name..." style="margin-bottom:15px;">
                 <div id="adminUserList" class="admin-user-list"></div>
             </div>
-
             <div id="adminTabContest" class="admin-tab-content hidden">
                 <h3>🏆 Manage Badges</h3>
-                
-                <div class="winner-input-group">
-                    <label>🥇 The Golden Quill (1st Place)</label>
-                    <div style="display:flex; gap:10px;">
-                        <input type="text" id="badgeInput_5" placeholder="Username">
-                        <button onclick="adminAwardBadge(5)" class="btn-primary small">Award</button>
-                        <button onclick="adminRevokeBadge(5)" class="btn-delete small">Revoke</button>
-                    </div>
-                </div>
-
-                <div class="winner-input-group">
-                    <label>🥈 The Cliffhanger (2nd Place)</label>
-                    <div style="display:flex; gap:10px;">
-                        <input type="text" id="badgeInput_4" placeholder="Username">
-                        <button onclick="adminAwardBadge(4)" class="btn-primary small">Award</button>
-                        <button onclick="adminRevokeBadge(4)" class="btn-delete small">Revoke</button>
-                    </div>
-                </div>
-
-                <div class="winner-input-group">
-                    <label>🥉 The Ink Scribble (3rd Place)</label>
-                    <div style="display:flex; gap:10px;">
-                        <input type="text" id="badgeInput_3" placeholder="Username">
-                        <button onclick="adminAwardBadge(3)" class="btn-primary small">Award</button>
-                        <button onclick="adminRevokeBadge(3)" class="btn-delete small">Revoke</button>
-                    </div>
-                </div>
-
+                <div class="winner-input-group"><label>🥇 The Golden Quill</label><div style="display:flex; gap:10px;"><input type="text" id="badgeInput_5" placeholder="Username"><button onclick="adminAwardBadge(5)" class="btn-primary small">Award</button><button onclick="adminRevokeBadge(5)" class="btn-delete small">Revoke</button></div></div>
+                <div class="winner-input-group"><label>🥈 The Cliffhanger</label><div style="display:flex; gap:10px;"><input type="text" id="badgeInput_4" placeholder="Username"><button onclick="adminAwardBadge(4)" class="btn-primary small">Award</button><button onclick="adminRevokeBadge(4)" class="btn-delete small">Revoke</button></div></div>
+                <div class="winner-input-group"><label>🥉 The Ink Scribble</label><div style="display:flex; gap:10px;"><input type="text" id="badgeInput_3" placeholder="Username"><button onclick="adminAwardBadge(3)" class="btn-primary small">Award</button><button onclick="adminRevokeBadge(3)" class="btn-delete small">Revoke</button></div></div>
                 <hr style="opacity:0.3; margin: 15px 0;">
-
-                <div class="winner-input-group">
-                    <label>🎭 The Bard (Weekly Participant)</label>
-                    <div style="display:flex; gap:10px;">
-                        <input type="text" id="badgeInput_1" placeholder="Username">
-                        <button onclick="adminAwardBadge(1)" class="btn-primary small">Award</button>
-                        <button onclick="adminRevokeBadge(1)" class="btn-delete small">Revoke</button>
-                    </div>
-                </div>
-
-                <div class="winner-input-group">
-                    <label>🗣️ Talk of the Nook (Commenter)</label>
-                    <div style="display:flex; gap:10px;">
-                        <input type="text" id="badgeInput_2" placeholder="Username">
-                        <button onclick="adminAwardBadge(2)" class="btn-primary small">Award</button>
-                        <button onclick="adminRevokeBadge(2)" class="btn-delete small">Revoke</button>
-                    </div>
-                </div>
-
-                <div class="winner-input-group">
-                    <label>💎 The Trilogy Master (3-Week Streak)</label>
-                    <div style="display:flex; gap:10px;">
-                        <input type="text" id="badgeInput_6" placeholder="Username">
-                        <button onclick="adminAwardBadge(6)" class="btn-primary small">Award</button>
-                        <button onclick="adminRevokeBadge(6)" class="btn-delete small">Revoke</button>
-                    </div>
-                </div>
+                <div class="winner-input-group"><label>🎭 The Bard</label><div style="display:flex; gap:10px;"><input type="text" id="badgeInput_1" placeholder="Username"><button onclick="adminAwardBadge(1)" class="btn-primary small">Award</button><button onclick="adminRevokeBadge(1)" class="btn-delete small">Revoke</button></div></div>
+                <div class="winner-input-group"><label>🗣️ Talk of the Nook</label><div style="display:flex; gap:10px;"><input type="text" id="badgeInput_2" placeholder="Username"><button onclick="adminAwardBadge(2)" class="btn-primary small">Award</button><button onclick="adminRevokeBadge(2)" class="btn-delete small">Revoke</button></div></div>
+                <div class="winner-input-group"><label>💎 The Trilogy Master</label><div style="display:flex; gap:10px;"><input type="text" id="badgeInput_6" placeholder="Username"><button onclick="adminAwardBadge(6)" class="btn-primary small">Award</button><button onclick="adminRevokeBadge(6)" class="btn-delete small">Revoke</button></div></div>
             </div>
         </div>
     </div>
@@ -186,19 +138,14 @@
     <div id="readModal" class="modal hidden">
         <div class="modal-content book-style read-modal-layout">
             <span class="close-modal" onclick="closeModal('readModal')">&times;</span>
-            
             <div class="read-header">
                 <div class="read-icon">📖</div>
                 <h3 id="readModalAuthor">By @Author</h3>
             </div>
-
             <div id="readModalText" class="modal-body-text story-text-styled"></div>
-            
             <div class="comments-section-wrapper">
                 <h4 style="color:#666; font-size:0.9rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:15px;">Discussion</h4>
-                
                 <div id="modalCommentsList" class="comments-list"></div>
-                
                 <div class="comment-input-area">
                     <input type="text" id="commentGuestName" placeholder="Your Name" class="input-compact">
                     <input type="text" id="newCommentInput" placeholder="Share your thoughts..." class="input-wide">
@@ -243,6 +190,7 @@
             <div class="hero-header-row"><h2>This Week's Inspiration</h2><button id="infoBtn" class="info-icon" aria-label="About">ⓘ</button></div>
             <div class="video-wrapper"><iframe id="youtubePlayer" src="" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
         </section>
+        
         <section id="writingZoneSection" class="writing-zone">
             <h3>Write your story here...</h3>
             <textarea id="mainStoryInput" maxlength="2000" placeholder="Once upon a time..."></textarea>
@@ -252,9 +200,27 @@
                 <button id="publishBtn" class="btn-primary">Publish Story</button>
             </div>
         </section>
-        <section class="leaderboard"><h3>🏆 Top Stories</h3><div class="top-stories-container" id="topStories"></div></section>
-        <section class="feed"><h3>Latest Submissions</h3><div id="storyFeed"></div></section>
+
+        <section class="leaderboard">
+            <h3>🏆 Top Stories</h3>
+            <div class="top-stories-container" id="topStories"></div>
+        </section>
+
+        <section class="feed">
+            <h3>Latest Submissions</h3>
+            <div id="storyFeed" class="scrollable-feed"></div>
+        </section>
     </main>
+
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2025 The Story Nook</p>
+            <div class="footer-links">
+                <button onclick="document.getElementById('aboutModal').classList.remove('hidden')">About</button>
+                <button onclick="openFeedback()">🦉 Send an Owl (Feedback)</button>
+            </div>
+        </div>
+    </footer>
 
     <script>
         function enterNook() {
@@ -269,4 +235,3 @@
     <script src="script.js"></script>
 </body>
 </html>
-
