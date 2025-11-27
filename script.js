@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Website Loaded v15.0 - Confirmation Box & Permissions");
+    console.log("Website Loaded v16.0 - Comment UX & Design");
 
     // ==========================================
     // 1. SUPABASE CONFIGURATION
@@ -91,11 +91,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const loggedOut = document.getElementById('loggedOutNav');
         const loggedIn = document.getElementById('loggedInNav');
         const guestInput = document.getElementById('guestPenName');
+        const commentGuestInput = document.getElementById('commentGuestName'); // New check
         
         if (currentUser && currentProfile) {
             loggedOut.classList.add('hidden');
             loggedIn.classList.remove('hidden');
             guestInput.classList.add('hidden');
+            
+            // HIDE COMMENT NAME INPUT IF LOGGED IN
+            if(commentGuestInput) commentGuestInput.classList.add('hidden');
             
             const navUser = document.getElementById('navUsername');
             if(navUser) navUser.innerText = currentProfile.username;
@@ -109,6 +113,9 @@ document.addEventListener('DOMContentLoaded', () => {
             loggedOut.classList.remove('hidden');
             loggedIn.classList.add('hidden');
             guestInput.classList.remove('hidden');
+            
+            // SHOW COMMENT NAME INPUT IF LOGGED OUT
+            if(commentGuestInput) commentGuestInput.classList.remove('hidden');
         }
     }
 
@@ -210,13 +217,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const isTopStory = story.votes >= 5; 
             const commentCount = (story.comments && story.comments[0]) ? story.comments[0].count : 0;
 
-            // --- PERMISSION CHECK ---
-            // You can delete if you are Admin OR if you own the story
             const isOwner = isAdmin || (currentUser && story.user_id === currentUser.id);
             
             let menuItems = `<button onclick="event.stopPropagation(); reportContent('story', ${story.id})">⚠️ Report</button>`;
             
-            // Only add the delete button if they have permission
             if (isOwner) {
                 menuItems += `<button onclick="event.stopPropagation(); deleteStory(${story.id})" class="text-red">🗑️ Delete</button>`;
             }
@@ -294,20 +298,10 @@ document.addEventListener('DOMContentLoaded', () => {
         else fetchStories();
     };
 
-    // SOFT DELETE STORY WITH CONFIRMATION
     window.deleteStory = async (id) => { 
-        // 1. Ask for confirmation
         if(!confirm("Are you sure you want to delete this story?")) return;
-
-        // 2. Close the menu so it doesn't stay stuck open
         document.querySelectorAll('.menu-dropdown').forEach(el => el.classList.remove('show'));
-        
-        // 3. Perform Soft Delete
-        await supabase
-            .from('stories')
-            .update({ deleted_at: new Date().toISOString() })
-            .eq('id', id);
-        
+        await supabase.from('stories').update({ deleted_at: new Date().toISOString() }).eq('id', id);
         fetchStories(); 
     };
 
@@ -349,8 +343,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         comments.forEach(c => {
             const u = c.profiles ? c.profiles.username : c.guest_name;
-            
-            // --- PERMISSION CHECK FOR COMMENTS ---
             const isOwner = isAdmin || (currentUser && c.user_id === currentUser.id);
             
             let menuItems = `<button onclick="event.stopPropagation(); reportContent('comment', ${c.id})">⚠️ Report</button>`;
@@ -379,14 +371,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const postCommentBtn = document.getElementById('postCommentBtn');
     if(postCommentBtn) postCommentBtn.onclick = async () => {
         const val = document.getElementById('newCommentInput').value;
-        const guestName = document.getElementById('commentGuestName').value;
+        const guestNameInput = document.getElementById('commentGuestName');
 
         if(!val) return;
         
         const payload = { content: val, story_id: activeStoryId };
+        
         if(currentUser) {
             payload.user_id = currentUser.id; 
         } else { 
+            const guestName = guestNameInput.value;
             if(!guestName) return alert("Name needed"); 
             payload.guest_name = guestName; 
         }
@@ -396,17 +390,10 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchComments(activeStoryId);
     };
 
-    // SOFT DELETE COMMENT WITH CONFIRMATION
     window.deleteComment = async (id) => { 
         if(!confirm("Are you sure you want to delete this comment?")) return;
-
         document.querySelectorAll('.menu-dropdown').forEach(el => el.classList.remove('show'));
-
-        await supabase
-            .from('comments')
-            .update({ deleted_at: new Date().toISOString() })
-            .eq('id', id);
-        
+        await supabase.from('comments').update({ deleted_at: new Date().toISOString() }).eq('id', id);
         fetchComments(activeStoryId); 
     };
 
@@ -695,7 +682,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Enter Nook (from Landing Page)
     window.enterNook = () => {
         const overlay = document.getElementById('welcomeOverlay');
         if (overlay) { overlay.style.opacity = '0'; setTimeout(() => overlay.classList.add('hidden'), 800); }
