@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Website Loaded v5.2 - Admin Debug Mode");
+    console.log("Website Loaded v6.0 - Ultimate Merge");
 
     // --- 1. BUTTON LISTENERS ---
     const infoBtn = document.getElementById('infoBtn');
@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentUser = null;
     let currentProfile = null;
     let isAdmin = false;
-    let activeStoryId = null; // Fix for comments
+    let activeStoryId = null; 
 
     try {
         const SUPABASE_URL = 'https://lypndarukqjtkyhxygwe.supabase.co';
@@ -401,6 +401,7 @@ document.addEventListener('DOMContentLoaded', () => {
         await supabase.from('stories').update({ votes: newVotes }).eq('id', id);
     }
 
+    // --- PASSPORT LOADING + BADGE COUNTING ---
     async function loadPassport() {
         const grid = document.getElementById('flairGrid');
         grid.innerHTML = 'Loading...';
@@ -500,7 +501,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const postCommentBtn = document.getElementById('postCommentBtn');
     if(postCommentBtn) postCommentBtn.onclick = async () => {
         const val = document.getElementById('newCommentInput').value;
-        const pen = document.getElementById('commentGuestName').value;
         if(!val) return;
         const payload = { content: val, story_id: activeStoryId };
         if(currentUser) payload.user_id = currentUser.id; else { if(!pen) return alert("Name needed"); payload.guest_name = pen; }
