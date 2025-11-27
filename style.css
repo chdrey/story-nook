@@ -41,7 +41,7 @@ nav { display: flex; justify-content: space-between; align-items: center; paddin
 nav.scrolled { padding: 10px 40px; background: var(--glass-nav); box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
 
 /* === MODAL STYLES === */
-.modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85); z-index: 5000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+.modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85); z-index: 30000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
 .modal-content.narrow { background: #3d2b20; color: var(--text-main); padding: 30px; border-radius: 10px; width: 90%; max-width: 400px; text-align: center; border: 1px solid var(--accent); display: flex; flex-direction: column; gap: 20px; }
 .auth-form-container { display: flex; flex-direction: column; gap: 15px; width: 100%; }
 .auth-toggle-wrapper { font-size: 0.9rem; color: #ccc; margin-top: 10px; }
@@ -247,3 +247,4 @@ input, textarea { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid va
     margin-left: 10px;
 }
 .btn-delete-small:hover { background: #c0392b; transform: scale(1.1); }
+
