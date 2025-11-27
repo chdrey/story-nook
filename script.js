@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Website Loaded v18.0 - Profile Stories Accordion");
+    console.log("Website Loaded v19.0 - Profile Close Fix");
 
     // ==========================================
     // 1. SUPABASE CONFIGURATION
@@ -140,10 +140,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const passportInfoBtn = document.getElementById('passportInfoBtn');
     if (passportInfoBtn) passportInfoBtn.onclick = () => document.getElementById('passportInfoModal').classList.remove('hidden');
 
+    // === FIX 1: NAV BUTTON EXPLICITLY OPENS MODAL ===
     const navProfileBtn = document.getElementById('navProfileBtn');
     if (navProfileBtn) {
         navProfileBtn.onclick = (e) => {
             e.stopPropagation(); 
+            // 1. Open the modal first
+            document.getElementById('profileModal').classList.remove('hidden');
+            // 2. Then load/reset the data
             window.resetProfileModalToMyView();
         };
     }
@@ -499,6 +503,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const adminSearch = document.getElementById('adminUserSearch');
     if(adminSearch) adminSearch.addEventListener('keyup', () => window.loadAllUsers());
 
+    // === CRITICAL PROFILE FIX ===
     window.viewUserProfile = async (userId) => {
         const modal = document.getElementById('profileModal');
         const grid = document.getElementById('flairGrid');
@@ -534,11 +539,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 50);
     };
 
+    // === FIX 2: RESET DOES NOT UNHIDE (Prevents reopen loop) ===
     window.resetProfileModalToMyView = () => {
         const modal = document.getElementById('profileModal');
         const grid = document.getElementById('flairGrid');
         
-        modal.classList.remove('hidden'); 
+        // REMOVED: modal.classList.remove('hidden'); 
         modal.classList.remove('admin-view');
         
         document.getElementById('settingsSection').classList.remove('hidden');
