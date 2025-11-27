@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Website Loaded v19.0 - Profile Close Fix");
+    console.log("Website Loaded v20.0 - Badges & Tooltips Fixed");
 
     // ==========================================
     // 1. SUPABASE CONFIGURATION
@@ -140,14 +140,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const passportInfoBtn = document.getElementById('passportInfoBtn');
     if (passportInfoBtn) passportInfoBtn.onclick = () => document.getElementById('passportInfoModal').classList.remove('hidden');
 
-    // === FIX 1: NAV BUTTON EXPLICITLY OPENS MODAL ===
     const navProfileBtn = document.getElementById('navProfileBtn');
     if (navProfileBtn) {
         navProfileBtn.onclick = (e) => {
             e.stopPropagation(); 
-            // 1. Open the modal first
             document.getElementById('profileModal').classList.remove('hidden');
-            // 2. Then load/reset the data
             window.resetProfileModalToMyView();
         };
     }
@@ -503,48 +500,39 @@ document.addEventListener('DOMContentLoaded', () => {
     const adminSearch = document.getElementById('adminUserSearch');
     if(adminSearch) adminSearch.addEventListener('keyup', () => window.loadAllUsers());
 
-    // === CRITICAL PROFILE FIX ===
     window.viewUserProfile = async (userId) => {
         const modal = document.getElementById('profileModal');
         const grid = document.getElementById('flairGrid');
         
-        // 1. Show modal IMMEDIATELY
         modal.classList.remove('hidden'); 
         modal.classList.add('admin-view'); 
         
-        // 2. Hide standard profile elements
         document.getElementById('settingsSection').classList.add('hidden');
         document.getElementById('deleteSection').classList.add('hidden');
         document.getElementById('adminDashboardBtn').classList.add('hidden');
 
-        // 3. Show loading state
         document.getElementById('profileNameDisplay').innerText = "Loading...";
         document.getElementById('profileAvatar').src = 'https://i.imgur.com/6UD0njE.png'; 
         if(grid) grid.innerHTML = '<p style="text-align:center; padding:20px;">Loading Badges...</p>';
 
-        // 4. Fetch User Data
         const { data: targetUser } = await supabase.from('profiles').select('*').eq('id', userId).single();
         if(!targetUser) { alert("User data missing."); modal.classList.add('hidden'); return; }
 
-        // 5. Populate Basic Info
         document.getElementById('profileNameDisplay').innerText = targetUser.username;
         const bigAvatar = document.getElementById('profileAvatar');
         bigAvatar.src = targetUser.avatar_url || 'https://i.imgur.com/6UD0njE.png';
         bigAvatar.classList.remove('profile-trigger-action'); 
 
-        // 6. DELAY BADGE LOAD to ensure grid paint
         setTimeout(() => {
             loadPassportForUser(userId); 
             loadStoriesForUser(userId);  
         }, 50);
     };
 
-    // === FIX 2: RESET DOES NOT UNHIDE (Prevents reopen loop) ===
     window.resetProfileModalToMyView = () => {
         const modal = document.getElementById('profileModal');
         const grid = document.getElementById('flairGrid');
         
-        // REMOVED: modal.classList.remove('hidden'); 
         modal.classList.remove('admin-view');
         
         document.getElementById('settingsSection').classList.remove('hidden');
@@ -595,6 +583,12 @@ document.addEventListener('DOMContentLoaded', () => {
         let badgeId = (place === 1) ? 5 : (place === 2) ? 4 : 3;
         await supabase.from('user_flairs').insert({ user_id: user.id, flair_id: badgeId });
         alert(`Awarded Badge #${badgeId} to ${username}!`);
+        
+        // Auto-refresh logic if the admin awarded themselves
+        if(user.id === currentUser.id) {
+            loadPassportForUser(currentUser.id);
+        }
+        
         document.getElementById(inputId).value = '';
     };
 
@@ -606,7 +600,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if(!grid) return;
         grid.innerHTML = ''; // Clear loading
         
-        const { data: userFlairs } = await supabase.from('user_flairs').select('flair_id').eq('user_id', targetId);
+        const { data: userFlairs, error } = await supabase.from('user_flairs').select('flair_id').eq('user_id', targetId);
+        if(error) {
+            console.error("Passport Error:", error);
+            grid.innerHTML = "Error loading badges. (Check RLS)";
+            return;
+        }
+
         const counts = {};
         if (userFlairs) userFlairs.forEach(uf => counts[uf.flair_id] = (counts[uf.flair_id] || 0) + 1);
         const earnedIds = userFlairs.map(uf => uf.flair_id);
@@ -626,6 +626,8 @@ document.addEventListener('DOMContentLoaded', () => {
         badgeDefinitions.forEach(def => {
             const isUnlocked = earnedIds.includes(def.id);
             const isSelected = selectedId === def.id;
+            const badgeCount = counts[def.id] || 0;
+            
             const div = document.createElement('div');
             div.className = `flair-item ${isUnlocked ? 'unlocked' : 'locked'} ${isSelected ? 'selected' : ''}`;
             
@@ -634,10 +636,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             const visualClass = isUnlocked ? def.css : 'frame-locked';
 
+            // Show tooltip if Unlocked OR if Count > 0 (consistency check)
+            const showTooltip = isUnlocked || badgeCount > 0;
+
             div.innerHTML = `
                 <div class="flair-preview ${visualClass}"></div>
                 <span>${def.name}</span>
-                ${isUnlocked ? `<div class="my-badge-tooltip">Times earned: ${counts[def.id] || 0}</div>` : ''}
+                ${showTooltip ? `<div class="my-badge-tooltip">Times earned: ${badgeCount}</div>` : ''}
             `;
             grid.appendChild(div);
         });
@@ -650,13 +655,12 @@ document.addEventListener('DOMContentLoaded', () => {
         loadPassportForUser(currentUser.id);
     }
 
-    // === UPDATED PROFILE STORY LOADER (SOFT DELETE & ACCORDION) ===
+    // === PROFILE STORY LOADER (SOFT DELETE & ACCORDION) ===
     async function loadStoriesForUser(targetId) {
         const list = document.getElementById('myStoriesList');
         if(!list) return;
         list.innerHTML = '<div style="text-align:center; color:#888;">Loading...</div>';
         
-        // Fetch only ALIVE stories
         const { data: myStories } = await supabase
             .from('stories')
             .select('*')
@@ -668,11 +672,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if(!myStories || myStories.length === 0) { list.innerHTML = '<p class="subtext" style="text-align:center;">No stories yet.</p>'; return; }
         
         myStories.forEach(s => {
-            // Create Accordion
             const details = document.createElement('details');
             details.className = 'story-accordion';
             
-            // Header
             const summary = document.createElement('summary');
             summary.className = 'story-summary';
             
@@ -680,7 +682,6 @@ document.addEventListener('DOMContentLoaded', () => {
             textSpan.innerText = s.content.substring(0, 40) + (s.content.length > 40 ? "..." : "");
             summary.appendChild(textSpan);
             
-            // Delete Button (Only for owner/admin)
             if(targetId === currentUser.id || isAdmin) {
                 const del = document.createElement('button');
                 del.innerText = '✕'; 
