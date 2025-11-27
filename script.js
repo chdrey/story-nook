@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Website Loaded v13.0 - Soft Delete & Counts");
+    console.log("Website Loaded v15.0 - Confirmation Box & Permissions");
 
     // ==========================================
     // 1. SUPABASE CONFIGURATION
@@ -81,8 +81,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================
     // 3. UI UPDATES & EVENT LISTENERS
     // ==========================================
-    
-    // Navbar Scroll Effect
     const nav = document.getElementById('mainNav');
     window.addEventListener('scroll', () => {
         if (window.scrollY > 50) nav.classList.add('scrolled');
@@ -155,7 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    // Modal Closing (Global)
+    // Modal Closing
     window.closeModal = (id) => {
         const modal = document.getElementById(id);
         if (modal) {
@@ -186,11 +184,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!feed) return;
         feed.innerHTML = '<p style="text-align:center; color:#ccc;">Gathering tales...</p>';
 
-        // NOTE: We request comments(count) to get the number of comments
         const { data: stories, error } = await supabase
             .from('stories')
             .select('*, profiles(username, avatar_url, selected_flair_id), comments(count)')
-            .is('deleted_at', null) // Only fetch alive stories
+            .is('deleted_at', null)
             .order('created_at', { ascending: false })
             .limit(20);
 
@@ -211,16 +208,17 @@ document.addEventListener('DOMContentLoaded', () => {
         stories.forEach(story => {
             const authorName = story.guest_name || (story.profiles ? story.profiles.username : 'Anonymous');
             const isTopStory = story.votes >= 5; 
-            
-            // Comment Count Logic
-            // Supabase returns an array for count like [{count: 5}] or []
             const commentCount = (story.comments && story.comments[0]) ? story.comments[0].count : 0;
 
-            // Menu Logic
+            // --- PERMISSION CHECK ---
+            // You can delete if you are Admin OR if you own the story
             const isOwner = isAdmin || (currentUser && story.user_id === currentUser.id);
-            let menuItems = `<button onclick="reportContent('story', ${story.id})">⚠️ Report</button>`;
+            
+            let menuItems = `<button onclick="event.stopPropagation(); reportContent('story', ${story.id})">⚠️ Report</button>`;
+            
+            // Only add the delete button if they have permission
             if (isOwner) {
-                menuItems += `<button onclick="deleteStory(${story.id})" class="text-red">🗑️ Delete</button>`;
+                menuItems += `<button onclick="event.stopPropagation(); deleteStory(${story.id})" class="text-red">🗑️ Delete</button>`;
             }
 
             const menuHTML = `
@@ -290,26 +288,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         const newVotes = (currentVotes || 0) + 1;
-        const { error } = await supabase
-            .from('stories')
-            .update({ votes: newVotes })
-            .eq('id', storyId);
+        const { error } = await supabase.from('stories').update({ votes: newVotes }).eq('id', storyId);
 
         if (error) console.error("Voting failed:", error);
         else fetchStories();
     };
 
-    // SOFT DELETE STORY
+    // SOFT DELETE STORY WITH CONFIRMATION
     window.deleteStory = async (id) => { 
-        if(confirm("Delete this story?")) { 
-            // Instead of .delete(), we update 'deleted_at'
-            await supabase
-                .from('stories')
-                .update({ deleted_at: new Date().toISOString() })
-                .eq('id', id);
-            
-            fetchStories(); 
-        } 
+        // 1. Ask for confirmation
+        if(!confirm("Are you sure you want to delete this story?")) return;
+
+        // 2. Close the menu so it doesn't stay stuck open
+        document.querySelectorAll('.menu-dropdown').forEach(el => el.classList.remove('show'));
+        
+        // 3. Perform Soft Delete
+        await supabase
+            .from('stories')
+            .update({ deleted_at: new Date().toISOString() })
+            .eq('id', id);
+        
+        fetchStories(); 
     };
 
     // ==========================================
@@ -339,7 +338,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .from('comments')
             .select('*, profiles(username)')
             .eq('story_id', storyId)
-            .is('deleted_at', null) // Only fetch alive comments
+            .is('deleted_at', null) 
             .order('created_at', {ascending: true});
             
         list.innerHTML = '';
@@ -351,12 +350,13 @@ document.addEventListener('DOMContentLoaded', () => {
         comments.forEach(c => {
             const u = c.profiles ? c.profiles.username : c.guest_name;
             
-            // --- MENU LOGIC FOR COMMENTS ---
+            // --- PERMISSION CHECK FOR COMMENTS ---
             const isOwner = isAdmin || (currentUser && c.user_id === currentUser.id);
-            let menuItems = `<button onclick="reportContent('comment', ${c.id})">⚠️ Report</button>`;
+            
+            let menuItems = `<button onclick="event.stopPropagation(); reportContent('comment', ${c.id})">⚠️ Report</button>`;
             
             if (isOwner) {
-                menuItems += `<button onclick="deleteComment(${c.id})" class="text-red">🗑️ Delete</button>`;
+                menuItems += `<button onclick="event.stopPropagation(); deleteComment(${c.id})" class="text-red">🗑️ Delete</button>`;
             }
 
             const menuHTML = `
@@ -396,16 +396,18 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchComments(activeStoryId);
     };
 
-    // SOFT DELETE COMMENT
+    // SOFT DELETE COMMENT WITH CONFIRMATION
     window.deleteComment = async (id) => { 
-        if(confirm("Delete comment?")) { 
-            await supabase
-                .from('comments')
-                .update({ deleted_at: new Date().toISOString() })
-                .eq('id', id);
-            
-            fetchComments(activeStoryId); 
-        } 
+        if(!confirm("Are you sure you want to delete this comment?")) return;
+
+        document.querySelectorAll('.menu-dropdown').forEach(el => el.classList.remove('show'));
+
+        await supabase
+            .from('comments')
+            .update({ deleted_at: new Date().toISOString() })
+            .eq('id', id);
+        
+        fetchComments(activeStoryId); 
     };
 
     // ==========================================
