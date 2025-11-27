@@ -54,6 +54,10 @@
                 </div>
             </div>
 
+            <button id="adminDashboardBtn" class="btn-primary full-width hidden" style="background:#2c3e50; margin-bottom:20px; border:1px solid #d4a373;">
+                👑 Admin Dashboard
+            </button>
+
             <div class="passport-section">
                 <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
                     <h3 style="margin:0;">🎖️ Author's Passport</h3>
@@ -98,6 +102,30 @@
                 <div class="guide-item"><div class="flair-preview frame-iron guide-badge"></div><div><strong>The Cliffhanger</strong><br><small>2nd Place (Weekly Vote).</small></div></div>
                 <div class="guide-item"><div class="flair-preview frame-gold guide-badge"></div><div><strong>The Golden Quill</strong><br><small>1st Place (Weekly Vote).</small></div></div>
                 <div class="guide-item"><div class="flair-preview frame-diamond guide-badge"></div><div><strong>The Trilogy Master</strong><br><small>Top 3 for 3 weeks in a row.</small></div></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="adminModal" class="modal hidden">
+        <div class="modal-content book-style full-screen-mobile">
+            <span class="close-modal" onclick="closeAllModals()">&times;</span>
+            <h2 style="color:#e76f51; text-align:center;">👑 PenPaleto Control</h2>
+            
+            <div class="admin-tabs">
+                <button class="tab-btn active" onclick="switchAdminTab('users')">Users & Badges</button>
+                <button class="tab-btn" onclick="switchAdminTab('contest')">Weekly Contest</button>
+            </div>
+
+            <div id="adminTabUsers" class="admin-tab-content">
+                <input type="text" id="adminUserSearch" placeholder="Search user by name..." style="margin-bottom:15px;">
+                <div id="adminUserList" class="admin-user-list"></div>
+            </div>
+
+            <div id="adminTabContest" class="admin-tab-content hidden">
+                <h3>🏆 Award Weekly Winners</h3>
+                <div class="winner-input-group"><label>🥇 1st (Golden Quill)</label><div style="display:flex; gap:10px;"><input type="text" id="winner1Input" placeholder="Username"><button onclick="adminAwardWinner(1)" class="btn-primary small">Award</button></div></div>
+                <div class="winner-input-group"><label>🥈 2nd (Cliffhanger)</label><div style="display:flex; gap:10px;"><input type="text" id="winner2Input" placeholder="Username"><button onclick="adminAwardWinner(2)" class="btn-primary small">Award</button></div></div>
+                <div class="winner-input-group"><label>🥉 3rd (Ink Splatter)</label><div style="display:flex; gap:10px;"><input type="text" id="winner3Input" placeholder="Username"><button onclick="adminAwardWinner(3)" class="btn-primary small">Award</button></div></div>
             </div>
         </div>
     </div>
