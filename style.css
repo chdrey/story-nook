@@ -63,11 +63,11 @@ nav.scrolled { padding: 10px 40px; background: var(--glass-nav); box-shadow: 0 5
     margin-top: 20px; 
     justify-items: center;
     width: 100%;
-    min-height: 120px; /* Prevents collapse */
+    min-height: 120px; 
 }
 .flair-item { display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: all 0.2s; text-align: center; position: relative; }
 .flair-item.unlocked { opacity: 1; }
-.flair-item.locked { opacity: 0.5; filter: grayscale(100%); } /* Clearer locked state */
+.flair-item.locked { opacity: 0.5; filter: grayscale(100%); } 
 .flair-item:hover { transform: translateY(-3px); }
 .flair-item.selected .flair-preview { box-shadow: 0 0 15px var(--accent), inset 0 0 10px rgba(255,255,255,0.5); transform: scale(1.1); }
 .flair-item span { font-size: 0.75rem; color: #555; margin-top: 5px; font-weight: bold; }
@@ -189,3 +189,61 @@ input, textarea { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid va
 .input-compact { width: 150px; background: white !important; border: 1px solid #ccc !important; }
 .input-wide { flex-grow: 1; background: white !important; border: 1px solid #ccc !important; }
 .comments-list { max-height: 400px; overflow-y: auto; }
+
+/* === PROFILE STORIES LIST (UPDATED) === */
+.my-stories-container {
+    max-height: 300px;
+    overflow-y: auto;
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid #d4a373;
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 20px;
+}
+.story-accordion {
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 5px;
+    margin-bottom: 8px;
+    overflow: hidden;
+    transition: all 0.2s;
+}
+.story-accordion[open] { border-color: var(--accent); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+.story-summary {
+    padding: 12px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: bold;
+    color: #2c1e16;
+    list-style: none;
+}
+.story-summary::-webkit-details-marker { display: none; }
+.story-summary:hover { background-color: rgba(212, 163, 115, 0.1); }
+.story-content-preview {
+    padding: 15px;
+    border-top: 1px dashed #ccc;
+    font-size: 0.95rem;
+    font-style: italic;
+    color: #555;
+    background: #fafafa;
+    white-space: pre-wrap;
+}
+.btn-delete-small {
+    background: #e76f51;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s, background 0.2s;
+    flex-shrink: 0;
+    margin-left: 10px;
+}
+.btn-delete-small:hover { background: #c0392b; transform: scale(1.1); }
