@@ -48,17 +48,17 @@
             <div class="profile-header">
                 <div class="avatar-wrapper">
                     <img id="profileAvatar" src="" alt="Avatar" class="avatar-large profile-trigger-action">
-                    <p style="font-size:0.8rem; color:var(--text-muted); margin-top:5px;">(Tap to change)</p>
                 </div>
                 <div class="profile-info">
-                    <h2 id="profileNameDisplay">Username</h2>
-                    <p class="subtext" style="margin-top:0;">Pen Name (Permanent)</p>
+                    <h2 id="profileNameDisplay">Guest</h2>
                 </div>
             </div>
 
             <div class="passport-section">
-                <h3>🎖️ Author's Passport</h3>
-                <p class="subtext">Progress through material frames by earning achievements.</p>
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                    <h3 style="margin:0;">🎖️ Author's Passport</h3>
+                    <button id="passportInfoBtn" class="info-icon-small">i</button>
+                </div>
                 <div id="flairGrid" class="flair-grid"></div>
             </div>
             
@@ -66,13 +66,10 @@
 
             <div class="settings-section">
                 <h4>⚙️ Settings</h4>
-                <p class="subtext">Pen names are permanent marks of your journey.</p>
-                
                 <div class="settings-grid" style="margin-top: 15px;">
                     <input type="password" id="newPasswordInput" placeholder="New Password">
                     <button id="changePasswordBtn" class="btn-secondary small">Update</button>
                 </div>
-                
                 <button id="logoutBtn" class="btn-secondary full-width" style="margin-top: 15px;">Log Out</button>
             </div>
 
@@ -82,10 +79,44 @@
 
             <hr style="border-color: #e76f51; opacity: 0.3;">
             
-            <div class="danger-zone">
-                <h4 style="color: #e76f51;">⚠️ Danger Zone</h4>
-                <p class="subtext" style="color: #c44536;">Deleting your account is permanent and cannot be undone. All your stories will be lost.</p>
-                <button id="deleteAccountBtn" class="btn-delete-final full-width">Delete Account Forever</button>
+            <div class="delete-section">
+                <button id="deleteAccountBtn" class="btn-delete-final full-width">Delete Account</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="passportInfoModal" class="modal hidden">
+        <div class="modal-content passport-guide-style">
+            <span class="close-modal" onclick="closeAllModals()">&times;</span>
+            
+            <h2 class="guide-title">Passport Guide</h2>
+            <p class="guide-desc">Collect badges to unlock new profile frames.</p>
+
+            <div class="badge-guide-grid">
+                <div class="guide-item">
+                    <div class="flair-preview frame-wood mini"></div>
+                    <div><strong>The Apprentice</strong><br><small>Publish your 1st story.</small></div>
+                </div>
+                <div class="guide-item">
+                    <div class="flair-preview frame-stone mini"></div>
+                    <div><strong>The Scribe</strong><br><small>Publish 5 stories.</small></div>
+                </div>
+                <div class="guide-item">
+                    <div class="flair-preview frame-iron mini"></div>
+                    <div><strong>The Keeper</strong><br><small>Receive 10+ votes on a story.</small></div>
+                </div>
+                <div class="guide-item">
+                    <div class="flair-preview frame-gold mini"></div>
+                    <div><strong>The Gilded Lantern</strong><br><small>Win a Keyword Challenge.</small></div>
+                </div>
+                <div class="guide-item">
+                    <div class="flair-preview frame-diamond mini"></div>
+                    <div><strong>The Trilogy Master</strong><br><small>Write a 3-part series.</small></div>
+                </div>
+                <div class="guide-item">
+                    <div class="flair-preview frame-cosmic mini"></div>
+                    <div><strong>The Void Walker</strong><br><small>Special Event Reward.</small></div>
+                </div>
             </div>
         </div>
     </div>
@@ -183,22 +214,27 @@
     </main>
 
     <script>
-        function enterNook() {
-            const overlay = document.getElementById('welcomeOverlay');
-            if (overlay) {
-                overlay.style.opacity = '0';
-                setTimeout(() => overlay.classList.add('hidden'), 800);
+        document.addEventListener('DOMContentLoaded', function() {
+            const enterBtn = document.getElementById('enterBtn');
+            if(enterBtn) {
+                enterBtn.addEventListener('click', function() {
+                    const overlay = document.getElementById('welcomeOverlay');
+                    if (overlay) {
+                        overlay.style.opacity = '0';
+                        setTimeout(() => overlay.classList.add('hidden'), 800);
+                    }
+                    const bgVideo = document.getElementById('bgVideo');
+                    if (bgVideo) {
+                        bgVideo.muted = false;
+                        bgVideo.play().catch(e => console.log("Autoplay blocked"));
+                    }
+                    const ytPlayer = document.getElementById('youtubePlayer');
+                    if (ytPlayer) {
+                        ytPlayer.src = "https://www.youtube.com/embed/hVFaaUEIpzE?start=103&autoplay=1&mute=0";
+                    }
+                });
             }
-            const bgVideo = document.getElementById('bgVideo');
-            if (bgVideo) {
-                bgVideo.muted = false;
-                bgVideo.play().catch(e => console.log("Video play blocked"));
-            }
-            const ytPlayer = document.getElementById('youtubePlayer');
-            if (ytPlayer) {
-                ytPlayer.src = "https://www.youtube.com/embed/hVFaaUEIpzE?start=103&autoplay=1&mute=0";
-            }
-        }
+        });
     </script>
     
     <script src="script.js"></script>
