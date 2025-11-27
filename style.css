@@ -21,7 +21,7 @@ html, body {
 }
 
 /* UTILITIES */
-main { max-width: 900px; margin: 0 auto; padding: 120px 20px 100px 20px; }
+main { max-width: 900px; margin: 0 auto; padding: 120px 20px 100px 20px; min-height: 80vh;}
 .full-width { width: 100%; }
 .hidden { display: none !important; }
 .subtext { font-style:italic; font-size:0.9rem; color:var(--text-muted); margin-bottom:10px; }
@@ -54,54 +54,6 @@ nav {
 .avatar-large { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent); }
 nav.scrolled { padding: 10px 40px; background: var(--glass-nav); box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
 
-/* === AVATAR UPLOAD STYLES === */
-.avatar-wrapper {
-    position: relative;
-    cursor: pointer;
-    width: 90px;
-    height: 90px;
-    margin: 0 auto;
-}
-
-.avatar-large {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 3px solid var(--accent);
-    transition: filter 0.2s;
-}
-
-.avatar-edit-hint {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: white;
-    font-size: 1.5rem;
-    opacity: 0; /* Hidden by default */
-    transition: opacity 0.2s;
-    pointer-events: none; /* Let clicks pass through to image */
-}
-
-/* Show camera icon on hover */
-.avatar-wrapper:hover .avatar-edit-hint {
-    opacity: 1;
-}
-
-/* If viewing someone else (no-click class), hide the hover effect */
-.avatar-wrapper.no-click {
-    cursor: default;
-}
-.avatar-wrapper.no-click:hover .avatar-edit-hint {
-    opacity: 0 !important;
-}
 /* === MODAL STYLES (Z-INDEX 30000) === */
 .modal { 
     position: fixed; 
@@ -352,3 +304,95 @@ input, textarea { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid va
 }
 .btn-delete-small:hover { background: #c0392b; transform: scale(1.1); }
 
+/* === AVATAR UPLOAD STYLES === */
+.avatar-wrapper {
+    position: relative;
+    cursor: pointer;
+    width: 90px;
+    height: 90px;
+    margin: 0 auto;
+}
+.avatar-large {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--accent);
+    transition: filter 0.2s;
+}
+.avatar-edit-hint {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-size: 1.5rem;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+}
+.avatar-wrapper:hover .avatar-edit-hint { opacity: 1; }
+.avatar-wrapper.no-click { cursor: default; }
+.avatar-wrapper.no-click:hover .avatar-edit-hint { opacity: 0 !important; }
+
+/* === FEED SCROLLABLE & AVATARS === */
+.scrollable-feed {
+    max-height: 800px;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+.scrollable-feed::-webkit-scrollbar { width: 8px; }
+.scrollable-feed::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 4px; }
+
+.story-header-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+.feed-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--accent);
+    flex-shrink: 0;
+}
+.story-author {
+    font-weight: bold;
+    color: var(--accent);
+    font-size: 1rem;
+}
+
+/* FOOTER */
+footer {
+    background: var(--glass-nav);
+    padding: 20px;
+    text-align: center;
+    margin-top: 50px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+.footer-content {
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+.footer-links button {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: var(--font-ui);
+    transition: color 0.2s;
+}
+.footer-links button:hover { color: var(--accent); }
