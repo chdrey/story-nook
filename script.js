@@ -1,28 +1,39 @@
 document.addEventListener('DOMContentLoaded', () => {
-    
-    // REPLACE WITH YOUR ADMIN EMAIL
-    const ADMIN_EMAIL = 'your_admin_email@example.com'; 
+    console.log("Website Loaded");
 
-    // 1. WELCOME BUTTONS
+    // --- 1. ENTER THE NOOK (CRITICAL LOGIC FIRST) ---
     const enterBtn = document.getElementById('enterBtn');
+    
     if (enterBtn) {
         enterBtn.addEventListener('click', () => {
+            console.log("Enter button clicked");
+            
+            // 1. Fade out the overlay
             const overlay = document.getElementById('welcomeOverlay');
             if (overlay) {
                 overlay.style.opacity = '0';
                 setTimeout(() => overlay.classList.add('hidden'), 800);
             }
+
+            // 2. Play Background Video
             const bgVideo = document.getElementById('bgVideo');
             if (bgVideo) {
                 bgVideo.muted = false;
-                bgVideo.play().catch(() => {});
+                bgVideo.play().catch((err) => console.log("Video autoplay blocked:", err));
             }
+
+            // 3. Start YouTube Music
             const ytPlayer = document.getElementById('youtubePlayer');
-            if (ytPlayer) ytPlayer.src = "https://www.youtube.com/embed/hVFaaUEIpzE?start=103&autoplay=1&mute=0";
+            if (ytPlayer) {
+                // Note: Mobile browsers often block unmuted audio autoplay
+                ytPlayer.src = "https://www.youtube.com/embed/hVFaaUEIpzE?start=103&autoplay=1&mute=0";
+            }
         });
+    } else {
+        console.error("Enter Button not found!");
     }
 
-    // INFO BUTTON (RESTORED)
+    // --- 2. INFO BUTTON ---
     const infoBtn = document.getElementById('infoBtn');
     if (infoBtn) {
         infoBtn.onclick = () => {
@@ -30,19 +41,29 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    // 2. SUPABASE INIT
+    // --- 3. SUPABASE INIT ---
+    // We put this inside a try-catch so it doesn't break the rest of the site if it fails
+    const ADMIN_EMAIL = 'your_admin_email@example.com'; 
     let supabase = null;
-    try {
-        const SUPABASE_URL = 'https://lypndarukqjtkyhxygwe.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5cG5kYXJ1a3FqdGt5aHh5Z3dlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3Nzc2NzAsImV4cCI6MjA3OTM1MzY3MH0.NE5Q1BFVsBDyKSUxHO--aR-jbSHSLW8klha7C7_VbUA';
-        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    } catch (err) { return; }
-
     let currentUser = null;
     let currentProfile = null;
     let isAdmin = false;
 
-    // --- APP START ---
+    try {
+        const SUPABASE_URL = 'https://lypndarukqjtkyhxygwe.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5cG5kYXJ1a3FqdGt5aHh5Z3dlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3Nzc2NzAsImV4cCI6MjA3OTM1MzY3MH0.NE5Q1BFVsBDyKSUxHO--aR-jbSHSLW8klha7C7_VbUA';
+        
+        if (window.supabase) {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            initApp(); // Only start the app logic if Supabase works
+        } else {
+            console.warn("Supabase script not loaded. Check your internet connection or AdBlocker.");
+        }
+    } catch (err) { 
+        console.error("Supabase Init Error:", err);
+    }
+
+    // --- 4. APP LOGIC ---
     async function initApp() {
         const { data: { session } } = await supabase.auth.getSession();
         if (session) handleUserSession(session);
@@ -68,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchStories();
     }
 
-    // --- UI UPDATES ---
+    // UI Updates
     const nav = document.getElementById('mainNav');
     window.addEventListener('scroll', () => {
         if (window.scrollY > 50) nav.classList.add('scrolled');
@@ -95,15 +116,19 @@ document.addEventListener('DOMContentLoaded', () => {
             loggedIn.classList.remove('hidden');
             guestInput.classList.add('hidden');
             
-            document.getElementById('navUsername').innerText = currentProfile.username;
+            // Only update username if the element exists (It is hidden on mobile)
+            const navUser = document.getElementById('navUsername');
+            if(navUser) navUser.innerText = currentProfile.username;
             
             const avatars = [document.getElementById('navAvatar'), document.getElementById('profileAvatar')];
             const flairClass = currentProfile.flairs ? currentProfile.flairs.css_class : '';
             
             avatars.forEach(img => {
-                img.src = currentProfile.avatar_url || 'https://i.imgur.com/6UD0njE.png';
-                img.className = img.id === 'navAvatar' ? 'avatar-small' : 'avatar-large';
-                if(flairClass) img.classList.add(flairClass);
+                if(img) {
+                    img.src = currentProfile.avatar_url || 'https://i.imgur.com/6UD0njE.png';
+                    img.className = img.id === 'navAvatar' ? 'avatar-small' : 'avatar-large';
+                    if(flairClass) img.classList.add(flairClass);
+                }
             });
         } else {
             loggedOut.classList.remove('hidden');
@@ -112,49 +137,56 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- AUTH LOGIC ---
+    // Auth Logic
     let isSignUp = false;
     const authModal = document.getElementById('authModal');
-    document.getElementById('navLoginBtn').onclick = () => authModal.classList.remove('hidden');
+    if(document.getElementById('navLoginBtn')) {
+        document.getElementById('navLoginBtn').onclick = () => authModal.classList.remove('hidden');
+    }
 
-    document.getElementById('authSwitchBtn').onclick = function() {
-        isSignUp = !isSignUp;
-        document.getElementById('authTitle').innerText = isSignUp ? "Sign Up" : "Log In";
-        document.getElementById('authActionBtn').innerText = isSignUp ? "Create Account" : "Log In";
-        document.getElementById('authToggleText').innerText = isSignUp ? "Already have an account?" : "Don't have an account?";
-        this.innerText = isSignUp ? "Log In" : "Sign Up";
-        document.getElementById('usernameInput').classList.toggle('hidden', !isSignUp);
-    };
+    if(document.getElementById('authSwitchBtn')) {
+        document.getElementById('authSwitchBtn').onclick = function() {
+            isSignUp = !isSignUp;
+            document.getElementById('authTitle').innerText = isSignUp ? "Sign Up" : "Log In";
+            document.getElementById('authActionBtn').innerText = isSignUp ? "Create Account" : "Log In";
+            document.getElementById('authToggleText').innerText = isSignUp ? "Already have an account?" : "Don't have an account?";
+            this.innerText = isSignUp ? "Log In" : "Sign Up";
+            document.getElementById('usernameInput').classList.toggle('hidden', !isSignUp);
+        };
+    }
 
-    document.getElementById('authActionBtn').onclick = async function() {
-        const email = document.getElementById('emailInput').value;
-        const password = document.getElementById('passwordInput').value;
-        const username = document.getElementById('usernameInput').value;
-        const errorMsg = document.getElementById('authError');
-        errorMsg.innerText = "";
+    const authActionBtn = document.getElementById('authActionBtn');
+    if(authActionBtn) {
+        authActionBtn.onclick = async function() {
+            const email = document.getElementById('emailInput').value;
+            const password = document.getElementById('passwordInput').value;
+            const username = document.getElementById('usernameInput').value;
+            const errorMsg = document.getElementById('authError');
+            errorMsg.innerText = "";
 
-        if(!email || !password) return errorMsg.innerText = "All fields required";
+            if(!email || !password) return errorMsg.innerText = "All fields required";
 
-        try {
-            if(isSignUp) {
-                if(!username) return errorMsg.innerText = "Pen Name required";
-                const { error } = await supabase.auth.signUp({
-                    email, password,
-                    options: { data: { username: username } }
-                });
-                if(error) throw error;
-                alert("Welcome!");
-            } else {
-                const { error } = await supabase.auth.signInWithPassword({ email, password });
-                if(error) throw error;
+            try {
+                if(isSignUp) {
+                    if(!username) return errorMsg.innerText = "Pen Name required";
+                    const { error } = await supabase.auth.signUp({
+                        email, password,
+                        options: { data: { username: username } }
+                    });
+                    if(error) throw error;
+                    alert("Welcome!");
+                } else {
+                    const { error } = await supabase.auth.signInWithPassword({ email, password });
+                    if(error) throw error;
+                }
+                closeAllModals();
+            } catch(e) {
+                errorMsg.innerText = e.message;
             }
-            closeAllModals();
-        } catch(e) {
-            errorMsg.innerText = e.message;
-        }
-    };
+        };
+    }
 
-    // --- STORIES ---
+    // Stories Logic
     async function fetchStories() {
         const feed = document.getElementById('storyFeed');
         if(!feed) return;
@@ -267,7 +299,6 @@ document.addEventListener('DOMContentLoaded', () => {
         await supabase.from('stories').update({ votes: newVotes }).eq('id', id);
     }
 
-    // --- PASSPORT & FLAIRS ---
     if(document.getElementById('navProfileBtn')) {
         document.getElementById('navProfileBtn').addEventListener('click', async () => {
             document.getElementById('profileModal').classList.remove('hidden');
@@ -375,33 +406,40 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     function escapeHtml(text) { return text ? text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") : ""; }
 
-    document.getElementById('publishBtn').addEventListener('click', async () => {
-        const txt = document.getElementById('mainStoryInput').value;
-        const pen = document.getElementById('guestPenName').value;
-        if(!txt) return;
-        const payload = { content: txt, votes: 0 };
-        if(currentUser) payload.user_id = currentUser.id;
-        else { if(!pen) return alert("Pen name needed"); payload.guest_name = pen; }
-        const { error } = await supabase.from('stories').insert(payload);
-        if(error) alert(error.message); else {
-            document.getElementById('mainStoryInput').value = '';
-            fetchStories();
-        }
-    });
+    const publishBtn = document.getElementById('publishBtn');
+    if(publishBtn) {
+        publishBtn.addEventListener('click', async () => {
+            const txt = document.getElementById('mainStoryInput').value;
+            const pen = document.getElementById('guestPenName').value;
+            if(!txt) return;
+            const payload = { content: txt, votes: 0 };
+            if(currentUser) payload.user_id = currentUser.id;
+            else { if(!pen) return alert("Pen name needed"); payload.guest_name = pen; }
+            const { error } = await supabase.from('stories').insert(payload);
+            if(error) alert(error.message); else {
+                document.getElementById('mainStoryInput').value = '';
+                fetchStories();
+            }
+        });
+    }
 
-    document.getElementById('postCommentBtn').addEventListener('click', async () => {
-        const val = document.getElementById('newCommentInput').value;
-        const pen = document.getElementById('commentGuestName').value;
-        if(!val) return;
-        const payload = { content: val, story_id: activeStoryId };
-        if(currentUser) payload.user_id = currentUser.id;
-        else { if(!pen) return alert("Name needed"); payload.guest_name = pen; }
-        await supabase.from('comments').insert(payload);
-        document.getElementById('newCommentInput').value = '';
-        fetchComments(activeStoryId);
-    });
+    const postCommentBtn = document.getElementById('postCommentBtn');
+    if(postCommentBtn) {
+        postCommentBtn.addEventListener('click', async () => {
+            const val = document.getElementById('newCommentInput').value;
+            const pen = document.getElementById('commentGuestName').value;
+            if(!val) return;
+            const payload = { content: val, story_id: activeStoryId };
+            if(currentUser) payload.user_id = currentUser.id;
+            else { if(!pen) return alert("Name needed"); payload.guest_name = pen; }
+            await supabase.from('comments').insert(payload);
+            document.getElementById('newCommentInput').value = '';
+            fetchComments(activeStoryId);
+        });
+    }
 
-    document.getElementById('logoutBtn').onclick = async () => { await supabase.auth.signOut(); };
-    
-    initApp();
+    const logoutBtn = document.getElementById('logoutBtn');
+    if(logoutBtn) {
+        logoutBtn.onclick = async () => { await supabase.auth.signOut(); };
+    }
 });
