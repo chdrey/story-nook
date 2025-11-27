@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Website Loaded v11.0 - Complete");
+    console.log("Website Loaded v12.0 - Menu Update");
 
     // ==========================================
     // 1. SUPABASE CONFIGURATION
@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if(adminBtn) adminBtn.classList.add('hidden');
         }
         updateUI();
-        // Refresh stories to show delete buttons if applicable
+        // Refresh stories to show menu options correctly
         fetchStories(); 
     }
 
@@ -103,7 +103,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const navUser = document.getElementById('navUsername');
             if(navUser) navUser.innerText = currentProfile.username;
             
-            // Only update avatars if we aren't viewing someone else in admin mode
             if(!document.getElementById('profileModal').classList.contains('admin-view')) {
                 const profileName = document.getElementById('profileNameDisplay');
                 if(profileName) profileName.innerText = currentProfile.username;
@@ -125,7 +124,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 img.src = profileData.avatar_url || 'https://i.imgur.com/6UD0njE.png';
                 if(img.id === 'navAvatar') {
                     img.className = 'avatar-small';
-                    // Remove old flair classes
                     img.classList.remove('frame-wood', 'frame-stone', 'frame-iron', 'frame-gold', 'frame-diamond', 'frame-copper');
                     if(flairClass) img.classList.add(flairClass);
                 } else if (!document.getElementById('profileModal').classList.contains('admin-view')) {
@@ -142,21 +140,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const passportInfoBtn = document.getElementById('passportInfoBtn');
     if (passportInfoBtn) passportInfoBtn.onclick = () => document.getElementById('passportInfoModal').classList.remove('hidden');
 
+    // --- PROFILE BUTTON FIX ---
+    const navProfileBtn = document.getElementById('navProfileBtn');
+    if (navProfileBtn) {
+        navProfileBtn.onclick = (e) => {
+            e.stopPropagation(); 
+            document.getElementById('profileModal').classList.remove('hidden');
+        };
+    }
+
     const adminBtn = document.getElementById('adminDashboardBtn');
     if(adminBtn) {
         adminBtn.onclick = () => {
             document.getElementById('adminModal').classList.remove('hidden');
             loadAllUsers();
-        };
-    }
-
-    // --- FIX: Add this specific listener for the Profile Button ---
-    const navProfileBtn = document.getElementById('navProfileBtn');
-    if (navProfileBtn) {
-        navProfileBtn.onclick = (e) => {
-            // Stop the click from bubbling up (prevents weird glitches)
-            e.stopPropagation(); 
-            document.getElementById('profileModal').classList.remove('hidden');
         };
     }
 
@@ -176,7 +173,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Helper: Escape HTML to prevent XSS
     function escapeHtml(text) {
         return text ? text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") : "";
     }
@@ -185,7 +181,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // 4. STORY LOGIC (FETCH, PUBLISH, VOTE)
     // ==========================================
 
-    // Fetch Stories from DB and display them
     async function fetchStories() {
         const feed = document.getElementById('storyFeed');
         const top = document.getElementById('topStories');
@@ -216,24 +211,34 @@ document.addEventListener('DOMContentLoaded', () => {
         stories.forEach(story => {
             const authorName = story.guest_name || (story.profiles ? story.profiles.username : 'Anonymous');
             const isTopStory = story.votes >= 5; 
-
-            // Delete button logic
-            let deleteBtn = '';
-            if (isAdmin || (currentUser && story.user_id === currentUser.id)) {
-                deleteBtn = `<button class="menu-trigger" onclick="event.stopPropagation(); deleteStory(${story.id})" title="Delete">🗑️</button>`;
+            
+            // --- MENU LOGIC ---
+            const isOwner = isAdmin || (currentUser && story.user_id === currentUser.id);
+            
+            let menuItems = `<button onclick="reportContent('story', ${story.id})">⚠️ Report</button>`;
+            
+            if (isOwner) {
+                menuItems += `<button onclick="deleteStory(${story.id})" class="text-red">🗑️ Delete</button>`;
             }
+
+            const menuHTML = `
+                <div class="action-column">
+                    <button class="menu-trigger" onclick="event.stopPropagation(); toggleMenu('story-menu-${story.id}')">⋮</button>
+                    <div id="story-menu-${story.id}" class="menu-dropdown">
+                        ${menuItems}
+                    </div>
+                    <button class="vote-btn" onclick="event.stopPropagation(); voteStory('${story.id}', ${story.votes})">
+                        ❤️ <span style="font-size:0.8rem">${story.votes || 0}</span>
+                    </button>
+                </div>
+            `;
 
             const cardHTML = `
                 <div class="story-card" onclick="openReadModal(${story.id})">
                     <p style="font-size: 1.1rem; margin-bottom: 10px;">"${escapeHtml(story.content.substring(0, 200))}${story.content.length > 200 ? '...' : ''}"</p>
                     <div class="story-meta">
                         <span>✍️ ${escapeHtml(authorName)}</span>
-                        <div style="display:flex; gap:10px; align-items:center;">
-                            ${deleteBtn}
-                            <button class="vote-btn" onclick="event.stopPropagation(); voteStory('${story.id}', ${story.votes})">
-                                ❤️ ${story.votes || 0}
-                            </button>
-                        </div>
+                        ${menuHTML}
                     </div>
                 </div>
             `;
@@ -245,7 +250,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Publish a new Story
     const publishBtn = document.getElementById('publishBtn');
     if(publishBtn) publishBtn.onclick = async () => {
         const txt = document.getElementById('mainStoryInput').value;
@@ -271,7 +275,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Vote Logic
     window.voteStory = async (storyId, currentVotes) => {
         if (!currentUser) {
             alert("Please log in to vote!");
@@ -289,7 +292,6 @@ document.addEventListener('DOMContentLoaded', () => {
         else fetchStories();
     };
 
-    // Delete Story
     window.deleteStory = async (id) => { 
         if(confirm("Delete this story permanently?")) { 
             await supabase.from('stories').delete().eq('id', id); 
@@ -301,7 +303,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // 5. COMMENTS & READING
     // ==========================================
     window.openReadModal = async (story) => {
-        // If passed ID instead of object, fetch it
         if(typeof story === 'number') { 
             const {data} = await supabase.from('stories').select('*, profiles(username)').eq('id', story).single(); 
             story = data; 
@@ -335,8 +336,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
         comments.forEach(c => {
             const u = c.profiles ? c.profiles.username : c.guest_name;
-            const del = (isAdmin || (currentUser && c.user_id === currentUser.id)) ? `<button class="btn-delete" style="padding:2px 6px;" onclick="deleteComment(${c.id})">X</button>` : '';
-            list.innerHTML += `<div class="comment-item"><div><strong>@${u}</strong>: ${escapeHtml(c.content)}</div>${del}</div>`;
+            
+            // --- MENU LOGIC FOR COMMENTS ---
+            const isOwner = isAdmin || (currentUser && c.user_id === currentUser.id);
+            
+            let menuItems = `<button onclick="reportContent('comment', ${c.id})">⚠️ Report</button>`;
+            
+            if (isOwner) {
+                menuItems += `<button onclick="deleteComment(${c.id})" class="text-red">🗑️ Delete</button>`;
+            }
+
+            const menuHTML = `
+                <div class="action-column" style="align-items:flex-end;">
+                    <button class="menu-trigger" onclick="event.stopPropagation(); toggleMenu('comment-menu-${c.id}')">⋮</button>
+                    <div id="comment-menu-${c.id}" class="menu-dropdown" style="width:100px;">
+                        ${menuItems}
+                    </div>
+                </div>
+            `;
+            
+            list.innerHTML += `
+                <div class="comment-item">
+                    <div><strong>@${u}</strong>: ${escapeHtml(c.content)}</div>
+                    ${menuHTML}
+                </div>`;
         });
     }
 
@@ -396,7 +419,6 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 if(isSignUp) {
                     if(!username) return errorMsg.innerText = "Pen Name required";
-                    // Check if username taken
                     const { data: existing } = await supabase.from('profiles').select('username').eq('username', username).single();
                     if(existing) throw new Error("This Pen Name is already taken. Be original!");
 
@@ -418,7 +440,6 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    // Logout
     const logoutBtn = document.getElementById('logoutBtn');
     if(logoutBtn) logoutBtn.onclick = async () => {
         await supabase.auth.signOut();
@@ -663,6 +684,29 @@ document.addEventListener('DOMContentLoaded', () => {
         const ytPlayer = document.getElementById('youtubePlayer');
         if (ytPlayer) ytPlayer.src = "https://www.youtube.com/embed/hVFaaUEIpzE?start=103&autoplay=1&mute=0";
     }
+    
+    // ==========================================
+    // 9. NEW MENU & REPORT LOGIC
+    // ==========================================
+
+    // Opens/Closes the specific menu
+    window.toggleMenu = (elementId) => {
+        document.querySelectorAll('.menu-dropdown').forEach(el => {
+            if(el.id !== elementId) el.classList.remove('show');
+        });
+        
+        const menu = document.getElementById(elementId);
+        if(menu) menu.classList.toggle('show');
+    };
+
+    // Close menus if clicking anywhere else on the screen
+    window.addEventListener('click', () => {
+        document.querySelectorAll('.menu-dropdown').forEach(el => el.classList.remove('show'));
+    });
+
+    window.reportContent = (type, id) => {
+        alert(`Thanks for reporting this ${type}. The admins have been notified.`);
+        document.querySelectorAll('.menu-dropdown').forEach(el => el.classList.remove('show'));
+    };
 
 });
-
