@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Website Loaded v21.0 - CONTROL PANEL FINAL");
+    console.log("Website Loaded v22.0 - CONTROL PANEL FINAL");
 
     // ==========================================
     // 1. SUPABASE CONFIGURATION
@@ -601,13 +601,42 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // === NEW: ADMIN REVOKE LOGIC ===
+    window.adminRevokeBadge = async (badgeId) => {
+        const inputId = `badgeInput_${badgeId}`;
+        const username = document.getElementById(inputId).value;
+        
+        if(!username) return alert("Enter username");
+        
+        const { data: user } = await supabase.from('profiles').select('id').eq('username', username).single();
+        
+        if(!user) return alert("User not found");
+        
+        // Remove only one instance of this badge
+        // Note: Supabase delete usually deletes all matches. 
+        // For simplicity in this structure, we delete rows matching user+badge.
+        const { error } = await supabase.from('user_flairs').delete().eq('user_id', user.id).eq('flair_id', badgeId);
+        
+        if(error) {
+            console.error(error);
+            alert("Error removing badge.");
+        } else {
+            alert(`Badge #${badgeId} revoked from ${username}.`);
+            document.getElementById(inputId).value = ''; 
+            
+            if(user.id === currentUser.id) {
+                loadPassportForUser(currentUser.id);
+            }
+        }
+    };
+
     // ==========================================
     // 8. PASSPORT & PROFILE (UNIFIED LOGIC)
     // ==========================================
     async function loadPassportForUser(targetId) {
         const grid = document.getElementById('flairGrid');
         if(!grid) return;
-        grid.innerHTML = ''; 
+        grid.innerHTML = ''; // Clear loading
         
         const { data: userFlairs, error } = await supabase.from('user_flairs').select('flair_id').eq('user_id', targetId);
         if(error) {
