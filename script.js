@@ -519,26 +519,41 @@ document.addEventListener('DOMContentLoaded', () => {
     const adminSearch = document.getElementById('adminUserSearch');
     if(adminSearch) adminSearch.addEventListener('keyup', () => window.loadAllUsers());
 
-    window.viewUserProfile = async (userId) => {
-        const { data: targetUser } = await supabase.from('profiles').select('*').eq('id', userId).single();
-        if(!targetUser) return alert("User data missing.");
-
+ window.viewUserProfile = async (userId) => {
         const modal = document.getElementById('profileModal');
+        
+        // FIX: Show the modal FIRST so the Grid has a width to calculate layout
+        modal.classList.remove('hidden'); 
         modal.classList.add('admin-view'); 
         
+        // Hide standard profile elements
         document.getElementById('settingsSection').classList.add('hidden');
         document.getElementById('deleteSection').classList.add('hidden');
         document.getElementById('adminDashboardBtn').classList.add('hidden');
 
+        // Show loading state immediately so it doesn't look broken
+        document.getElementById('profileNameDisplay').innerText = "Loading...";
+        document.getElementById('profileAvatar').src = 'https://i.imgur.com/6UD0njE.png'; // default placeholder
+        document.getElementById('flairGrid').innerHTML = '<p>Loading Passport...</p>';
+
+        // NOW fetch the data
+        const { data: targetUser } = await supabase.from('profiles').select('*').eq('id', userId).single();
+        
+        if(!targetUser) {
+            alert("User data missing.");
+            modal.classList.add('hidden');
+            return;
+        }
+
+        // Populate Data
         document.getElementById('profileNameDisplay').innerText = targetUser.username;
         const bigAvatar = document.getElementById('profileAvatar');
         bigAvatar.src = targetUser.avatar_url || 'https://i.imgur.com/6UD0njE.png';
         bigAvatar.classList.remove('profile-trigger-action'); 
 
+        // Load the badges and stories AFTER the modal is visible
         loadPassportForUser(userId); 
         loadStoriesForUser(userId);  
-
-        modal.classList.remove('hidden');
     };
 
     window.resetProfileModalToMyView = () => {
