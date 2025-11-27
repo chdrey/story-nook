@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Website Loaded v22.0 - CONTROL PANEL FINAL");
+    console.log("Website Loaded v23.0 - Avatar Upload");
 
     // ==========================================
     // 1. SUPABASE CONFIGURATION
@@ -121,7 +121,10 @@ document.addEventListener('DOMContentLoaded', () => {
         
         avatars.forEach(img => {
             if(img) {
-                img.src = profileData.avatar_url || 'https://i.imgur.com/6UD0njE.png';
+                // Add timestamp to force refresh if URL is same but image changed
+                const url = profileData.avatar_url || 'https://i.imgur.com/6UD0njE.png';
+                img.src = url;
+                
                 if(img.id === 'navAvatar') {
                     img.className = 'avatar-small';
                     img.classList.remove('frame-wood', 'frame-stone', 'frame-iron', 'frame-gold', 'frame-diamond', 'frame-copper');
@@ -178,7 +181,69 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================
-    // 4. STORY LOGIC (FETCH, PUBLISH, VOTE)
+    // 4. AVATAR UPLOAD LOGIC (NEW)
+    // ==========================================
+    
+    // Trigger hidden input
+    const profileAvatar = document.getElementById('profileAvatar');
+    const avatarInput = document.getElementById('avatarUploadInput');
+
+    if(profileAvatar && avatarInput) {
+        profileAvatar.onclick = () => {
+            // Only allow upload if NOT in admin view mode
+            if(!document.getElementById('profileModal').classList.contains('admin-view')) {
+                avatarInput.click();
+            }
+        };
+
+        // Handle File Selection
+        avatarInput.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Optional: Check file size (e.g. max 2MB)
+            if (file.size > 2000000) return alert("File is too big! Max 2MB.");
+
+            const overlay = document.getElementById('avatarEditOverlay');
+            if(overlay) overlay.innerText = "⏳"; // Show loading icon
+
+            try {
+                // 1. Upload to Supabase Storage
+                // We use timestamp to make filename unique
+                const fileName = `${currentUser.id}/${Date.now()}.png`; 
+                const { error: uploadError } = await supabase.storage.from('avatars').upload(fileName, file, {
+                    cacheControl: '3600',
+                    upsert: false
+                });
+
+                if (uploadError) throw uploadError;
+
+                // 2. Get Public URL
+                const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(fileName);
+
+                // 3. Update Profile Database
+                const { error: dbError } = await supabase
+                    .from('profiles')
+                    .update({ avatar_url: publicUrl })
+                    .eq('id', currentUser.id);
+
+                if (dbError) throw dbError;
+
+                // 4. Refresh UI
+                await fetchUserProfile();
+                updateUI();
+                if(overlay) overlay.innerText = "📷"; // Reset icon
+
+            } catch (error) {
+                console.error("Upload failed:", error);
+                alert("Upload failed. Make sure you created the 'avatars' bucket in Supabase!");
+                if(overlay) overlay.innerText = "❌";
+            }
+        };
+    }
+
+    // ==========================================
+    // 5. STORY LOGIC
     // ==========================================
 
     async function fetchStories() {
@@ -293,7 +358,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ==========================================
-    // 5. COMMENTS & READING
+    // 6. COMMENTS & READING
     // ==========================================
     window.openReadModal = async (story) => {
         if(typeof story === 'number') { 
@@ -381,7 +446,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ==========================================
-    // 6. AUTH MODAL LOGIC
+    // 7. AUTH MODAL LOGIC
     // ==========================================
     let isSignUp = false;
     const authActionBtn = document.getElementById('authActionBtn');
@@ -436,7 +501,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ==========================================
-    // 7. ADMIN DASHBOARD & PROFILE LOGIC
+    // 8. ADMIN DASHBOARD & PROFILE LOGIC
     // ==========================================
     window.switchAdminTab = (tab) => {
         document.querySelectorAll('.admin-tab-content').forEach(d => d.classList.add('hidden'));
@@ -500,7 +565,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const adminSearch = document.getElementById('adminUserSearch');
     if(adminSearch) adminSearch.addEventListener('keyup', () => window.loadAllUsers());
 
-    // === CRITICAL PROFILE FIX ===
     window.viewUserProfile = async (userId) => {
         const modal = document.getElementById('profileModal');
         const grid = document.getElementById('flairGrid');
@@ -508,6 +572,9 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.classList.remove('hidden'); 
         modal.classList.add('admin-view'); 
         
+        // Add "no-click" class to wrapper to disable upload hover effect
+        document.querySelector('.avatar-wrapper').classList.add('no-click');
+
         document.getElementById('settingsSection').classList.add('hidden');
         document.getElementById('deleteSection').classList.add('hidden');
         document.getElementById('adminDashboardBtn').classList.add('hidden');
@@ -536,6 +603,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         modal.classList.remove('admin-view');
         
+        // Remove "no-click" to enable upload
+        document.querySelector('.avatar-wrapper').classList.remove('no-click');
+
         document.getElementById('settingsSection').classList.remove('hidden');
         document.getElementById('deleteSection').classList.remove('hidden');
         if(isAdmin) document.getElementById('adminDashboardBtn').classList.remove('hidden');
@@ -575,63 +645,40 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // === UPDATED ADMIN AWARD LOGIC ===
     window.adminAwardBadge = async (badgeId) => {
         const inputId = `badgeInput_${badgeId}`;
         const username = document.getElementById(inputId).value;
-        
         if(!username) return alert("Enter username");
-        
         const { data: user } = await supabase.from('profiles').select('id').eq('username', username).single();
-        
         if(!user) return alert("User not found");
         
         const { error } = await supabase.from('user_flairs').insert({ user_id: user.id, flair_id: badgeId });
-        
-        if(error) {
-            console.error(error);
-            alert("Error: They might already have this badge.");
-        } else {
-            alert(`Badge #${badgeId} awarded to ${username}!`);
+        if(error) { console.error(error); alert("Error awarding badge."); }
+        else { 
+            alert(`Badge #${badgeId} awarded to ${username}!`); 
             document.getElementById(inputId).value = ''; 
-            
-            if(user.id === currentUser.id) {
-                loadPassportForUser(currentUser.id);
-            }
+            if(user.id === currentUser.id) loadPassportForUser(currentUser.id);
         }
     };
 
-    // === NEW: ADMIN REVOKE LOGIC ===
     window.adminRevokeBadge = async (badgeId) => {
         const inputId = `badgeInput_${badgeId}`;
         const username = document.getElementById(inputId).value;
-        
         if(!username) return alert("Enter username");
-        
         const { data: user } = await supabase.from('profiles').select('id').eq('username', username).single();
-        
         if(!user) return alert("User not found");
         
-        // Remove only one instance of this badge
-        // Note: Supabase delete usually deletes all matches. 
-        // For simplicity in this structure, we delete rows matching user+badge.
         const { error } = await supabase.from('user_flairs').delete().eq('user_id', user.id).eq('flair_id', badgeId);
-        
-        if(error) {
-            console.error(error);
-            alert("Error removing badge.");
-        } else {
-            alert(`Badge #${badgeId} revoked from ${username}.`);
+        if(error) { console.error(error); alert("Error removing badge."); }
+        else { 
+            alert(`Badge #${badgeId} revoked from ${username}.`); 
             document.getElementById(inputId).value = ''; 
-            
-            if(user.id === currentUser.id) {
-                loadPassportForUser(currentUser.id);
-            }
+            if(user.id === currentUser.id) loadPassportForUser(currentUser.id);
         }
     };
 
     // ==========================================
-    // 8. PASSPORT & PROFILE (UNIFIED LOGIC)
+    // 9. PASSPORT & PROFILE (UNIFIED LOGIC)
     // ==========================================
     async function loadPassportForUser(targetId) {
         const grid = document.getElementById('flairGrid');
@@ -639,11 +686,7 @@ document.addEventListener('DOMContentLoaded', () => {
         grid.innerHTML = ''; // Clear loading
         
         const { data: userFlairs, error } = await supabase.from('user_flairs').select('flair_id').eq('user_id', targetId);
-        if(error) {
-            console.error("Passport Error:", error);
-            grid.innerHTML = "Error loading badges. (Check RLS)";
-            return;
-        }
+        if(error) { console.error("Passport Error:", error); grid.innerHTML = "Error loading badges."; return; }
 
         const counts = {};
         if (userFlairs) userFlairs.forEach(uf => counts[uf.flair_id] = (counts[uf.flair_id] || 0) + 1);
@@ -673,7 +716,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 div.onclick = () => equipFlair(def.id);
             }
             const visualClass = isUnlocked ? def.css : 'frame-locked';
-
             const showTooltip = isUnlocked || badgeCount > 0;
 
             div.innerHTML = `
@@ -692,7 +734,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loadPassportForUser(currentUser.id);
     }
 
-    // === PROFILE STORY LOADER (SOFT DELETE & ACCORDION) ===
+    // === PROFILE STORY LOADER ===
     async function loadStoriesForUser(targetId) {
         const list = document.getElementById('myStoriesList');
         if(!list) return;
@@ -711,7 +753,6 @@ document.addEventListener('DOMContentLoaded', () => {
         myStories.forEach(s => {
             const details = document.createElement('details');
             details.className = 'story-accordion';
-            
             const summary = document.createElement('summary');
             summary.className = 'story-summary';
             
@@ -724,7 +765,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 del.innerText = '✕'; 
                 del.className = 'btn-delete-small';
                 del.title = "Delete Story";
-                
                 del.onclick = async (e) => {
                     e.stopPropagation(); 
                     e.preventDefault();
@@ -757,7 +797,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================
-    // 9. MENU & REPORT LOGIC
+    // 10. MENU & REPORT LOGIC
     // ==========================================
     window.toggleMenu = (elementId) => {
         document.querySelectorAll('.menu-dropdown').forEach(el => {
