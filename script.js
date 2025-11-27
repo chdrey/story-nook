@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Website Loaded v6.0 - Ultimate Merge");
+    console.log("Website Loaded v6.5 - Stable Final with Admin");
 
-    // --- 1. BUTTON LISTENERS ---
+    // --- 1. MODAL OPEN LISTENERS ---
     const infoBtn = document.getElementById('infoBtn');
     if (infoBtn) infoBtn.onclick = () => document.getElementById('aboutModal').classList.remove('hidden');
 
@@ -16,13 +16,32 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    // --- 2. SUPABASE INIT ---
+    // --- 2. MODAL CLOSE LOGIC (THE FIX) ---
+    // Closes a SPECIFIC modal by ID
+    window.closeModal = (id) => {
+        const modal = document.getElementById(id);
+        if (modal) modal.classList.add('hidden');
+    }
+    
+    // Closes ALL modals (used for main profile close, or logout)
+    window.closeAllModals = () => {
+        document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden'));
+    }
+
+    // Backdrop Click: Only close the top-most clicked background
+    window.onclick = (e) => {
+        if (e.target.classList.contains('modal')) {
+            e.target.classList.add('hidden');
+        }
+    };
+
+    // --- 3. SUPABASE INIT ---
     const ADMIN_EMAIL = 'chdrey@gmail.com'; 
     let supabase = null;
     let currentUser = null;
     let currentProfile = null;
     let isAdmin = false;
-    let activeStoryId = null; 
+    let activeStoryId = null;
 
     try {
         const SUPABASE_URL = 'https://lypndarukqjtkyhxygwe.supabase.co';
@@ -36,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     } catch (err) { console.error("Supabase Init Error:", err); }
 
-    // --- 3. APP LOGIC ---
+    // --- 4. APP LOGIC ---
     async function initApp() {
         const { data: { session } } = await supabase.auth.getSession();
         if (session) handleUserSession(session);
@@ -62,12 +81,10 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchStories();
     }
 
-    // --- ADMIN CHECKER ---
     function checkAdminStatus() {
         if (!currentUser) return;
         const userEmail = currentUser.email ? currentUser.email.toLowerCase() : '';
         const targetEmail = ADMIN_EMAIL.toLowerCase();
-        
         const isEmailMatch = userEmail === targetEmail;
         const isUserMatch = currentProfile && currentProfile.username === 'PenPaleto';
 
@@ -78,7 +95,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- UI UPDATES ---
     const nav = document.getElementById('mainNav');
     window.addEventListener('scroll', () => {
         if (window.scrollY > 50) nav.classList.add('scrolled');
@@ -128,12 +144,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- AUTH ---
     let isSignUp = false;
     const authModal = document.getElementById('authModal');
-    if(document.getElementById('navLoginBtn')) {
-        document.getElementById('navLoginBtn').onclick = () => authModal.classList.remove('hidden');
-    }
+    if(document.getElementById('navLoginBtn')) document.getElementById('navLoginBtn').onclick = () => document.getElementById('authModal').classList.remove('hidden');
 
     if(document.getElementById('authSwitchBtn')) {
         document.getElementById('authSwitchBtn').onclick = function() {
@@ -168,11 +181,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                     if(error) throw error;
                     alert("Welcome! Please check your email to confirm if required.");
-                    closeAllModals();
+                    closeModal('authModal');
                 } else {
                     const { error } = await supabase.auth.signInWithPassword({ email, password });
                     if(error) throw error;
-                    closeAllModals();
+                    closeModal('authModal');
                 }
             } catch(e) {
                 errorMsg.innerText = e.message;
@@ -401,7 +414,6 @@ document.addEventListener('DOMContentLoaded', () => {
         await supabase.from('stories').update({ votes: newVotes }).eq('id', id);
     }
 
-    // --- PASSPORT LOADING + BADGE COUNTING ---
     async function loadPassport() {
         const grid = document.getElementById('flairGrid');
         grid.innerHTML = 'Loading...';
@@ -454,13 +466,6 @@ document.addEventListener('DOMContentLoaded', () => {
             list.appendChild(details);
         });
     }
-
-    window.closeAllModals = function() { document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden')); }
-    window.onclick = (e) => { if (e.target.classList.contains('modal')) closeAllModals(); };
-    window.toggleMenu = (btn) => { 
-        document.querySelectorAll('.menu-dropdown').forEach(d => d.classList.remove('show'));
-        btn.nextElementSibling.classList.toggle('show');
-    };
 
     window.openReadModal = async (story) => {
         if(typeof story === 'number') { const {data} = await supabase.from('stories').select('*, profiles(username)').eq('id', story).single(); story = data; }
