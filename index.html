@@ -23,7 +23,7 @@
 
     <div id="authModal" class="modal hidden">
         <div class="modal-content narrow">
-            <span class="close-modal" onclick="closeAllModals()">&times;</span>
+            <span class="close-modal" onclick="closeModal('authModal')">&times;</span>
             <h2 id="authTitle">Log In</h2>
             <div class="auth-form-container">
                 <input type="email" id="emailInput" placeholder="Email Address" autocomplete="email">
@@ -41,7 +41,7 @@
 
     <div id="profileModal" class="modal hidden">
         <div class="modal-content book-style">
-            <span class="close-modal" onclick="closeAllModals()">&times;</span>
+            <span class="close-modal" onclick="closeModal('profileModal')">&times;</span>
             
             <div class="profile-header">
                 <div class="avatar-wrapper">
@@ -80,6 +80,7 @@
             <div id="myStoriesList" class="my-stories-container"></div>
 
             <hr style="border-color: #e76f51; opacity: 0.3;">
+            
             <div class="delete-section">
                 <button id="deleteAccountBtn" class="btn-delete-final full-width">Delete Account</button>
             </div>
@@ -88,7 +89,8 @@
 
     <div id="passportInfoModal" class="modal hidden">
         <div class="modal-content passport-guide-style">
-            <span class="close-modal" onclick="closeAllModals()">&times;</span>
+            <span class="close-modal" onclick="closeModal('passportInfoModal')">&times;</span>
+            
             <h2 class="guide-title">Passport Guide</h2>
             <p class="guide-desc">Collect badges to unlock new profile frames.</p>
 
@@ -118,11 +120,12 @@
                     <div><strong>The Trilogy Master</strong><br><small>Top 3 for 3 weeks in a row.</small></div>
                 </div>
             </div>
+        </div>
     </div>
 
     <div id="adminModal" class="modal hidden">
         <div class="modal-content book-style full-screen-mobile">
-            <span class="close-modal" onclick="closeAllModals()">&times;</span>
+            <span class="close-modal" onclick="closeModal('adminModal')">&times;</span>
             <h2 style="color:#e76f51; text-align:center;">👑 PenPaleto Control</h2>
             
             <div class="admin-tabs">
@@ -146,7 +149,7 @@
 
     <div id="readModal" class="modal hidden">
         <div class="modal-content book-style">
-            <span class="close-modal" onclick="closeAllModals()">&times;</span>
+            <span class="close-modal" onclick="closeModal('readModal')">&times;</span>
             <h3 id="readModalAuthor">By @Author</h3>
             <div id="readModalText" class="modal-body-text"></div>
             <div class="comments-section-wrapper">
@@ -163,7 +166,7 @@
 
     <div id="aboutModal" class="modal hidden">
         <div class="modal-content book-style">
-            <span class="close-modal" onclick="closeAllModals()">&times;</span>
+            <span class="close-modal" onclick="closeModal('aboutModal')">&times;</span>
             <h2 style="text-align:center; color:#d4a373; margin-bottom:20px;">About The Nook</h2>
             <div class="modal-body-text">
                 <p>Welcome to <strong>The Story Nook</strong>.</p>
@@ -222,4 +225,3 @@
     <script src="script.js"></script>
 </body>
 </html>
-
