@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Website Loaded v26.0 - Mobile Journal & Fixes");
+    console.log("Website Loaded v26.5 - Collapsible Feed");
 
     // ==========================================
     // 1. SUPABASE CONFIGURATION
@@ -170,6 +170,19 @@ document.addEventListener('DOMContentLoaded', () => {
             loadAllUsers();
         };
     }
+
+    // COLLAPSIBLE FEED LOGIC
+    window.toggleFeed = () => {
+        const container = document.getElementById('feedCollapsibleContainer');
+        const icon = document.getElementById('feedToggleIcon');
+        container.classList.toggle('hidden');
+        
+        if (container.classList.contains('hidden')) {
+            icon.innerText = "▶"; // Collapsed
+        } else {
+            icon.innerText = "▼"; // Expanded
+        }
+    };
 
     // Feedback Modal logic
     window.openFeedback = () => {
