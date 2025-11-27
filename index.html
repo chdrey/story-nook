@@ -25,12 +25,14 @@
         <div class="modal-content narrow">
             <span class="close-modal" onclick="closeAllModals()">&times;</span>
             <h2 id="authTitle">Log In</h2>
+            
             <div class="auth-form-container">
                 <input type="email" id="emailInput" placeholder="Email Address" autocomplete="email">
                 <input type="password" id="passwordInput" placeholder="Password" autocomplete="current-password">
                 <input type="text" id="usernameInput" placeholder="Choose a Pen Name" class="hidden" autocomplete="username">
                 <button id="authActionBtn" class="btn-primary full-width">Log In</button>
             </div>
+
             <div class="auth-toggle-wrapper">
                 <span id="authToggleText">Don't have an account?</span>
                 <button id="authSwitchBtn" class="text-link">Sign Up</button>
@@ -80,6 +82,7 @@
             <div id="myStoriesList" class="my-stories-container"></div>
 
             <hr style="border-color: #e76f51; opacity: 0.3;">
+            
             <div class="delete-section">
                 <button id="deleteAccountBtn" class="btn-delete-final full-width">Delete Account</button>
             </div>
@@ -90,6 +93,8 @@
         <div class="modal-content passport-guide-style">
             <span class="close-modal" onclick="closeAllModals()">&times;</span>
             <h2 class="guide-title">Passport Guide</h2>
+            <p class="guide-desc">Collect badges to unlock new profile frames.</p>
+
             <div class="badge-guide-grid">
                 <div class="guide-item"><div class="flair-preview frame-wood guide-badge"></div><div><strong>The Bard</strong><br><small>Participated in the weekly prompt.</small></div></div>
                 <div class="guide-item"><div class="flair-preview frame-copper guide-badge"></div><div><strong>Talk of the Nook</strong><br><small>Most comments in a week.</small></div></div>
@@ -118,31 +123,9 @@
 
             <div id="adminTabContest" class="admin-tab-content hidden">
                 <h3>🏆 Award Weekly Winners</h3>
-                <p class="subtext">Enter exact usernames to award placement badges.</p>
-                
-                <div class="winner-input-group">
-                    <label>🥇 1st Place (Golden Quill)</label>
-                    <div style="display:flex; gap:10px;">
-                        <input type="text" id="winner1Input" placeholder="Username">
-                        <button onclick="adminAwardWinner(1)" class="btn-primary small">Award</button>
-                    </div>
-                </div>
-
-                <div class="winner-input-group">
-                    <label>🥈 2nd Place (The Cliffhanger)</label>
-                    <div style="display:flex; gap:10px;">
-                        <input type="text" id="winner2Input" placeholder="Username">
-                        <button onclick="adminAwardWinner(2)" class="btn-primary small">Award</button>
-                    </div>
-                </div>
-
-                <div class="winner-input-group">
-                    <label>🥉 3rd Place (Ink Splatter)</label>
-                    <div style="display:flex; gap:10px;">
-                        <input type="text" id="winner3Input" placeholder="Username">
-                        <button onclick="adminAwardWinner(3)" class="btn-primary small">Award</button>
-                    </div>
-                </div>
+                <div class="winner-input-group"><label>🥇 1st (Golden Quill)</label><div style="display:flex; gap:10px;"><input type="text" id="winner1Input" placeholder="Username"><button onclick="adminAwardWinner(1)" class="btn-primary small">Award</button></div></div>
+                <div class="winner-input-group"><label>🥈 2nd (Cliffhanger)</label><div style="display:flex; gap:10px;"><input type="text" id="winner2Input" placeholder="Username"><button onclick="adminAwardWinner(2)" class="btn-primary small">Award</button></div></div>
+                <div class="winner-input-group"><label>🥉 3rd (Ink Splatter)</label><div style="display:flex; gap:10px;"><input type="text" id="winner3Input" placeholder="Username"><button onclick="adminAwardWinner(3)" class="btn-primary small">Award</button></div></div>
             </div>
         </div>
     </div>
@@ -213,19 +196,14 @@
     </main>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const enterBtn = document.getElementById('enterBtn');
-            if(enterBtn) {
-                enterBtn.addEventListener('click', function() {
-                    const overlay = document.getElementById('welcomeOverlay');
-                    if (overlay) { overlay.style.opacity = '0'; setTimeout(() => overlay.classList.add('hidden'), 800); }
-                    const bgVideo = document.getElementById('bgVideo');
-                    if (bgVideo) { bgVideo.muted = false; bgVideo.play().catch(e => console.log("Autoplay blocked")); }
-                    const ytPlayer = document.getElementById('youtubePlayer');
-                    if (ytPlayer) ytPlayer.src = "https://www.youtube.com/embed/hVFaaUEIpzE?start=103&autoplay=1&mute=0";
-                });
-            }
-        });
+        function enterNook() {
+            const overlay = document.getElementById('welcomeOverlay');
+            if (overlay) { overlay.style.opacity = '0'; setTimeout(() => overlay.classList.add('hidden'), 800); }
+            const bgVideo = document.getElementById('bgVideo');
+            if (bgVideo) { bgVideo.muted = false; bgVideo.play().catch(e => console.log("Video autoplay blocked")); }
+            const ytPlayer = document.getElementById('youtubePlayer');
+            if (ytPlayer) ytPlayer.src = "https://www.youtube.com/embed/hVFaaUEIpzE?start=103&autoplay=1&mute=0";
+        }
     </script>
     <script src="script.js"></script>
 </body>
