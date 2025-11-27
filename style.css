@@ -27,7 +27,21 @@ main { max-width: 900px; margin: 0 auto; padding: 120px 20px 100px 20px; }
 .subtext { font-style:italic; font-size:0.9rem; color:var(--text-muted); margin-bottom:10px; }
 
 /* === NAVIGATION === */
-nav { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; width: 100%; background: var(--glass); position: fixed; top: 0; left: 0; z-index: 10000; border-bottom: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); }
+nav { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    padding: 20px 40px; 
+    width: 100%; 
+    background: var(--glass); 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    z-index: 10000; 
+    border-bottom: 1px solid rgba(255,255,255,0.1); 
+    backdrop-filter: blur(10px); 
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); 
+}
 .logo { font-size: 1.5rem; font-weight: bold; color: var(--accent); cursor: pointer; white-space: nowrap; transition: all 0.4s ease; }
 .nav-group { display: flex; align-items: center; gap: 15px; transition: all 0.4s ease; }
 .save-prompt { font-size: 0.9rem; color: var(--text-muted); font-style: italic; white-space: nowrap; }
@@ -40,8 +54,20 @@ nav { display: flex; justify-content: space-between; align-items: center; paddin
 .avatar-large { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent); }
 nav.scrolled { padding: 10px 40px; background: var(--glass-nav); box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
 
-/* === MODAL STYLES === */
-.modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85); z-index: 30000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+/* === MODAL STYLES (Z-INDEX 30000) === */
+.modal { 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    background-color: rgba(0, 0, 0, 0.85); 
+    z-index: 30000; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    backdrop-filter: blur(5px); 
+}
 .modal-content.narrow { background: #3d2b20; color: var(--text-main); padding: 30px; border-radius: 10px; width: 90%; max-width: 400px; text-align: center; border: 1px solid var(--accent); display: flex; flex-direction: column; gap: 20px; }
 .auth-form-container { display: flex; flex-direction: column; gap: 15px; width: 100%; }
 .auth-toggle-wrapper { font-size: 0.9rem; color: #ccc; margin-top: 10px; }
@@ -55,7 +81,7 @@ nav.scrolled { padding: 10px 40px; background: var(--glass-nav); box-shadow: 0 5
 .delete-section { border: none; background: transparent; padding: 0; text-align: center; }
 .settings-grid { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
 
-/* BADGES & PASSPORT - ROBUST STYLES */
+/* BADGES & PASSPORT */
 .flair-grid { 
     display: grid; 
     grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); 
@@ -65,7 +91,7 @@ nav.scrolled { padding: 10px 40px; background: var(--glass-nav); box-shadow: 0 5
     width: 100%;
     min-height: 120px; 
 }
-.flair-item { display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: all 0.2s; text-align: center; position: relative; }
+.flair-item { position: relative; display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: all 0.2s; text-align: center; overflow: visible; }
 .flair-item.unlocked { opacity: 1; }
 .flair-item.locked { opacity: 0.5; filter: grayscale(100%); } 
 .flair-item:hover { transform: translateY(-3px); }
@@ -74,8 +100,38 @@ nav.scrolled { padding: 10px 40px; background: var(--glass-nav); box-shadow: 0 5
 
 .flair-preview, .guide-badge { width: 80px; height: 80px; border-radius: 50%; background-color: transparent; transition: all 0.3s ease; flex-shrink: 0; }
 
-.my-badge-tooltip { visibility: hidden; opacity: 0; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #2c1e16; color: #faedcd; padding: 5px 10px; border-radius: 5px; font-size: 0.8rem; white-space: nowrap; z-index: 20; transition: opacity 0.2s; pointer-events: none; margin-bottom: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
-.flair-item:hover .my-badge-tooltip, .flair-item:active .my-badge-tooltip, .flair-item:focus-within .my-badge-tooltip { visibility: visible; opacity: 1; }
+/* TOOLTIPS */
+.my-badge-tooltip {
+    visibility: hidden;
+    opacity: 0;
+    position: absolute;
+    bottom: 110%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #3d2b20;
+    color: #faedcd;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    white-space: nowrap;
+    z-index: 99999;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    border: 1px solid #d4a373;
+    transition: opacity 0.2s, bottom 0.2s;
+    pointer-events: none;
+}
+.my-badge-tooltip::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #3d2b20 transparent transparent transparent;
+}
+.flair-item:hover .my-badge-tooltip { visibility: visible; opacity: 1; bottom: 120%; }
 
 .passport-guide-style { background: #fdf6e3; color: #2c1e16; padding: 30px; border-radius: 10px; width: 90%; max-width: 500px; display: flex; flex-direction: column; font-family: var(--font-body); }
 .guide-title { text-align: center; color: #d4a373; margin-bottom: 5px; }
@@ -190,7 +246,7 @@ input, textarea { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid va
 .input-wide { flex-grow: 1; background: white !important; border: 1px solid #ccc !important; }
 .comments-list { max-height: 400px; overflow-y: auto; }
 
-/* === PROFILE STORIES LIST (UPDATED) === */
+/* === PROFILE STORIES LIST === */
 .my-stories-container {
     max-height: 300px;
     overflow-y: auto;
@@ -247,4 +303,3 @@ input, textarea { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid va
     margin-left: 10px;
 }
 .btn-delete-small:hover { background: #c0392b; transform: scale(1.1); }
-
