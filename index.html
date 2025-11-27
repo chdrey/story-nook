@@ -25,14 +25,12 @@
         <div class="modal-content narrow">
             <span class="close-modal" onclick="closeAllModals()">&times;</span>
             <h2 id="authTitle">Log In</h2>
-            
             <div class="auth-form-container">
                 <input type="email" id="emailInput" placeholder="Email Address" autocomplete="email">
                 <input type="password" id="passwordInput" placeholder="Password" autocomplete="current-password">
                 <input type="text" id="usernameInput" placeholder="Choose a Pen Name" class="hidden" autocomplete="username">
                 <button id="authActionBtn" class="btn-primary full-width">Log In</button>
             </div>
-
             <div class="auth-toggle-wrapper">
                 <span id="authToggleText">Don't have an account?</span>
                 <button id="authSwitchBtn" class="text-link">Sign Up</button>
@@ -53,6 +51,10 @@
                     <h2 id="profileNameDisplay">Guest</h2>
                 </div>
             </div>
+
+            <button id="adminDashboardBtn" class="btn-primary full-width hidden" style="background:#2c3e50; margin-bottom:20px; border:1px solid #d4a373;">
+                👑 Admin Dashboard
+            </button>
 
             <div class="passport-section">
                 <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
@@ -78,7 +80,6 @@
             <div id="myStoriesList" class="my-stories-container"></div>
 
             <hr style="border-color: #e76f51; opacity: 0.3;">
-            
             <div class="delete-section">
                 <button id="deleteAccountBtn" class="btn-delete-final full-width">Delete Account</button>
             </div>
@@ -88,34 +89,59 @@
     <div id="passportInfoModal" class="modal hidden">
         <div class="modal-content passport-guide-style">
             <span class="close-modal" onclick="closeAllModals()">&times;</span>
-            
             <h2 class="guide-title">Passport Guide</h2>
-            <p class="guide-desc">Collect badges to unlock new profile frames.</p>
-
             <div class="badge-guide-grid">
-                <div class="guide-item">
-                    <div class="flair-preview frame-wood guide-badge"></div>
-                    <div><strong>The Bard</strong><br><small>Participated in the weekly prompt.</small></div>
+                <div class="guide-item"><div class="flair-preview frame-wood guide-badge"></div><div><strong>The Bard</strong><br><small>Participated in the weekly prompt.</small></div></div>
+                <div class="guide-item"><div class="flair-preview frame-copper guide-badge"></div><div><strong>Talk of the Nook</strong><br><small>Most comments in a week.</small></div></div>
+                <div class="guide-item"><div class="flair-preview frame-stone guide-badge"></div><div><strong>The Ink Splatter</strong><br><small>3rd Place (Weekly Vote).</small></div></div>
+                <div class="guide-item"><div class="flair-preview frame-iron guide-badge"></div><div><strong>The Cliffhanger</strong><br><small>2nd Place (Weekly Vote).</small></div></div>
+                <div class="guide-item"><div class="flair-preview frame-gold guide-badge"></div><div><strong>The Golden Quill</strong><br><small>1st Place (Weekly Vote).</small></div></div>
+                <div class="guide-item"><div class="flair-preview frame-diamond guide-badge"></div><div><strong>The Trilogy Master</strong><br><small>Top 3 for 3 weeks in a row.</small></div></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="adminModal" class="modal hidden">
+        <div class="modal-content book-style full-screen-mobile">
+            <span class="close-modal" onclick="closeAllModals()">&times;</span>
+            <h2 style="color:#e76f51; text-align:center;">👑 PenPaleto Control</h2>
+            
+            <div class="admin-tabs">
+                <button class="tab-btn active" onclick="switchAdminTab('users')">Users & Badges</button>
+                <button class="tab-btn" onclick="switchAdminTab('contest')">Weekly Contest</button>
+            </div>
+
+            <div id="adminTabUsers" class="admin-tab-content">
+                <input type="text" id="adminUserSearch" placeholder="Search user by name..." style="margin-bottom:15px;">
+                <div id="adminUserList" class="admin-user-list"></div>
+            </div>
+
+            <div id="adminTabContest" class="admin-tab-content hidden">
+                <h3>🏆 Award Weekly Winners</h3>
+                <p class="subtext">Enter exact usernames to award placement badges.</p>
+                
+                <div class="winner-input-group">
+                    <label>🥇 1st Place (Golden Quill)</label>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="winner1Input" placeholder="Username">
+                        <button onclick="adminAwardWinner(1)" class="btn-primary small">Award</button>
+                    </div>
                 </div>
-                <div class="guide-item">
-                    <div class="flair-preview frame-copper guide-badge"></div>
-                    <div><strong>Talk of the Nook</strong><br><small>Most comments in a week.</small></div>
+
+                <div class="winner-input-group">
+                    <label>🥈 2nd Place (The Cliffhanger)</label>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="winner2Input" placeholder="Username">
+                        <button onclick="adminAwardWinner(2)" class="btn-primary small">Award</button>
+                    </div>
                 </div>
-                <div class="guide-item">
-                    <div class="flair-preview frame-stone guide-badge"></div>
-                    <div><strong>The Ink Splatter</strong><br><small>3rd Place (Weekly Vote).</small></div>
-                </div>
-                <div class="guide-item">
-                    <div class="flair-preview frame-iron guide-badge"></div>
-                    <div><strong>The Cliffhanger</strong><br><small>2nd Place (Weekly Vote).</small></div>
-                </div>
-                <div class="guide-item">
-                    <div class="flair-preview frame-gold guide-badge"></div>
-                    <div><strong>The Golden Quill</strong><br><small>1st Place (Weekly Vote).</small></div>
-                </div>
-                <div class="guide-item">
-                    <div class="flair-preview frame-diamond guide-badge"></div>
-                    <div><strong>The Trilogy Master</strong><br><small>Top 3 for 3 weeks in a row.</small></div>
+
+                <div class="winner-input-group">
+                    <label>🥉 3rd Place (Ink Splatter)</label>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="winner3Input" placeholder="Username">
+                        <button onclick="adminAwardWinner(3)" class="btn-primary small">Award</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -126,7 +152,6 @@
             <span class="close-modal" onclick="closeAllModals()">&times;</span>
             <h3 id="readModalAuthor">By @Author</h3>
             <div id="readModalText" class="modal-body-text"></div>
-            
             <div class="comments-section-wrapper">
                 <h4>Comments</h4>
                 <div id="modalCommentsList" class="comments-list"></div>
@@ -145,25 +170,18 @@
             <h2 style="text-align:center; color:#d4a373; margin-bottom:20px;">About The Nook</h2>
             <div class="modal-body-text">
                 <p>Welcome to <strong>The Story Nook</strong>.</p>
-                <ul>
-                    <li>🔥 <strong>Watch:</strong> Relax with the ambience.</li>
-                    <li>✍️ <strong>Write:</strong> Flash fiction (max 2000 chars).</li>
-                    <li>❤️ <strong>Connect:</strong> Read, vote, and comment.</li>
-                </ul>
-                <p style="text-align:center; margin-top:20px; font-style:italic;">"Be kind, for everyone you meet is fighting a hard battle."</p>
+                <ul><li>🔥 <strong>Watch:</strong> Relax.</li><li>✍️ <strong>Write:</strong> Flash fiction.</li><li>❤️ <strong>Connect:</strong> Vote & Comment.</li></ul>
             </div>
         </div>
     </div>
 
     <nav id="mainNav">
         <div class="logo">The Story Nook 📚</div>
-        
         <div class="user-controls">
             <div id="loggedOutNav" class="nav-group">
                 <span class="save-prompt">Want to save stories?</span>
                 <button id="navLoginBtn" class="btn-secondary">Log In</button>
             </div>
-
             <div id="loggedInNav" class="nav-group hidden">
                 <button id="navProfileBtn" class="profile-trigger">
                     <span id="navUsername">Writer</span>
@@ -173,44 +191,25 @@
         </div>
     </nav>
 
-    <div class="video-background">
-        <video muted loop playsinline id="bgVideo">
-            <source src="assets/fireplace.mp4" type="video/mp4">
-        </video>
-    </div>
+    <div class="video-background"><video muted loop playsinline id="bgVideo"><source src="assets/fireplace.mp4" type="video/mp4"></video></div>
     <div class="overlay"></div>
 
     <main>
         <section class="hero">
-            <div class="hero-header-row">
-                <h2>This Week's Inspiration</h2>
-                <button id="infoBtn" class="info-icon" aria-label="About">ⓘ</button>
-            </div>
-            <div class="video-wrapper">
-                <iframe id="youtubePlayer" src="" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-            </div>
+            <div class="hero-header-row"><h2>This Week's Inspiration</h2><button id="infoBtn" class="info-icon" aria-label="About">ⓘ</button></div>
+            <div class="video-wrapper"><iframe id="youtubePlayer" src="" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
         </section>
-
         <section id="writingZoneSection" class="writing-zone">
             <h3>Write your story here...</h3>
             <textarea id="mainStoryInput" maxlength="2000" placeholder="Once upon a time..."></textarea>
             <div class="char-counter"><span id="charCount">0</span>/2000 characters</div>
-            
             <div class="action-bar">
                 <input type="text" id="guestPenName" placeholder="Pen Name (Guest)">
                 <button id="publishBtn" class="btn-primary">Publish Story</button>
             </div>
         </section>
-
-        <section class="leaderboard">
-            <h3>🏆 Top Stories</h3>
-            <div class="top-stories-container" id="topStories"></div>
-        </section>
-
-        <section class="feed">
-            <h3>Latest Submissions</h3>
-            <div id="storyFeed"></div>
-        </section>
+        <section class="leaderboard"><h3>🏆 Top Stories</h3><div class="top-stories-container" id="topStories"></div></section>
+        <section class="feed"><h3>Latest Submissions</h3><div id="storyFeed"></div></section>
     </main>
 
     <script>
@@ -219,24 +218,15 @@
             if(enterBtn) {
                 enterBtn.addEventListener('click', function() {
                     const overlay = document.getElementById('welcomeOverlay');
-                    if (overlay) {
-                        overlay.style.opacity = '0';
-                        setTimeout(() => overlay.classList.add('hidden'), 800);
-                    }
+                    if (overlay) { overlay.style.opacity = '0'; setTimeout(() => overlay.classList.add('hidden'), 800); }
                     const bgVideo = document.getElementById('bgVideo');
-                    if (bgVideo) {
-                        bgVideo.muted = false;
-                        bgVideo.play().catch(e => console.log("Autoplay blocked"));
-                    }
+                    if (bgVideo) { bgVideo.muted = false; bgVideo.play().catch(e => console.log("Autoplay blocked")); }
                     const ytPlayer = document.getElementById('youtubePlayer');
-                    if (ytPlayer) {
-                        ytPlayer.src = "https://www.youtube.com/embed/hVFaaUEIpzE?start=103&autoplay=1&mute=0";
-                    }
+                    if (ytPlayer) ytPlayer.src = "https://www.youtube.com/embed/hVFaaUEIpzE?start=103&autoplay=1&mute=0";
                 });
             }
         });
     </script>
-    
     <script src="script.js"></script>
 </body>
 </html>
