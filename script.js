@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Website Loaded v10.0 - Empty Circle Fix");
+    console.log("Website Loaded v8.0 - Moderation & CMS");
 
     // --- 1. MODAL OPEN LISTENERS ---
     const infoBtn = document.getElementById('infoBtn');
@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if(adminBtn) {
         adminBtn.onclick = () => {
             document.getElementById('adminModal').classList.remove('hidden');
-            loadAllUsers();
+            loadAllUsers(); // Auto-load users
         };
     }
 
@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const modal = document.getElementById(id);
         if (modal) {
             modal.classList.add('hidden');
+            // If closing profile modal, reset it to "My Profile" state just in case
             if(id === 'profileModal') resetProfileModalToMyView();
         }
     }
@@ -126,6 +127,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const navUser = document.getElementById('navUsername');
             if(navUser) navUser.innerText = currentProfile.username;
             
+            // Only update profile name if we are viewing OUR OWN profile
+            // This prevents overwriting the modal if we are viewing someone else
             if(!document.getElementById('profileModal').classList.contains('admin-view')) {
                 const profileName = document.getElementById('profileNameDisplay');
                 if(profileName) profileName.innerText = currentProfile.username;
@@ -146,9 +149,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 img.src = profileData.avatar_url || 'https://i.imgur.com/6UD0njE.png';
                 if(img.id === 'navAvatar') {
                     img.className = 'avatar-small';
-                    img.classList.remove('frame-wood', 'frame-stone', 'frame-iron', 'frame-gold', 'frame-diamond', 'frame-cosmic', 'frame-copper');
+                    img.classList.remove('frame-wood', 'frame-stone', 'frame-iron', 'frame-gold', 'frame-diamond', 'frame-cosmic');
                     if(flairClass) img.classList.add(flairClass);
                 } else if (!document.getElementById('profileModal').classList.contains('admin-view')) {
+                    // Only update large avatar if viewing self
                     img.className = 'avatar-large profile-trigger-action';
                 }
             }
@@ -205,19 +209,25 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    // --- ADMIN LOGIC ---
+    // --- ADMIN & MODERATION LOGIC ---
     window.switchAdminTab = (tab) => {
         document.querySelectorAll('.admin-tab-content').forEach(d => d.classList.add('hidden'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        
         if(tab === 'users') {
             document.getElementById('adminTabUsers').classList.remove('hidden');
             document.querySelectorAll('.tab-btn')[0].classList.add('active');
-        } else {
+        } else if(tab === 'contest') {
             document.getElementById('adminTabContest').classList.remove('hidden');
             document.querySelectorAll('.tab-btn')[1].classList.add('active');
+        } else if(tab === 'mod') {
+            document.getElementById('adminTabMod').classList.remove('hidden');
+            document.querySelectorAll('.tab-btn')[2].classList.add('active');
+            loadModerationLog();
         }
     };
 
+    // 1. User Management
     async function loadAllUsers() {
         const list = document.getElementById('adminUserList');
         list.innerHTML = '<div style="text-align:center; color:#888;">Loading users...</div>';
@@ -238,23 +248,20 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const earned = u.user_flairs.map(f => f.flair_id);
             let badgeHtml = '';
-            
             const badges = [
-                {id: 1, cls: 'frame-wood', name: 'The Bard'}, 
-                {id: 2, cls: 'frame-copper', name: 'Talk of the Nook'},
-                {id: 3, cls: 'frame-stone', name: 'The Ink Scribble'}, 
-                {id: 4, cls: 'frame-iron', name: 'The Cliffhanger'},
-                {id: 5, cls: 'frame-gold', name: 'The Golden Quill'}, 
-                {id: 6, cls: 'frame-diamond', name: 'Trilogy Master'}
+                {id: 1, cls: 'frame-wood'}, {id: 2, cls: 'frame-copper'},
+                {id: 3, cls: 'frame-stone'}, {id: 4, cls: 'frame-iron'},
+                {id: 5, cls: 'frame-gold'}, {id: 6, cls: 'frame-diamond'}
             ];
 
             badges.forEach(b => {
                 const has = earned.includes(b.id);
                 badgeHtml += `<div class="admin-badge-btn ${has ? 'owned' : ''} ${b.cls}" 
-                              title="Toggle: ${b.name}"
+                              title="Toggle Badge"
                               onclick="toggleUserBadge('${u.id}', ${b.id}, ${has}, this); event.stopPropagation();"></div>`;
             });
 
+            // Make header clickable to view profile
             card.innerHTML = `
                 <div class="admin-user-header" onclick="viewUserProfile('${u.id}')">
                     <strong>@${u.username}</strong>
@@ -269,28 +276,36 @@ document.addEventListener('DOMContentLoaded', () => {
     const adminSearch = document.getElementById('adminUserSearch');
     if(adminSearch) adminSearch.addEventListener('keyup', loadAllUsers);
 
+    // 2. View User Profile (Admin Mode)
     window.viewUserProfile = async (userId) => {
+        // Fetch target user data
         const { data: targetUser } = await supabase.from('profiles').select('*').eq('id', userId).single();
         if(!targetUser) return alert("User data missing.");
 
         const modal = document.getElementById('profileModal');
+        
+        // Enter "Admin View" mode
         modal.classList.add('admin-view'); 
         
+        // Hide private controls
         document.getElementById('settingsSection').classList.add('hidden');
         document.getElementById('deleteSection').classList.add('hidden');
         document.getElementById('adminDashboardBtn').classList.add('hidden');
 
+        // Populate Data
         document.getElementById('profileNameDisplay').innerText = targetUser.username;
         const bigAvatar = document.getElementById('profileAvatar');
         bigAvatar.src = targetUser.avatar_url || 'https://i.imgur.com/6UD0njE.png';
-        bigAvatar.classList.remove('profile-trigger-action'); 
+        bigAvatar.classList.remove('profile-trigger-action'); // Disable click-to-change
 
-        loadPassportForUser(userId); 
-        loadStoriesForUser(userId);  
+        // Load their stuff
+        loadPassportForUser(userId); // You need a version of loadPassport that takes an ID
+        loadStoriesForUser(userId);  // Same for stories
 
         modal.classList.remove('hidden');
     };
 
+    // Helper: Reset Profile Modal when closing
     function resetProfileModalToMyView() {
         const modal = document.getElementById('profileModal');
         modal.classList.remove('admin-view');
@@ -299,16 +314,64 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('deleteSection').classList.remove('hidden');
         if(isAdmin) document.getElementById('adminDashboardBtn').classList.remove('hidden');
         
+        // Restore My Data
         if(currentProfile) {
             document.getElementById('profileNameDisplay').innerText = currentProfile.username;
             const bigAvatar = document.getElementById('profileAvatar');
             bigAvatar.src = currentProfile.avatar_url || 'https://i.imgur.com/6UD0njE.png';
             bigAvatar.classList.add('profile-trigger-action');
-            loadPassportForUser(currentUser.id);
-            loadStoriesForUser(currentUser.id);
+            loadPassport();
+            loadMyStories();
         }
     }
 
+    // 3. Moderation Log
+    async function loadModerationLog() {
+        const list = document.getElementById('adminModList');
+        list.innerHTML = 'Loading content log...';
+        
+        // Fetch Stories
+        const { data: s } = await supabase.from('stories').select('*, profiles(username)').limit(50);
+        // Fetch Comments
+        const { data: c } = await supabase.from('comments').select('*, profiles(username)').limit(50);
+        
+        const allContent = [
+            ...s.map(i => ({...i, type:'Story', text:i.content})), 
+            ...c.map(i => ({...i, type:'Comment', text:i.content}))
+        ];
+        
+        // Sort by date new -> old
+        allContent.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+
+        list.innerHTML = '';
+        allContent.forEach(item => {
+            const row = document.createElement('div');
+            row.className = `mod-item ${item.type === 'Story' ? 'mod-story' : ''}`;
+            
+            const u = item.profiles ? item.profiles.username : (item.guest_name || 'Guest');
+            const date = new Date(item.created_at).toLocaleDateString();
+            
+            row.innerHTML = `
+                <div class="mod-meta">
+                    <span><strong>${item.type}</strong> by @${u} (${date})</span>
+                    <button class="btn-delete" style="font-size:0.7rem;" onclick="adminDeleteContent('${item.type}', ${item.id})">Delete</button>
+                </div>
+                <div class="mod-preview" onclick="openReadModal(${item.type === 'Story' ? item.id : item.story_id})">
+                    ${escapeHtml(item.text.substring(0, 60))}...
+                </div>
+            `;
+            list.appendChild(row);
+        });
+    }
+
+    window.adminDeleteContent = async (type, id) => {
+        if(!confirm(`Delete this ${type} permanently?`)) return;
+        const table = type === 'Story' ? 'stories' : 'comments';
+        await supabase.from(table).delete().eq('id', id);
+        loadModerationLog(); // Refresh list
+    }
+
+    // --- OTHER HELPERS ---
     window.toggleUserBadge = async (userId, badgeId, hasBadge, btn) => {
         if(!confirm(hasBadge ? "Remove badge?" : "Award badge?")) return;
         if(hasBadge) {
@@ -342,50 +405,161 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById(inputId).value = '';
     };
 
-    // --- REFACTORED PASSPORT LOADING ---
+    // --- STANDARD APP LOGIC ---
+    function setupProfileActions() {
+        if(document.getElementById('navProfileBtn')) {
+            document.getElementById('navProfileBtn').addEventListener('click', async () => {
+                document.getElementById('profileModal').classList.remove('hidden');
+                loadPassport();
+                loadMyStories();
+            });
+        }
+        // ... (Existing avatar/pass logic kept same) ...
+        const profileAvatar = document.getElementById('profileAvatar');
+        if(profileAvatar) {
+            profileAvatar.addEventListener('click', async () => {
+                 // Prevent changing avatar if in Admin View
+                 if(document.getElementById('profileModal').classList.contains('admin-view')) return;
+
+                 const newUrl = prompt("Enter URL for new profile picture:", currentProfile.avatar_url || "");
+                 if(newUrl && newUrl !== currentProfile.avatar_url) {
+                     await supabase.from('profiles').update({ avatar_url: newUrl }).eq('id', currentUser.id);
+                     await fetchUserProfile();
+                     updateUI();
+                 }
+            });
+        }
+        const changePassBtn = document.getElementById('changePasswordBtn');
+        if(changePassBtn) {
+            changePassBtn.addEventListener('click', async () => {
+                const newPass = document.getElementById('newPasswordInput').value;
+                if(newPass) {
+                    await supabase.auth.updateUser({ password: newPass });
+                    alert("Password updated.");
+                    document.getElementById('newPasswordInput').value = '';
+                }
+            });
+        }
+        const logoutBtn = document.getElementById('logoutBtn');
+        if(logoutBtn) logoutBtn.onclick = async () => { await supabase.auth.signOut(); closeAllModals(); };
+        const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+        if(deleteAccountBtn) {
+            deleteAccountBtn.addEventListener('click', async () => {
+                if(confirm("⚠️ ARE YOU SURE? Account deletion is permanent.")) {
+                    await supabase.from('stories').delete().eq('user_id', currentUser.id);
+                    await supabase.from('profiles').delete().eq('id', currentUser.id);
+                    await supabase.auth.signOut();
+                    window.location.reload(); 
+                }
+            });
+        }
+    }
+
+    async function fetchStories() {
+        const feed = document.getElementById('storyFeed');
+        if(!feed) return;
+        feed.innerHTML = '<p style="text-align:center;">Loading...</p>';
+        const { data: stories } = await supabase.from('stories').select(`*, profiles (username, avatar_url, selected_flair_id, flairs(css_class)), comments (count)`).order('created_at', { ascending: false });
+        feed.innerHTML = '';
+        
+        const topStories = [...stories].sort((a, b) => b.votes - a.votes).slice(0, 3);
+        const lb = document.getElementById('topStories');
+        if(lb) {
+            lb.innerHTML = '';
+            topStories.forEach(s => {
+                if(s.votes > 0) {
+                    let u = s.profiles ? s.profiles.username : (s.guest_name || 'Guest');
+                    lb.innerHTML += `<div class="story-card" style="padding:10px" onclick="openReadModal(${s.id})"><strong>@${u}</strong> (${s.votes} ❤️)<br><small>${escapeHtml(s.content.substring(0,50))}...</small></div>`;
+                }
+            });
+        }
+
+        stories.forEach(story => {
+            const card = document.createElement('div');
+            card.className = 'story-card';
+            let username = story.profiles ? story.profiles.username : (story.guest_name + " (Guest)");
+            let avatar = story.profiles?.avatar_url || 'https://i.imgur.com/6UD0njE.png';
+            let flairClass = story.profiles?.flairs?.css_class || '';
+            
+            let menuHtml = '';
+            const isOwner = (currentUser && story.user_id === currentUser.id);
+            if(isOwner || isAdmin) {
+                menuHtml = `<div class="menu-container"><button class="menu-trigger" onclick="toggleMenu(this)">⋮</button>
+                <div class="menu-dropdown"><button class="menu-item delete" onclick="deleteStory(${story.id})">Delete</button></div></div>`;
+            }
+
+            card.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <div class="profile-header" style="margin-bottom:10px;">
+                        <img src="${avatar}" class="avatar-small ${flairClass}" style="margin-right:10px;">
+                        <span style="color:#d4a373; font-weight:bold;">@${username}</span>
+                    </div>
+                    ${menuHtml}
+                </div>
+                <div class="story-text" id="story-text-${story.id}">${escapeHtml(story.content)}</div>
+                <div class="story-meta">
+                    <button id="btn-${story.id}" class="vote-btn" onclick="toggleVote(event, ${story.id}, ${story.votes})">❤️ <span>${story.votes}</span></button>
+                    <span>💬 ${story.comments ? story.comments[0].count : 0}</span>
+                </div>`;
+            
+            card.addEventListener('click', (e) => {
+                if(!e.target.closest('button') && !e.target.closest('.menu-container')) openReadModal(story); 
+            });
+            feed.appendChild(card);
+        });
+    }
+
+    window.toggleVote = async function(event, id, currentVotes) {
+        event.stopPropagation();
+        const userIdKey = currentUser ? currentUser.id : 'guest';
+        const storageKey = `voted_${userIdKey}`;
+        let votedStories = JSON.parse(localStorage.getItem(storageKey)) || [];
+        const hasVoted = votedStories.includes(id);
+        let newVotes;
+        if (hasVoted) {
+            newVotes = Math.max(0, currentVotes - 1);
+            votedStories = votedStories.filter(storyId => storyId !== id);
+        } else {
+            newVotes = currentVotes + 1;
+            votedStories.push(id);
+        }
+        localStorage.setItem(storageKey, JSON.stringify(votedStories));
+        const btn = document.getElementById(`btn-${id}`);
+        if(btn) btn.innerHTML = `❤️ <span>${newVotes}</span>`;
+        await supabase.from('stories').update({ votes: newVotes }).eq('id', id);
+    }
+
+    // --- REFACTORED LOADING FUNCTIONS (Supports Admin Viewing) ---
+    async function loadPassport() { loadPassportForUser(currentUser.id); }
+    async function loadMyStories() { loadStoriesForUser(currentUser.id); }
+
     async function loadPassportForUser(targetId) {
         const grid = document.getElementById('flairGrid');
         grid.innerHTML = 'Loading...';
-        
+        const { data: allFlairs } = await supabase.from('flairs').select('*').order('id', { ascending: true });
         const { data: userFlairs } = await supabase.from('user_flairs').select('flair_id').eq('user_id', targetId);
+        
         const counts = {};
         if (userFlairs) userFlairs.forEach(uf => counts[uf.flair_id] = (counts[uf.flair_id] || 0) + 1);
         const earnedIds = userFlairs.map(uf => uf.flair_id);
-        
+        grid.innerHTML = '';
+
+        // Determine which flair is currently selected by the target user
         const { data: targetProfile } = await supabase.from('profiles').select('selected_flair_id').eq('id', targetId).single();
         const selectedId = targetProfile ? targetProfile.selected_flair_id : null;
 
-        const badgeDefinitions = [
-            { id: 1, name: "The Bard", css: "frame-wood" },
-            { id: 2, name: "Talk of the Nook", css: "frame-copper" },
-            { id: 3, name: "The Ink Scribble", css: "frame-stone" },
-            { id: 4, name: "The Cliffhanger", css: "frame-iron" },
-            { id: 5, name: "The Golden Quill", css: "frame-gold" },
-            { id: 6, name: "The Trilogy Master", css: "frame-diamond" }
-        ];
-
-        grid.innerHTML = '';
-
-        badgeDefinitions.forEach(def => {
-            const isUnlocked = earnedIds.includes(def.id);
-            const isSelected = selectedId === def.id;
-            
+        allFlairs.forEach(f => {
+            const isUnlocked = earnedIds.includes(f.id);
+            const isSelected = selectedId === f.id;
             const div = document.createElement('div');
-            // If unlocked, add class 'unlocked', otherwise 'locked'
-            div.className = `flair-item ${isUnlocked ? 'unlocked' : 'locked'} ${isSelected ? 'selected' : ''}`;
+            div.className = `flair-item ${isUnlocked ? 'unlocked' : ''} ${isSelected ? 'selected' : ''}`;
             
+            // Only allow equipping if viewing OWN profile
             if(isUnlocked && targetId === currentUser.id) {
-                div.onclick = () => equipFlair(def.id);
+                div.onclick = () => equipFlair(f.id);
             }
             
-            // KEY FIX: If not unlocked, use 'frame-locked' style instead of material style
-            const visualClass = isUnlocked ? def.css : 'frame-locked';
-
-            div.innerHTML = `
-                <div class="flair-preview ${visualClass}"></div>
-                <span>${def.name}</span>
-                <div class="my-badge-tooltip">Times earned: ${counts[def.id] || 0}</div>
-            `;
+            div.innerHTML = `<div class="flair-preview ${f.css_class}"></div><span>${f.name}</span><div class="my-badge-tooltip">Times earned: ${counts[f.id] || 0}</div>`;
             grid.appendChild(div);
         });
     }
@@ -402,6 +576,7 @@ document.addEventListener('DOMContentLoaded', () => {
             summary.style.cssText = "display:flex; justify-content:space-between; cursor:pointer; font-weight:bold;";
             summary.innerHTML = `<span>${s.content.substring(0,30)}...</span>`;
             
+            // Only show delete button if it's My profile OR I am Admin
             if(targetId === currentUser.id || isAdmin) {
                 const del = document.createElement('button');
                 del.innerText = 'X'; del.className = 'btn-delete';
@@ -423,10 +598,6 @@ document.addEventListener('DOMContentLoaded', () => {
         updateUI();
         loadPassportForUser(currentUser.id);
     }
-
-    // Default Loaders
-    async function loadPassport() { loadPassportForUser(currentUser.id); }
-    async function loadMyStories() { loadStoriesForUser(currentUser.id); }
 
     window.openReadModal = async (story) => {
         if(typeof story === 'number') { const {data} = await supabase.from('stories').select('*, profiles(username)').eq('id', story).single(); story = data; }
