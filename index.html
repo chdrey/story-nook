@@ -107,7 +107,7 @@
     <div id="adminModal" class="modal hidden">
         <div class="modal-content book-style full-screen-mobile">
             <span class="close-modal" onclick="closeModal('adminModal')">&times;</span>
-            <h2 style="color:#e76f51; text-align:center;">👑 PenPaleto Control Panel</h2>
+            <h2 style="color:#e76f51; text-align:center;">👑 Control Panel</h2>
             
             <div class="admin-tabs">
                 <button class="tab-btn active" onclick="switchAdminTab('users')">Users & Badges</button>
@@ -120,13 +120,14 @@
             </div>
 
             <div id="adminTabContest" class="admin-tab-content hidden">
-                <h3>🏆 Award Badges</h3>
+                <h3>🏆 Manage Badges</h3>
                 
                 <div class="winner-input-group">
                     <label>🥇 The Golden Quill (1st Place)</label>
                     <div style="display:flex; gap:10px;">
                         <input type="text" id="badgeInput_5" placeholder="Username">
                         <button onclick="adminAwardBadge(5)" class="btn-primary small">Award</button>
+                        <button onclick="adminRevokeBadge(5)" class="btn-delete small">Revoke</button>
                     </div>
                 </div>
 
@@ -135,6 +136,7 @@
                     <div style="display:flex; gap:10px;">
                         <input type="text" id="badgeInput_4" placeholder="Username">
                         <button onclick="adminAwardBadge(4)" class="btn-primary small">Award</button>
+                        <button onclick="adminRevokeBadge(4)" class="btn-delete small">Revoke</button>
                     </div>
                 </div>
 
@@ -143,6 +145,7 @@
                     <div style="display:flex; gap:10px;">
                         <input type="text" id="badgeInput_3" placeholder="Username">
                         <button onclick="adminAwardBadge(3)" class="btn-primary small">Award</button>
+                        <button onclick="adminRevokeBadge(3)" class="btn-delete small">Revoke</button>
                     </div>
                 </div>
 
@@ -153,6 +156,7 @@
                     <div style="display:flex; gap:10px;">
                         <input type="text" id="badgeInput_1" placeholder="Username">
                         <button onclick="adminAwardBadge(1)" class="btn-primary small">Award</button>
+                        <button onclick="adminRevokeBadge(1)" class="btn-delete small">Revoke</button>
                     </div>
                 </div>
 
@@ -161,6 +165,7 @@
                     <div style="display:flex; gap:10px;">
                         <input type="text" id="badgeInput_2" placeholder="Username">
                         <button onclick="adminAwardBadge(2)" class="btn-primary small">Award</button>
+                        <button onclick="adminRevokeBadge(2)" class="btn-delete small">Revoke</button>
                     </div>
                 </div>
 
@@ -169,6 +174,7 @@
                     <div style="display:flex; gap:10px;">
                         <input type="text" id="badgeInput_6" placeholder="Username">
                         <button onclick="adminAwardBadge(6)" class="btn-primary small">Award</button>
+                        <button onclick="adminRevokeBadge(6)" class="btn-delete small">Revoke</button>
                     </div>
                 </div>
             </div>
