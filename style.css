@@ -78,7 +78,7 @@ nav.scrolled { padding: 10px 40px; background: var(--glass-nav); box-shadow: 0 5
 .guide-item small { color: #666; font-size: 0.8rem; line-height: 1.1; display: block; }
 .info-icon-small { background: transparent; border: 1px solid #8b5e3c; color: #8b5e3c; width: 20px; height: 20px; border-radius: 50%; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-/* === NEW MATERIAL FRAMES (No Animation, All Round) === */
+/* FRAMES */
 .frame-wood { border: 4px solid #8b5a2b; background: repeating-linear-gradient(45deg, #8b5a2b, #6d4320 10px); box-shadow: inset 0 0 10px #3e230b; }
 .frame-copper { border: 4px solid #b87333; background: radial-gradient(circle at 30% 30%, #cd7f32, #8b4513); box-shadow: inset 0 0 5px #5e3b1f; }
 .frame-stone { border: 4px solid #7a7a7a; background: #9e9e9e; box-shadow: inset 0 0 5px #333, 0 2px 5px rgba(0,0,0,0.5); }
@@ -160,4 +160,3 @@ input, textarea { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid va
     .badge-guide-grid { grid-template-columns: 1fr; } 
     .full-screen-mobile { width: 100%; height: 100vh; max-height: 100vh; border-radius: 0; }
 }
-
