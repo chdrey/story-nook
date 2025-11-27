@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Website Loaded v6.5 - Stable Final with Admin");
+    console.log("Website Loaded v7.0 - Admin User List Optimized");
 
     // --- 1. MODAL OPEN LISTENERS ---
     const infoBtn = document.getElementById('infoBtn');
@@ -12,27 +12,20 @@ document.addEventListener('DOMContentLoaded', () => {
     if(adminBtn) {
         adminBtn.onclick = () => {
             document.getElementById('adminModal').classList.remove('hidden');
-            loadAllUsers();
+            loadAllUsers(); // Auto-load list when opened
         };
     }
 
-    // --- 2. MODAL CLOSE LOGIC (THE FIX) ---
-    // Closes a SPECIFIC modal by ID
+    // --- 2. MODAL CLOSE LOGIC ---
     window.closeModal = (id) => {
         const modal = document.getElementById(id);
         if (modal) modal.classList.add('hidden');
     }
-    
-    // Closes ALL modals (used for main profile close, or logout)
     window.closeAllModals = () => {
         document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden'));
     }
-
-    // Backdrop Click: Only close the top-most clicked background
     window.onclick = (e) => {
-        if (e.target.classList.contains('modal')) {
-            e.target.classList.add('hidden');
-        }
+        if (e.target.classList.contains('modal')) e.target.classList.add('hidden');
     };
 
     // --- 3. SUPABASE INIT ---
@@ -85,6 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!currentUser) return;
         const userEmail = currentUser.email ? currentUser.email.toLowerCase() : '';
         const targetEmail = ADMIN_EMAIL.toLowerCase();
+        
         const isEmailMatch = userEmail === targetEmail;
         const isUserMatch = currentProfile && currentProfile.username === 'PenPaleto';
 
@@ -95,6 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- UI UPDATES ---
     const nav = document.getElementById('mainNav');
     window.addEventListener('scroll', () => {
         if (window.scrollY > 50) nav.classList.add('scrolled');
@@ -144,6 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- AUTH ---
     let isSignUp = false;
     const authModal = document.getElementById('authModal');
     if(document.getElementById('navLoginBtn')) document.getElementById('navLoginBtn').onclick = () => document.getElementById('authModal').classList.remove('hidden');
@@ -206,16 +202,32 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // SEARCH LISTENER FOR REAL-TIME FILTERING
+    const adminSearch = document.getElementById('adminUserSearch');
+    if(adminSearch) {
+        adminSearch.addEventListener('keyup', loadAllUsers);
+    }
+
     async function loadAllUsers() {
         const list = document.getElementById('adminUserList');
-        list.innerHTML = 'Loading...';
+        list.innerHTML = '<div style="text-align:center; color:#888;">Loading users...</div>';
+        
         const term = document.getElementById('adminUserSearch').value.toLowerCase();
         
         let query = supabase.from('profiles').select('*, user_flairs(flair_id)');
+        // Only filter if text is entered
         if(term) query = query.ilike('username', `%${term}%`);
         
-        const { data: users } = await query.order('username');
+        // Fetch up to 50 users (ordered A-Z)
+        const { data: users, error } = await query.order('username').limit(50);
+        
+        if(error) {
+            list.innerHTML = "Error loading users.";
+            return;
+        }
+
         list.innerHTML = '';
+        if(users.length === 0) list.innerHTML = '<div style="text-align:center;">No users found.</div>';
 
         users.forEach(u => {
             const card = document.createElement('div');
@@ -233,6 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
             badges.forEach(b => {
                 const has = earned.includes(b.id);
                 badgeHtml += `<div class="admin-badge-btn ${has ? 'owned' : ''} ${b.cls}" 
+                              title="Toggle Badge ${b.id}"
                               onclick="toggleUserBadge('${u.id}', ${b.id}, ${has}, this)"></div>`;
             });
 
@@ -253,9 +266,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if(hasBadge) {
             await supabase.from('user_flairs').delete().eq('user_id', userId).eq('flair_id', badgeId);
             btn.classList.remove('owned');
+            // Update onclick to allow re-adding without refresh
+            btn.onclick = () => toggleUserBadge(userId, badgeId, false, btn);
         } else {
             await supabase.from('user_flairs').insert({ user_id: userId, flair_id: badgeId });
             btn.classList.add('owned');
+            btn.onclick = () => toggleUserBadge(userId, badgeId, true, btn);
         }
     };
 
@@ -267,9 +283,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    const adminSearch = document.getElementById('adminUserSearch');
-    if(adminSearch) adminSearch.addEventListener('keyup', loadAllUsers);
-
     window.adminAwardWinner = async (place) => {
         const inputId = `winner${place}Input`;
         const username = document.getElementById(inputId).value;
@@ -279,9 +292,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if(!user) return alert("User not found");
 
         let badgeId;
-        if(place === 1) badgeId = 5; 
-        else if(place === 2) badgeId = 4;
-        else if(place === 3) badgeId = 3; 
+        if(place === 1) badgeId = 5; // Gold
+        else if(place === 2) badgeId = 4; // Iron
+        else if(place === 3) badgeId = 3; // Stone
 
         await supabase.from('user_flairs').insert({ user_id: user.id, flair_id: badgeId });
         alert(`Awarded Badge #${badgeId} to ${username}!`);
