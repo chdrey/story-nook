@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Website Loaded v25.0 - TOP 3 & AVATAR FIX");
+    console.log("Website Loaded v26.0 - Mobile Journal & Fixes");
 
     // ==========================================
     // 1. SUPABASE CONFIGURATION
@@ -87,6 +87,10 @@ document.addEventListener('DOMContentLoaded', () => {
         else nav.classList.remove('scrolled');
     });
 
+    window.scrollToTop = () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
     function updateUI() {
         const loggedOut = document.getElementById('loggedOutNav');
         const loggedIn = document.getElementById('loggedInNav');
@@ -147,6 +151,15 @@ document.addEventListener('DOMContentLoaded', () => {
             e.stopPropagation(); 
             document.getElementById('profileModal').classList.remove('hidden');
             window.resetProfileModalToMyView();
+        };
+    }
+
+    // LOG IN BUTTON LOGIC
+    const navLoginBtn = document.getElementById('navLoginBtn');
+    if(navLoginBtn) {
+        navLoginBtn.onclick = (e) => {
+            e.stopPropagation();
+            document.getElementById('authModal').classList.remove('hidden');
         };
     }
 
@@ -249,19 +262,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================
-    // 5. STORY LOGIC - SEPARATE QUERIES (FIXED)
+    // 5. STORY LOGIC
     // ==========================================
 
     function createStoryCardHTML(story, isTopSection = false) {
         const authorName = story.guest_name || (story.profiles ? story.profiles.username : 'Anonymous');
-        
-        // AVATAR LOGIC
         const hasAvatar = story.profiles && story.profiles.avatar_url;
         let avatarHTML = '';
         if (hasAvatar) {
             avatarHTML = `<img src="${story.profiles.avatar_url}" class="feed-avatar-img" alt="Avatar">`;
         } else {
-            // Get first letter of name
             const initial = authorName.charAt(0).toUpperCase();
             avatarHTML = `<div class="feed-avatar-placeholder">${initial}</div>`;
         }
@@ -307,16 +317,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const feed = document.getElementById('storyFeed');
         const top = document.getElementById('topStories');
         
-        if (!feed) return;
-        feed.innerHTML = '<p style="text-align:center; color:#ccc;">Gathering tales...</p>';
-
-        // --- 1. FETCH TOP 3 STORIES (Votes > 0) ---
+        // --- 1. FETCH TOP 3 STORIES ---
         if(top) {
             const { data: topStories } = await supabase
                 .from('stories')
                 .select('*, profiles(username, avatar_url, selected_flair_id), comments(count)')
                 .is('deleted_at', null)
-                .gt('votes', 0) // MUST have at least 1 vote
+                .gt('votes', 0) 
                 .order('votes', { ascending: false })
                 .limit(3);
 
@@ -330,7 +337,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // --- 2. FETCH FEED (LATEST 30) ---
+        // --- 2. FETCH FEED ---
         const { data: feedStories, error } = await supabase
             .from('stories')
             .select('*, profiles(username, avatar_url, selected_flair_id), comments(count)')
@@ -340,18 +347,56 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (error) {
             console.error("Error loading stories:", error);
-            feed.innerHTML = '<p style="text-align:center">The ink has dried up (Error loading).</p>';
+            if(feed) feed.innerHTML = '<p style="text-align:center">The ink has dried up (Error loading).</p>';
             return;
         }
 
-        feed.innerHTML = '';
-        if (feedStories.length === 0) {
-            feed.innerHTML = '<p style="text-align:center">No stories yet. Be the first!</p>';
-            return;
+        if(feed) {
+            feed.innerHTML = '';
+            if (feedStories.length === 0) {
+                feed.innerHTML = '<p style="text-align:center">No stories yet. Be the first!</p>';
+                return;
+            }
+            feedStories.forEach(story => {
+                feed.insertAdjacentHTML('beforeend', createStoryCardHTML(story, false));
+            });
+            
+            // Populate Mobile Feed as well
+            const mobileContent = document.getElementById('mobileFeedContent');
+            if(mobileContent) {
+                mobileContent.innerHTML = feed.innerHTML;
+            }
         }
+    }
 
-        feedStories.forEach(story => {
-            feed.insertAdjacentHTML('beforeend', createStoryCardHTML(story, false));
+    // === MOBILE FEED LOGIC ===
+    window.openMobileFeed = () => {
+        const overlay = document.getElementById('mobileFeedOverlay');
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    };
+
+    window.closeMobileFeed = () => {
+        const overlay = document.getElementById('mobileFeedOverlay');
+        overlay.classList.remove('active');
+        document.body.style.overflow = 'auto'; 
+    };
+
+    // Swipe to Close Logic
+    let touchStartY = 0;
+    let touchEndY = 0;
+    const mobileOverlay = document.getElementById('mobileFeedOverlay');
+
+    if(mobileOverlay) {
+        mobileOverlay.addEventListener('touchstart', e => {
+            touchStartY = e.changedTouches[0].screenY;
+        });
+
+        mobileOverlay.addEventListener('touchend', e => {
+            touchEndY = e.changedTouches[0].screenY;
+            if (touchEndY > touchStartY + 100) { // If swiped down significantly
+                closeMobileFeed();
+            }
         });
     }
 
