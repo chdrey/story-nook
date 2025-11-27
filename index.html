@@ -143,6 +143,10 @@
                 <h3 id="readModalAuthor">By @Author</h3>
             </div>
             <div id="readModalText" class="modal-body-text story-text-styled"></div>
+            
+            <div id="modalActionsRow" class="story-actions-row hidden">
+               </div>
+
             <div class="comments-section-wrapper">
                 <h4 style="color:#666; font-size:0.9rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:15px;">Discussion</h4>
                 <div id="modalCommentsList" class="comments-list"></div>
@@ -207,28 +211,10 @@
         </section>
 
         <section class="feed">
-            <div class="feed-header-wrapper" onclick="toggleFeed()" title="Click to collapse/expand">
-                <h3 class="feed-title" style="margin:0;">Latest Submissions</h3>
-                <span id="feedToggleIcon" style="font-size:1.2rem; color:var(--accent);">▼</span>
-            </div>
-
-            <div id="feedCollapsibleContainer">
-                <button id="mobileFeedTrigger" class="btn-primary full-width hidden-on-desktop" onclick="openMobileFeed()">
-                    📖 Open the Weekly Journal
-                </button>
-                <div id="storyFeed" class="scrollable-feed"></div>
-            </div>
+            <h3 class="feed-title">Latest Submissions</h3>
+            <div id="storyFeed" class="feed-list-container"></div>
         </section>
     </main>
-
-    <div id="mobileFeedOverlay" class="mobile-feed-overlay">
-        <div class="mobile-feed-header">
-            <h2>The Weekly Journal</h2>
-            <button class="close-modal" onclick="closeMobileFeed()">&times;</button>
-        </div>
-        <p style="text-align:center; color:#888; font-size:0.8rem; margin-bottom:10px;">(Swipe down to close)</p>
-        <div id="mobileFeedContent" class="mobile-feed-content"></div>
-    </div>
 
     <footer>
         <div class="footer-content">
