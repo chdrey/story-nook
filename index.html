@@ -207,11 +207,17 @@
         </section>
 
         <section class="feed">
-            <h3 class="feed-title">Latest Submissions</h3>
-            <button id="mobileFeedTrigger" class="btn-primary full-width hidden-on-desktop" onclick="openMobileFeed()">
-                📖 Open the Weekly Journal
-            </button>
-            <div id="storyFeed" class="scrollable-feed"></div>
+            <div class="feed-header-wrapper" onclick="toggleFeed()" title="Click to collapse/expand">
+                <h3 class="feed-title" style="margin:0;">Latest Submissions</h3>
+                <span id="feedToggleIcon" style="font-size:1.2rem; color:var(--accent);">▼</span>
+            </div>
+
+            <div id="feedCollapsibleContainer">
+                <button id="mobileFeedTrigger" class="btn-primary full-width hidden-on-desktop" onclick="openMobileFeed()">
+                    📖 Open the Weekly Journal
+                </button>
+                <div id="storyFeed" class="scrollable-feed"></div>
+            </div>
         </section>
     </main>
 
@@ -221,8 +227,7 @@
             <button class="close-modal" onclick="closeMobileFeed()">&times;</button>
         </div>
         <p style="text-align:center; color:#888; font-size:0.8rem; margin-bottom:10px;">(Swipe down to close)</p>
-        <div id="mobileFeedContent" class="mobile-feed-content">
-            </div>
+        <div id="mobileFeedContent" class="mobile-feed-content"></div>
     </div>
 
     <footer>
