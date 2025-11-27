@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Website Loaded v17.0 - FINAL PROFILE FIX");
+    console.log("Website Loaded v18.0 - Profile Stories Accordion");
 
     // ==========================================
     // 1. SUPABASE CONFIGURATION
@@ -144,7 +144,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (navProfileBtn) {
         navProfileBtn.onclick = (e) => {
             e.stopPropagation(); 
-            // Trigger the "My View" reset logic
             window.resetProfileModalToMyView();
         };
     }
@@ -162,7 +161,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const modal = document.getElementById(id);
         if (modal) {
             modal.classList.add('hidden');
-            // If closing profile, reset view state in background
             if(id === 'profileModal') setTimeout(() => resetProfileModalToMyView(), 300);
         }
     }
@@ -501,12 +499,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const adminSearch = document.getElementById('adminUserSearch');
     if(adminSearch) adminSearch.addEventListener('keyup', () => window.loadAllUsers());
 
-    // === CRITICAL PROFILE FIX ===
     window.viewUserProfile = async (userId) => {
         const modal = document.getElementById('profileModal');
         const grid = document.getElementById('flairGrid');
         
-        // 1. Show modal IMMEDIATELY so it takes up space in the DOM
+        // 1. Show modal IMMEDIATELY
         modal.classList.remove('hidden'); 
         modal.classList.add('admin-view'); 
         
@@ -541,7 +538,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const modal = document.getElementById('profileModal');
         const grid = document.getElementById('flairGrid');
         
-        modal.classList.remove('hidden'); // Ensure visible
+        modal.classList.remove('hidden'); 
         modal.classList.remove('admin-view');
         
         document.getElementById('settingsSection').classList.remove('hidden');
@@ -555,7 +552,6 @@ document.addEventListener('DOMContentLoaded', () => {
             bigAvatar.classList.add('profile-trigger-action');
             if(grid) grid.innerHTML = 'Loading...';
             
-            // DELAY HERE TOO
             setTimeout(() => {
                 loadPassportForUser(currentUser.id);
                 loadStoriesForUser(currentUser.id);
@@ -624,17 +620,12 @@ document.addEventListener('DOMContentLoaded', () => {
         badgeDefinitions.forEach(def => {
             const isUnlocked = earnedIds.includes(def.id);
             const isSelected = selectedId === def.id;
-            
             const div = document.createElement('div');
-            // Show as "locked" if not owned
             div.className = `flair-item ${isUnlocked ? 'unlocked' : 'locked'} ${isSelected ? 'selected' : ''}`;
             
-            // Only allow clicking if you own it AND it's your profile
             if(isUnlocked && targetId === currentUser.id) {
                 div.onclick = () => equipFlair(def.id);
             }
-            
-            // If unlocked, show visual. If locked, show generic frame.
             const visualClass = isUnlocked ? def.css : 'frame-locked';
 
             div.innerHTML = `
@@ -653,30 +644,61 @@ document.addEventListener('DOMContentLoaded', () => {
         loadPassportForUser(currentUser.id);
     }
 
+    // === UPDATED PROFILE STORY LOADER (SOFT DELETE & ACCORDION) ===
     async function loadStoriesForUser(targetId) {
         const list = document.getElementById('myStoriesList');
         if(!list) return;
+        list.innerHTML = '<div style="text-align:center; color:#888;">Loading...</div>';
+        
+        // Fetch only ALIVE stories
+        const { data: myStories } = await supabase
+            .from('stories')
+            .select('*')
+            .eq('user_id', targetId)
+            .is('deleted_at', null) 
+            .order('created_at', { ascending: false });
+        
         list.innerHTML = '';
-        const { data: myStories } = await supabase.from('stories').select('*').eq('user_id', targetId).order('created_at', { ascending: false });
-        if(!myStories || myStories.length === 0) { list.innerHTML = '<p class="subtext">No stories yet.</p>'; return; }
+        if(!myStories || myStories.length === 0) { list.innerHTML = '<p class="subtext" style="text-align:center;">No stories yet.</p>'; return; }
         
         myStories.forEach(s => {
+            // Create Accordion
             const details = document.createElement('details');
-            details.style.borderBottom = "1px solid #ccc"; details.style.padding = "10px 0";
+            details.className = 'story-accordion';
+            
+            // Header
             const summary = document.createElement('summary');
-            summary.style.cssText = "display:flex; justify-content:space-between; cursor:pointer; font-weight:bold;";
-            summary.innerHTML = `<span>${escapeHtml(s.content.substring(0,30))}...</span>`;
+            summary.className = 'story-summary';
+            
+            const textSpan = document.createElement('span');
+            textSpan.innerText = s.content.substring(0, 40) + (s.content.length > 40 ? "..." : "");
+            summary.appendChild(textSpan);
+            
+            // Delete Button (Only for owner/admin)
             if(targetId === currentUser.id || isAdmin) {
                 const del = document.createElement('button');
-                del.innerText = 'X'; del.className = 'btn-delete';
+                del.innerText = '✕'; 
+                del.className = 'btn-delete-small';
+                del.title = "Delete Story";
+                
                 del.onclick = async (e) => {
-                    e.stopPropagation();
-                    if(confirm("Delete?")) { await supabase.from('stories').delete().eq('id', s.id); loadStoriesForUser(targetId); fetchStories(); }
+                    e.stopPropagation(); 
+                    e.preventDefault();
+                    if(confirm("Are you sure you want to delete this story?")) {
+                        await supabase.from('stories').update({ deleted_at: new Date().toISOString() }).eq('id', s.id);
+                        loadStoriesForUser(targetId); 
+                        fetchStories(); 
+                    }
                 };
                 summary.appendChild(del);
             }
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'story-content-preview';
+            contentDiv.innerText = s.content;
+            
             details.appendChild(summary);
-            details.appendChild(Object.assign(document.createElement('div'), {innerText: s.content, style:"padding:10px; font-style:italic;"}));
+            details.appendChild(contentDiv);
             list.appendChild(details);
         });
     }
