@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // REPLACE WITH YOUR ADMIN EMAIL
     const ADMIN_EMAIL = 'your_admin_email@example.com'; 
 
-    // 1. ENTER BUTTON
+    // 1. WELCOME BUTTONS
     const enterBtn = document.getElementById('enterBtn');
     if (enterBtn) {
         enterBtn.addEventListener('click', () => {
@@ -20,6 +20,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const ytPlayer = document.getElementById('youtubePlayer');
             if (ytPlayer) ytPlayer.src = "https://www.youtube.com/embed/hVFaaUEIpzE?start=103&autoplay=1&mute=0";
         });
+    }
+
+    // INFO BUTTON (RESTORED)
+    const infoBtn = document.getElementById('infoBtn');
+    if (infoBtn) {
+        infoBtn.onclick = () => {
+            document.getElementById('aboutModal').classList.remove('hidden');
+        };
     }
 
     // 2. SUPABASE INIT
