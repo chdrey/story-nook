@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Website Loaded v12.0 - Menu Update");
+    console.log("Website Loaded v13.0 - Soft Delete & Counts");
 
     // ==========================================
     // 1. SUPABASE CONFIGURATION
@@ -50,7 +50,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if(adminBtn) adminBtn.classList.add('hidden');
         }
         updateUI();
-        // Refresh stories to show menu options correctly
         fetchStories(); 
     }
 
@@ -140,7 +139,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const passportInfoBtn = document.getElementById('passportInfoBtn');
     if (passportInfoBtn) passportInfoBtn.onclick = () => document.getElementById('passportInfoModal').classList.remove('hidden');
 
-    // --- PROFILE BUTTON FIX ---
     const navProfileBtn = document.getElementById('navProfileBtn');
     if (navProfileBtn) {
         navProfileBtn.onclick = (e) => {
@@ -188,9 +186,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!feed) return;
         feed.innerHTML = '<p style="text-align:center; color:#ccc;">Gathering tales...</p>';
 
+        // NOTE: We request comments(count) to get the number of comments
         const { data: stories, error } = await supabase
             .from('stories')
-            .select('*, profiles(username, avatar_url, selected_flair_id)')
+            .select('*, profiles(username, avatar_url, selected_flair_id), comments(count)')
+            .is('deleted_at', null) // Only fetch alive stories
             .order('created_at', { ascending: false })
             .limit(20);
 
@@ -212,11 +212,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const authorName = story.guest_name || (story.profiles ? story.profiles.username : 'Anonymous');
             const isTopStory = story.votes >= 5; 
             
-            // --- MENU LOGIC ---
+            // Comment Count Logic
+            // Supabase returns an array for count like [{count: 5}] or []
+            const commentCount = (story.comments && story.comments[0]) ? story.comments[0].count : 0;
+
+            // Menu Logic
             const isOwner = isAdmin || (currentUser && story.user_id === currentUser.id);
-            
             let menuItems = `<button onclick="reportContent('story', ${story.id})">⚠️ Report</button>`;
-            
             if (isOwner) {
                 menuItems += `<button onclick="deleteStory(${story.id})" class="text-red">🗑️ Delete</button>`;
             }
@@ -227,9 +229,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div id="story-menu-${story.id}" class="menu-dropdown">
                         ${menuItems}
                     </div>
+                    
                     <button class="vote-btn" onclick="event.stopPropagation(); voteStory('${story.id}', ${story.votes})">
                         ❤️ <span style="font-size:0.8rem">${story.votes || 0}</span>
                     </button>
+                    
+                    <div style="font-size:0.8rem; color:var(--text-muted); text-align:center; margin-top:2px;">
+                        💬 ${commentCount}
+                    </div>
                 </div>
             `;
 
@@ -292,9 +299,15 @@ document.addEventListener('DOMContentLoaded', () => {
         else fetchStories();
     };
 
+    // SOFT DELETE STORY
     window.deleteStory = async (id) => { 
-        if(confirm("Delete this story permanently?")) { 
-            await supabase.from('stories').delete().eq('id', id); 
+        if(confirm("Delete this story?")) { 
+            // Instead of .delete(), we update 'deleted_at'
+            await supabase
+                .from('stories')
+                .update({ deleted_at: new Date().toISOString() })
+                .eq('id', id);
+            
             fetchStories(); 
         } 
     };
@@ -326,6 +339,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .from('comments')
             .select('*, profiles(username)')
             .eq('story_id', storyId)
+            .is('deleted_at', null) // Only fetch alive comments
             .order('created_at', {ascending: true});
             
         list.innerHTML = '';
@@ -339,7 +353,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // --- MENU LOGIC FOR COMMENTS ---
             const isOwner = isAdmin || (currentUser && c.user_id === currentUser.id);
-            
             let menuItems = `<button onclick="reportContent('comment', ${c.id})">⚠️ Report</button>`;
             
             if (isOwner) {
@@ -383,9 +396,14 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchComments(activeStoryId);
     };
 
+    // SOFT DELETE COMMENT
     window.deleteComment = async (id) => { 
         if(confirm("Delete comment?")) { 
-            await supabase.from('comments').delete().eq('id', id); 
+            await supabase
+                .from('comments')
+                .update({ deleted_at: new Date().toISOString() })
+                .eq('id', id);
+            
             fetchComments(activeStoryId); 
         } 
     };
@@ -686,10 +704,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // ==========================================
-    // 9. NEW MENU & REPORT LOGIC
+    // 9. MENU & REPORT LOGIC
     // ==========================================
 
-    // Opens/Closes the specific menu
     window.toggleMenu = (elementId) => {
         document.querySelectorAll('.menu-dropdown').forEach(el => {
             if(el.id !== elementId) el.classList.remove('show');
@@ -699,7 +716,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if(menu) menu.classList.toggle('show');
     };
 
-    // Close menus if clicking anywhere else on the screen
     window.addEventListener('click', () => {
         document.querySelectorAll('.menu-dropdown').forEach(el => el.classList.remove('show'));
     });
