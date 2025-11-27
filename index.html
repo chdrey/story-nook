@@ -53,7 +53,7 @@
             </div>
 
             <button id="adminDashboardBtn" class="btn-primary full-width hidden" style="background:#2c3e50; margin-bottom:20px; border:1px solid #d4a373;">
-                👑 Admin Dashboard
+                👑 Control Panel
             </button>
 
             <div class="passport-section">
@@ -107,11 +107,11 @@
     <div id="adminModal" class="modal hidden">
         <div class="modal-content book-style full-screen-mobile">
             <span class="close-modal" onclick="closeModal('adminModal')">&times;</span>
-            <h2 style="color:#e76f51; text-align:center;">👑 PenPaleto Control</h2>
+            <h2 style="color:#e76f51; text-align:center;">👑 PenPaleto Control Panel</h2>
             
             <div class="admin-tabs">
                 <button class="tab-btn active" onclick="switchAdminTab('users')">Users & Badges</button>
-                <button class="tab-btn" onclick="switchAdminTab('contest')">Weekly Contest</button>
+                <button class="tab-btn" onclick="switchAdminTab('contest')">Manual Awards</button>
             </div>
 
             <div id="adminTabUsers" class="admin-tab-content">
@@ -120,10 +120,57 @@
             </div>
 
             <div id="adminTabContest" class="admin-tab-content hidden">
-                <h3>🏆 Award Weekly Winners</h3>
-                <div class="winner-input-group"><label>🥇 1st (Golden Quill)</label><div style="display:flex; gap:10px;"><input type="text" id="winner1Input" placeholder="Username"><button onclick="adminAwardWinner(1)" class="btn-primary small">Award</button></div></div>
-                <div class="winner-input-group"><label>🥈 2nd (Cliffhanger)</label><div style="display:flex; gap:10px;"><input type="text" id="winner2Input" placeholder="Username"><button onclick="adminAwardWinner(2)" class="btn-primary small">Award</button></div></div>
-                <div class="winner-input-group"><label>🥉 3rd (Ink Scribble)</label><div style="display:flex; gap:10px;"><input type="text" id="winner3Input" placeholder="Username"><button onclick="adminAwardWinner(3)" class="btn-primary small">Award</button></div></div>
+                <h3>🏆 Award Badges</h3>
+                
+                <div class="winner-input-group">
+                    <label>🥇 The Golden Quill (1st Place)</label>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="badgeInput_5" placeholder="Username">
+                        <button onclick="adminAwardBadge(5)" class="btn-primary small">Award</button>
+                    </div>
+                </div>
+
+                <div class="winner-input-group">
+                    <label>🥈 The Cliffhanger (2nd Place)</label>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="badgeInput_4" placeholder="Username">
+                        <button onclick="adminAwardBadge(4)" class="btn-primary small">Award</button>
+                    </div>
+                </div>
+
+                <div class="winner-input-group">
+                    <label>🥉 The Ink Scribble (3rd Place)</label>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="badgeInput_3" placeholder="Username">
+                        <button onclick="adminAwardBadge(3)" class="btn-primary small">Award</button>
+                    </div>
+                </div>
+
+                <hr style="opacity:0.3; margin: 15px 0;">
+
+                <div class="winner-input-group">
+                    <label>🎭 The Bard (Weekly Participant)</label>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="badgeInput_1" placeholder="Username">
+                        <button onclick="adminAwardBadge(1)" class="btn-primary small">Award</button>
+                    </div>
+                </div>
+
+                <div class="winner-input-group">
+                    <label>🗣️ Talk of the Nook (Commenter)</label>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="badgeInput_2" placeholder="Username">
+                        <button onclick="adminAwardBadge(2)" class="btn-primary small">Award</button>
+                    </div>
+                </div>
+
+                <div class="winner-input-group">
+                    <label>💎 The Trilogy Master (3-Week Streak)</label>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="badgeInput_6" placeholder="Username">
+                        <button onclick="adminAwardBadge(6)" class="btn-primary small">Award</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
