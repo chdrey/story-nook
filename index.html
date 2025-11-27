@@ -129,17 +129,25 @@
     </div>
 
     <div id="readModal" class="modal hidden">
-        <div class="modal-content book-style">
+        <div class="modal-content book-style read-modal-layout">
             <span class="close-modal" onclick="closeModal('readModal')">&times;</span>
-            <h3 id="readModalAuthor">By @Author</h3>
-            <div id="readModalText" class="modal-body-text"></div>
+            
+            <div class="read-header">
+                <div class="read-icon">📖</div>
+                <h3 id="readModalAuthor">By @Author</h3>
+            </div>
+
+            <div id="readModalText" class="modal-body-text story-text-styled"></div>
+            
             <div class="comments-section-wrapper">
-                <h4>Comments</h4>
+                <h4 style="color:#666; font-size:0.9rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:15px;">Discussion</h4>
+                
                 <div id="modalCommentsList" class="comments-list"></div>
+                
                 <div class="comment-input-area">
-                    <input type="text" id="commentGuestName" placeholder="Your Name" style="width: 30%;">
-                    <input type="text" id="newCommentInput" placeholder="Be nice... write a comment">
-                    <button id="postCommentBtn" class="btn-secondary small">Post</button>
+                    <input type="text" id="commentGuestName" placeholder="Your Name" class="input-compact">
+                    <input type="text" id="newCommentInput" placeholder="Share your thoughts..." class="input-wide">
+                    <button id="postCommentBtn" class="btn-primary small">Post</button>
                 </div>
             </div>
         </div>
