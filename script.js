@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Website Loaded v8.0 - Moderation & CMS");
+    console.log("Website Loaded v6.5 - Stable Final with Admin");
 
     // --- 1. MODAL OPEN LISTENERS ---
     const infoBtn = document.getElementById('infoBtn');
@@ -12,27 +12,26 @@ document.addEventListener('DOMContentLoaded', () => {
     if(adminBtn) {
         adminBtn.onclick = () => {
             document.getElementById('adminModal').classList.remove('hidden');
-            loadAllUsers(); // Auto-load users
+            loadAllUsers();
         };
     }
 
-    // --- 2. MODAL CLOSE LOGIC ---
+    // --- 2. MODAL CLOSE LOGIC (THE FIX) ---
+    // Closes a SPECIFIC modal by ID
     window.closeModal = (id) => {
         const modal = document.getElementById(id);
-        if (modal) {
-            modal.classList.add('hidden');
-            // If closing profile modal, reset it to "My Profile" state just in case
-            if(id === 'profileModal') resetProfileModalToMyView();
-        }
+        if (modal) modal.classList.add('hidden');
     }
+    
+    // Closes ALL modals (used for main profile close, or logout)
     window.closeAllModals = () => {
         document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden'));
-        resetProfileModalToMyView();
     }
+
+    // Backdrop Click: Only close the top-most clicked background
     window.onclick = (e) => {
         if (e.target.classList.contains('modal')) {
             e.target.classList.add('hidden');
-            resetProfileModalToMyView();
         }
     };
 
@@ -86,7 +85,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!currentUser) return;
         const userEmail = currentUser.email ? currentUser.email.toLowerCase() : '';
         const targetEmail = ADMIN_EMAIL.toLowerCase();
-        
         const isEmailMatch = userEmail === targetEmail;
         const isUserMatch = currentProfile && currentProfile.username === 'PenPaleto';
 
@@ -97,7 +95,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- UI UPDATES ---
     const nav = document.getElementById('mainNav');
     window.addEventListener('scroll', () => {
         if (window.scrollY > 50) nav.classList.add('scrolled');
@@ -127,13 +124,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const navUser = document.getElementById('navUsername');
             if(navUser) navUser.innerText = currentProfile.username;
             
-            // Only update profile name if we are viewing OUR OWN profile
-            // This prevents overwriting the modal if we are viewing someone else
-            if(!document.getElementById('profileModal').classList.contains('admin-view')) {
-                const profileName = document.getElementById('profileNameDisplay');
-                if(profileName) profileName.innerText = currentProfile.username;
-                updateAvatars(currentProfile);
-            }
+            const profileName = document.getElementById('profileNameDisplay');
+            if(profileName) profileName.innerText = currentProfile.username;
+
+            const avatars = [document.getElementById('navAvatar'), document.getElementById('profileAvatar')];
+            const flairClass = currentProfile.flairs ? currentProfile.flairs.css_class : '';
+            avatars.forEach(img => {
+                if(img) {
+                    img.src = currentProfile.avatar_url || 'https://i.imgur.com/6UD0njE.png';
+                    img.className = img.id === 'navAvatar' ? 'avatar-small' : 'avatar-large profile-trigger-action';
+                    img.classList.remove('frame-wood', 'frame-stone', 'frame-iron', 'frame-gold', 'frame-diamond', 'frame-cosmic');
+                    if(flairClass) img.classList.add(flairClass);
+                }
+            });
         } else {
             loggedOut.classList.remove('hidden');
             loggedIn.classList.add('hidden');
@@ -141,25 +144,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function updateAvatars(profileData) {
-        const avatars = [document.getElementById('navAvatar'), document.getElementById('profileAvatar')];
-        const flairClass = profileData.flairs ? profileData.flairs.css_class : '';
-        avatars.forEach(img => {
-            if(img) {
-                img.src = profileData.avatar_url || 'https://i.imgur.com/6UD0njE.png';
-                if(img.id === 'navAvatar') {
-                    img.className = 'avatar-small';
-                    img.classList.remove('frame-wood', 'frame-stone', 'frame-iron', 'frame-gold', 'frame-diamond', 'frame-cosmic');
-                    if(flairClass) img.classList.add(flairClass);
-                } else if (!document.getElementById('profileModal').classList.contains('admin-view')) {
-                    // Only update large avatar if viewing self
-                    img.className = 'avatar-large profile-trigger-action';
-                }
-            }
-        });
-    }
-
-    // --- AUTH ---
     let isSignUp = false;
     const authModal = document.getElementById('authModal');
     if(document.getElementById('navLoginBtn')) document.getElementById('navLoginBtn').onclick = () => document.getElementById('authModal').classList.remove('hidden');
@@ -209,38 +193,29 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    // --- ADMIN & MODERATION LOGIC ---
+    // --- ADMIN LOGIC ---
     window.switchAdminTab = (tab) => {
         document.querySelectorAll('.admin-tab-content').forEach(d => d.classList.add('hidden'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        
         if(tab === 'users') {
             document.getElementById('adminTabUsers').classList.remove('hidden');
-            document.querySelectorAll('.tab-btn')[0].classList.add('active');
-        } else if(tab === 'contest') {
+            document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
+        } else {
             document.getElementById('adminTabContest').classList.remove('hidden');
-            document.querySelectorAll('.tab-btn')[1].classList.add('active');
-        } else if(tab === 'mod') {
-            document.getElementById('adminTabMod').classList.remove('hidden');
-            document.querySelectorAll('.tab-btn')[2].classList.add('active');
-            loadModerationLog();
+            document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
         }
     };
 
-    // 1. User Management
     async function loadAllUsers() {
         const list = document.getElementById('adminUserList');
-        list.innerHTML = '<div style="text-align:center; color:#888;">Loading users...</div>';
-        
+        list.innerHTML = 'Loading...';
         const term = document.getElementById('adminUserSearch').value.toLowerCase();
+        
         let query = supabase.from('profiles').select('*, user_flairs(flair_id)');
         if(term) query = query.ilike('username', `%${term}%`);
         
-        const { data: users, error } = await query.order('username').limit(50);
-        
-        if(error) { list.innerHTML = "Error loading users."; return; }
+        const { data: users } = await query.order('username');
         list.innerHTML = '';
-        if(users.length === 0) list.innerHTML = '<div style="text-align:center;">No users found.</div>';
 
         users.forEach(u => {
             const card = document.createElement('div');
@@ -248,6 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const earned = u.user_flairs.map(f => f.flair_id);
             let badgeHtml = '';
+            // IDs: 1=Wood, 2=Copper, 3=Stone, 4=Iron, 5=Gold, 6=Diamond
             const badges = [
                 {id: 1, cls: 'frame-wood'}, {id: 2, cls: 'frame-copper'},
                 {id: 3, cls: 'frame-stone'}, {id: 4, cls: 'frame-iron'},
@@ -257,15 +233,13 @@ document.addEventListener('DOMContentLoaded', () => {
             badges.forEach(b => {
                 const has = earned.includes(b.id);
                 badgeHtml += `<div class="admin-badge-btn ${has ? 'owned' : ''} ${b.cls}" 
-                              title="Toggle Badge"
-                              onclick="toggleUserBadge('${u.id}', ${b.id}, ${has}, this); event.stopPropagation();"></div>`;
+                              onclick="toggleUserBadge('${u.id}', ${b.id}, ${has}, this)"></div>`;
             });
 
-            // Make header clickable to view profile
             card.innerHTML = `
-                <div class="admin-user-header" onclick="viewUserProfile('${u.id}')">
+                <div class="admin-user-header">
                     <strong>@${u.username}</strong>
-                    <button class="btn-delete" onclick="adminBanUser('${u.id}'); event.stopPropagation();" style="font-size:0.7rem;">BAN</button>
+                    <button class="btn-delete" onclick="adminBanUser('${u.id}')" style="font-size:0.7rem;">BAN</button>
                 </div>
                 <div class="admin-badge-controls">${badgeHtml}</div>
             `;
@@ -273,115 +247,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    const adminSearch = document.getElementById('adminUserSearch');
-    if(adminSearch) adminSearch.addEventListener('keyup', loadAllUsers);
-
-    // 2. View User Profile (Admin Mode)
-    window.viewUserProfile = async (userId) => {
-        // Fetch target user data
-        const { data: targetUser } = await supabase.from('profiles').select('*').eq('id', userId).single();
-        if(!targetUser) return alert("User data missing.");
-
-        const modal = document.getElementById('profileModal');
-        
-        // Enter "Admin View" mode
-        modal.classList.add('admin-view'); 
-        
-        // Hide private controls
-        document.getElementById('settingsSection').classList.add('hidden');
-        document.getElementById('deleteSection').classList.add('hidden');
-        document.getElementById('adminDashboardBtn').classList.add('hidden');
-
-        // Populate Data
-        document.getElementById('profileNameDisplay').innerText = targetUser.username;
-        const bigAvatar = document.getElementById('profileAvatar');
-        bigAvatar.src = targetUser.avatar_url || 'https://i.imgur.com/6UD0njE.png';
-        bigAvatar.classList.remove('profile-trigger-action'); // Disable click-to-change
-
-        // Load their stuff
-        loadPassportForUser(userId); // You need a version of loadPassport that takes an ID
-        loadStoriesForUser(userId);  // Same for stories
-
-        modal.classList.remove('hidden');
-    };
-
-    // Helper: Reset Profile Modal when closing
-    function resetProfileModalToMyView() {
-        const modal = document.getElementById('profileModal');
-        modal.classList.remove('admin-view');
-        
-        document.getElementById('settingsSection').classList.remove('hidden');
-        document.getElementById('deleteSection').classList.remove('hidden');
-        if(isAdmin) document.getElementById('adminDashboardBtn').classList.remove('hidden');
-        
-        // Restore My Data
-        if(currentProfile) {
-            document.getElementById('profileNameDisplay').innerText = currentProfile.username;
-            const bigAvatar = document.getElementById('profileAvatar');
-            bigAvatar.src = currentProfile.avatar_url || 'https://i.imgur.com/6UD0njE.png';
-            bigAvatar.classList.add('profile-trigger-action');
-            loadPassport();
-            loadMyStories();
-        }
-    }
-
-    // 3. Moderation Log
-    async function loadModerationLog() {
-        const list = document.getElementById('adminModList');
-        list.innerHTML = 'Loading content log...';
-        
-        // Fetch Stories
-        const { data: s } = await supabase.from('stories').select('*, profiles(username)').limit(50);
-        // Fetch Comments
-        const { data: c } = await supabase.from('comments').select('*, profiles(username)').limit(50);
-        
-        const allContent = [
-            ...s.map(i => ({...i, type:'Story', text:i.content})), 
-            ...c.map(i => ({...i, type:'Comment', text:i.content}))
-        ];
-        
-        // Sort by date new -> old
-        allContent.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
-
-        list.innerHTML = '';
-        allContent.forEach(item => {
-            const row = document.createElement('div');
-            row.className = `mod-item ${item.type === 'Story' ? 'mod-story' : ''}`;
-            
-            const u = item.profiles ? item.profiles.username : (item.guest_name || 'Guest');
-            const date = new Date(item.created_at).toLocaleDateString();
-            
-            row.innerHTML = `
-                <div class="mod-meta">
-                    <span><strong>${item.type}</strong> by @${u} (${date})</span>
-                    <button class="btn-delete" style="font-size:0.7rem;" onclick="adminDeleteContent('${item.type}', ${item.id})">Delete</button>
-                </div>
-                <div class="mod-preview" onclick="openReadModal(${item.type === 'Story' ? item.id : item.story_id})">
-                    ${escapeHtml(item.text.substring(0, 60))}...
-                </div>
-            `;
-            list.appendChild(row);
-        });
-    }
-
-    window.adminDeleteContent = async (type, id) => {
-        if(!confirm(`Delete this ${type} permanently?`)) return;
-        const table = type === 'Story' ? 'stories' : 'comments';
-        await supabase.from(table).delete().eq('id', id);
-        loadModerationLog(); // Refresh list
-    }
-
-    // --- OTHER HELPERS ---
     window.toggleUserBadge = async (userId, badgeId, hasBadge, btn) => {
         if(!confirm(hasBadge ? "Remove badge?" : "Award badge?")) return;
+        
         if(hasBadge) {
             await supabase.from('user_flairs').delete().eq('user_id', userId).eq('flair_id', badgeId);
             btn.classList.remove('owned');
-            btn.onclick = () => toggleUserBadge(userId, badgeId, false, btn);
         } else {
             await supabase.from('user_flairs').insert({ user_id: userId, flair_id: badgeId });
             btn.classList.add('owned');
-            btn.onclick = () => toggleUserBadge(userId, badgeId, true, btn);
         }
     };
 
@@ -393,13 +267,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const adminSearch = document.getElementById('adminUserSearch');
+    if(adminSearch) adminSearch.addEventListener('keyup', loadAllUsers);
+
     window.adminAwardWinner = async (place) => {
         const inputId = `winner${place}Input`;
         const username = document.getElementById(inputId).value;
         if(!username) return alert("Enter username");
+
         const { data: user } = await supabase.from('profiles').select('id').eq('username', username).single();
         if(!user) return alert("User not found");
-        let badgeId = (place === 1) ? 5 : (place === 2) ? 4 : 3;
+
+        let badgeId;
+        if(place === 1) badgeId = 5; 
+        else if(place === 2) badgeId = 4;
+        else if(place === 3) badgeId = 3; 
+
         await supabase.from('user_flairs').insert({ user_id: user.id, flair_id: badgeId });
         alert(`Awarded Badge #${badgeId} to ${username}!`);
         document.getElementById(inputId).value = '';
@@ -414,13 +297,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 loadMyStories();
             });
         }
-        // ... (Existing avatar/pass logic kept same) ...
+
         const profileAvatar = document.getElementById('profileAvatar');
         if(profileAvatar) {
             profileAvatar.addEventListener('click', async () => {
-                 // Prevent changing avatar if in Admin View
-                 if(document.getElementById('profileModal').classList.contains('admin-view')) return;
-
                  const newUrl = prompt("Enter URL for new profile picture:", currentProfile.avatar_url || "");
                  if(newUrl && newUrl !== currentProfile.avatar_url) {
                      await supabase.from('profiles').update({ avatar_url: newUrl }).eq('id', currentUser.id);
@@ -429,6 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
                  }
             });
         }
+
         const changePassBtn = document.getElementById('changePasswordBtn');
         if(changePassBtn) {
             changePassBtn.addEventListener('click', async () => {
@@ -440,8 +321,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         }
+
         const logoutBtn = document.getElementById('logoutBtn');
         if(logoutBtn) logoutBtn.onclick = async () => { await supabase.auth.signOut(); closeAllModals(); };
+
         const deleteAccountBtn = document.getElementById('deleteAccountBtn');
         if(deleteAccountBtn) {
             deleteAccountBtn.addEventListener('click', async () => {
@@ -515,6 +398,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const storageKey = `voted_${userIdKey}`;
         let votedStories = JSON.parse(localStorage.getItem(storageKey)) || [];
         const hasVoted = votedStories.includes(id);
+        
         let newVotes;
         if (hasVoted) {
             newVotes = Math.max(0, currentVotes - 1);
@@ -523,72 +407,32 @@ document.addEventListener('DOMContentLoaded', () => {
             newVotes = currentVotes + 1;
             votedStories.push(id);
         }
+
         localStorage.setItem(storageKey, JSON.stringify(votedStories));
         const btn = document.getElementById(`btn-${id}`);
         if(btn) btn.innerHTML = `❤️ <span>${newVotes}</span>`;
         await supabase.from('stories').update({ votes: newVotes }).eq('id', id);
     }
 
-    // --- REFACTORED LOADING FUNCTIONS (Supports Admin Viewing) ---
-    async function loadPassport() { loadPassportForUser(currentUser.id); }
-    async function loadMyStories() { loadStoriesForUser(currentUser.id); }
-
-    async function loadPassportForUser(targetId) {
+    async function loadPassport() {
         const grid = document.getElementById('flairGrid');
         grid.innerHTML = 'Loading...';
         const { data: allFlairs } = await supabase.from('flairs').select('*').order('id', { ascending: true });
-        const { data: userFlairs } = await supabase.from('user_flairs').select('flair_id').eq('user_id', targetId);
+        const { data: userFlairs } = await supabase.from('user_flairs').select('flair_id').eq('user_id', currentUser.id);
         
         const counts = {};
         if (userFlairs) userFlairs.forEach(uf => counts[uf.flair_id] = (counts[uf.flair_id] || 0) + 1);
         const earnedIds = userFlairs.map(uf => uf.flair_id);
         grid.innerHTML = '';
 
-        // Determine which flair is currently selected by the target user
-        const { data: targetProfile } = await supabase.from('profiles').select('selected_flair_id').eq('id', targetId).single();
-        const selectedId = targetProfile ? targetProfile.selected_flair_id : null;
-
         allFlairs.forEach(f => {
             const isUnlocked = earnedIds.includes(f.id);
-            const isSelected = selectedId === f.id;
+            const isSelected = currentProfile.selected_flair_id === f.id;
             const div = document.createElement('div');
             div.className = `flair-item ${isUnlocked ? 'unlocked' : ''} ${isSelected ? 'selected' : ''}`;
-            
-            // Only allow equipping if viewing OWN profile
-            if(isUnlocked && targetId === currentUser.id) {
-                div.onclick = () => equipFlair(f.id);
-            }
-            
+            if(isUnlocked) div.onclick = () => equipFlair(f.id);
             div.innerHTML = `<div class="flair-preview ${f.css_class}"></div><span>${f.name}</span><div class="my-badge-tooltip">Times earned: ${counts[f.id] || 0}</div>`;
             grid.appendChild(div);
-        });
-    }
-
-    async function loadStoriesForUser(targetId) {
-        const { data: myStories } = await supabase.from('stories').select('*').eq('user_id', targetId).order('created_at', { ascending: false });
-        const list = document.getElementById('myStoriesList');
-        list.innerHTML = '';
-        if(myStories.length === 0) { list.innerHTML = '<p class="subtext">No stories yet.</p>'; return; }
-        myStories.forEach(s => {
-            const details = document.createElement('details');
-            details.style.borderBottom = "1px solid #ccc"; details.style.padding = "10px 0";
-            const summary = document.createElement('summary');
-            summary.style.cssText = "display:flex; justify-content:space-between; cursor:pointer; font-weight:bold;";
-            summary.innerHTML = `<span>${s.content.substring(0,30)}...</span>`;
-            
-            // Only show delete button if it's My profile OR I am Admin
-            if(targetId === currentUser.id || isAdmin) {
-                const del = document.createElement('button');
-                del.innerText = 'X'; del.className = 'btn-delete';
-                del.onclick = async (e) => {
-                    e.stopPropagation();
-                    if(confirm("Delete?")) { await supabase.from('stories').delete().eq('id', s.id); loadStoriesForUser(targetId); fetchStories(); }
-                };
-                summary.appendChild(del);
-            }
-            details.appendChild(summary);
-            details.appendChild(Object.assign(document.createElement('div'), {innerText: s.content, style:"padding:10px; font-style:italic;"}));
-            list.appendChild(details);
         });
     }
 
@@ -596,7 +440,31 @@ document.addEventListener('DOMContentLoaded', () => {
         await supabase.from('profiles').update({ selected_flair_id: id }).eq('id', currentUser.id);
         await fetchUserProfile();
         updateUI();
-        loadPassportForUser(currentUser.id);
+        loadPassport();
+    }
+
+    async function loadMyStories() {
+        const { data: myStories } = await supabase.from('stories').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+        const list = document.getElementById('myStoriesList');
+        list.innerHTML = '';
+        myStories.forEach(s => {
+            const details = document.createElement('details');
+            details.style.borderBottom = "1px solid #ccc"; details.style.padding = "10px 0";
+            const summary = document.createElement('summary');
+            summary.style.cssText = "display:flex; justify-content:space-between; cursor:pointer; font-weight:bold;";
+            summary.innerHTML = `<span>${s.content.substring(0,30)}...</span>`;
+            
+            const del = document.createElement('button');
+            del.innerText = 'X'; del.className = 'btn-delete';
+            del.onclick = async (e) => {
+                e.stopPropagation();
+                if(confirm("Delete?")) { await supabase.from('stories').delete().eq('id', s.id); loadMyStories(); }
+            };
+            summary.appendChild(del);
+            details.appendChild(summary);
+            details.appendChild(Object.assign(document.createElement('div'), {innerText: s.content, style:"padding:10px; font-style:italic;"}));
+            list.appendChild(details);
+        });
     }
 
     window.openReadModal = async (story) => {
