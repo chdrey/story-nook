@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Website Loaded v25.0 - TOP 3 LOGIC FIXED");
+    console.log("Website Loaded v25.0 - TOP 3 & AVATAR FIX");
 
     // ==========================================
     // 1. SUPABASE CONFIGURATION
@@ -254,7 +254,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function createStoryCardHTML(story, isTopSection = false) {
         const authorName = story.guest_name || (story.profiles ? story.profiles.username : 'Anonymous');
-        const authorAvatar = (story.profiles && story.profiles.avatar_url) ? story.profiles.avatar_url : 'https://i.imgur.com/6UD0njE.png';
+        
+        // AVATAR LOGIC
+        const hasAvatar = story.profiles && story.profiles.avatar_url;
+        let avatarHTML = '';
+        if (hasAvatar) {
+            avatarHTML = `<img src="${story.profiles.avatar_url}" class="feed-avatar-img" alt="Avatar">`;
+        } else {
+            // Get first letter of name
+            const initial = authorName.charAt(0).toUpperCase();
+            avatarHTML = `<div class="feed-avatar-placeholder">${initial}</div>`;
+        }
+
         const commentCount = (story.comments && story.comments[0]) ? story.comments[0].count : 0;
         const isOwner = isAdmin || (currentUser && story.user_id === currentUser.id);
         
@@ -281,7 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return `
             <div class="story-card" onclick="openReadModal(${story.id})">
                 <div class="story-header-row">
-                    <img src="${authorAvatar}" class="feed-avatar" alt="Avatar">
+                    ${avatarHTML}
                     <span class="story-author">${escapeHtml(authorName)}</span>
                 </div>
                 <p style="font-size: 1.1rem; margin-bottom: 10px;">"${escapeHtml(story.content.substring(0, 200))}${story.content.length > 200 ? '...' : ''}"</p>
@@ -443,7 +454,7 @@ document.addEventListener('DOMContentLoaded', () => {
             list.innerHTML += `
                 <div class="comment-item">
                     <div style="display:flex; gap:10px; align-items:flex-start;">
-                        <img src="${uAvatar}" class="feed-avatar" style="width:30px; height:30px;">
+                        <img src="${uAvatar}" class="feed-avatar-img" style="width:30px; height:30px;">
                         <div>
                             <strong>@${u}</strong><br>
                             ${escapeHtml(c.content)}
