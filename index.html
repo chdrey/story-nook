@@ -167,7 +167,7 @@
     </div>
 
     <nav id="mainNav">
-        <div class="logo">The Story Nook 📚</div>
+        <div class="logo" onclick="scrollToTop()">The Story Nook 📚</div>
         <div class="user-controls">
             <div id="loggedOutNav" class="nav-group">
                 <span class="save-prompt">Want to save stories?</span>
@@ -207,10 +207,23 @@
         </section>
 
         <section class="feed">
-            <h3>Latest Submissions</h3>
+            <h3 class="feed-title">Latest Submissions</h3>
+            <button id="mobileFeedTrigger" class="btn-primary full-width hidden-on-desktop" onclick="openMobileFeed()">
+                📖 Open the Weekly Journal
+            </button>
             <div id="storyFeed" class="scrollable-feed"></div>
         </section>
     </main>
+
+    <div id="mobileFeedOverlay" class="mobile-feed-overlay">
+        <div class="mobile-feed-header">
+            <h2>The Weekly Journal</h2>
+            <button class="close-modal" onclick="closeMobileFeed()">&times;</button>
+        </div>
+        <p style="text-align:center; color:#888; font-size:0.8rem; margin-bottom:10px;">(Swipe down to close)</p>
+        <div id="mobileFeedContent" class="mobile-feed-content">
+            </div>
+    </div>
 
     <footer>
         <div class="footer-content">
