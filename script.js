@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Website Loaded v20.0 - Badges & Tooltips Fixed");
+    console.log("Website Loaded v21.0 - CONTROL PANEL FINAL");
 
     // ==========================================
     // 1. SUPABASE CONFIGURATION
@@ -500,6 +500,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const adminSearch = document.getElementById('adminUserSearch');
     if(adminSearch) adminSearch.addEventListener('keyup', () => window.loadAllUsers());
 
+    // === CRITICAL PROFILE FIX ===
     window.viewUserProfile = async (userId) => {
         const modal = document.getElementById('profileModal');
         const grid = document.getElementById('flairGrid');
@@ -574,22 +575,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    window.adminAwardWinner = async (place) => {
-        const inputId = `winner${place}Input`;
+    // === UPDATED ADMIN AWARD LOGIC ===
+    window.adminAwardBadge = async (badgeId) => {
+        const inputId = `badgeInput_${badgeId}`;
         const username = document.getElementById(inputId).value;
+        
         if(!username) return alert("Enter username");
+        
         const { data: user } = await supabase.from('profiles').select('id').eq('username', username).single();
+        
         if(!user) return alert("User not found");
-        let badgeId = (place === 1) ? 5 : (place === 2) ? 4 : 3;
-        await supabase.from('user_flairs').insert({ user_id: user.id, flair_id: badgeId });
-        alert(`Awarded Badge #${badgeId} to ${username}!`);
         
-        // Auto-refresh logic if the admin awarded themselves
-        if(user.id === currentUser.id) {
-            loadPassportForUser(currentUser.id);
+        const { error } = await supabase.from('user_flairs').insert({ user_id: user.id, flair_id: badgeId });
+        
+        if(error) {
+            console.error(error);
+            alert("Error: They might already have this badge.");
+        } else {
+            alert(`Badge #${badgeId} awarded to ${username}!`);
+            document.getElementById(inputId).value = ''; 
+            
+            if(user.id === currentUser.id) {
+                loadPassportForUser(currentUser.id);
+            }
         }
-        
-        document.getElementById(inputId).value = '';
     };
 
     // ==========================================
@@ -598,7 +607,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadPassportForUser(targetId) {
         const grid = document.getElementById('flairGrid');
         if(!grid) return;
-        grid.innerHTML = ''; // Clear loading
+        grid.innerHTML = ''; 
         
         const { data: userFlairs, error } = await supabase.from('user_flairs').select('flair_id').eq('user_id', targetId);
         if(error) {
@@ -636,7 +645,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             const visualClass = isUnlocked ? def.css : 'frame-locked';
 
-            // Show tooltip if Unlocked OR if Count > 0 (consistency check)
             const showTooltip = isUnlocked || badgeCount > 0;
 
             div.innerHTML = `
