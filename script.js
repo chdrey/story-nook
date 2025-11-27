@@ -150,6 +150,16 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
+    // --- FIX: Add this specific listener for the Profile Button ---
+    const navProfileBtn = document.getElementById('navProfileBtn');
+    if (navProfileBtn) {
+        navProfileBtn.onclick = (e) => {
+            // Stop the click from bubbling up (prevents weird glitches)
+            e.stopPropagation(); 
+            document.getElementById('profileModal').classList.remove('hidden');
+        };
+    }
+
     // Modal Closing (Global)
     window.closeModal = (id) => {
         const modal = document.getElementById(id);
@@ -655,3 +665,4 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 });
+
